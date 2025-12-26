@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useContext } from 'react';
+import { LanguageContext } from '../App';
 import { 
   Send, 
   Wifi, 
@@ -38,6 +40,32 @@ import GeminiLogo1 from "../assets/gemini.svg";
 
 
 const LandingPage = () => {
+  const { lang, setLang } = useContext(LanguageContext);
+
+  const dict: Record<string, Record<string, string>> = {
+    en: {},
+    am: {
+      'nav.why': 'ለምን ሴፍዲል?',
+      'nav.how': 'እንዴት ይሰራል',
+      'auth.signin': 'ግባ',
+
+      'hero.title1': 'ደህና የተጠበቀ እስክሮ',
+      'hero.title2': 'ቀላል ተስማሚ',
+      'hero.subtitle': 'የታመነ የእስክሮ መድረክ። ግብይትህን አስተማምነው አድርግ።',
+      'hero.getStarted': 'ጀምር',
+
+      'how.title': 'ሴፍዲል እንዴት ይሰራል?',
+      'how.subtitle': 'ቀላል፣ ደህንነቱ የተጠበቀ እና ግልጽ በ4 ደረጃዎች',
+      'how.cta': 'የመጀመሪያ ስምምነትህን ጀምር',
+
+      'cta.title': 'ደህና ለመከፈል ዝግጁ ነህ?',
+      'cta.subtitle': 'ለደህንነት እና ለግልጽነት ሚስጥር የሆነ ስራ የሚያደርጉ ሺዎችን ተቀላቀል',
+      'cta.getStartedFree': 'በነጻ ጀምር',
+      'cta.learnMore': 'ተጨማሪ እወቅ',
+    },
+  };
+
+  const tr = (key: string, fallback: string) => dict[lang]?.[key] ?? fallback;
 
   const steps = [
     {
@@ -124,17 +152,28 @@ const LandingPage = () => {
             {/* Navigation */}
             <nav className="hidden md:flex space-x-8 items-center">
               <a href="#why-safedeal" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Why SafeDeal?
+                {tr('nav.why', 'Why SafeDeal?')}
               </a>
               <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">
-                How It Works
+                {tr('nav.how', 'How It Works')}
               </a>
             </nav>
 
-            {/* Sign In Button */}
-            <Link to="/login?mode=login" className="btn bg-[#005356] text-white hover:bg-[#005356]/80 btn-md">
-              Sign in
-            </Link>
+            {/* Language + Sign In */}
+            <div className="flex items-center gap-3">
+              <select
+                aria-label="Language"
+                value={lang}
+                onChange={(e) => setLang(e.target.value as any)}
+                className="border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
+              >
+                <option value="en">English</option>
+                <option value="am">አማርኛ</option>
+              </select>
+              <Link to="/login?mode=login" className="btn bg-[#005356] text-white hover:bg-[#005356]/80 btn-md">
+                {tr('auth.signin', 'Sign in')}
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -160,20 +199,20 @@ const LandingPage = () => {
         className="text-white text-center lg:text-left"
       >
         <h1 className="text-4xl lg:text-7xl font-semibold leading-tight mb-2 lg:mb-6 text-black">
-          Secure Escrow
+          {tr('hero.title1', 'Secure Escrow')}
         </h1>
         <h2 className="text-3xl md:text-4xl lg:text-6xl leading-tight mb-4 lg:mb-6 text-black" >
-          Made Simple
+          {tr('hero.title2', 'Made Simple')}
         </h2>
         <p className="text-sm md:text-xl text-gray-600 mb-8 mx-8 lg:mx-0">
-        The trusted escrow platform. Secure your deals, and trade with confidence.
+          {tr('hero.subtitle', 'The trusted escrow platform. Secure your deals, and trade with confidence.')}
         </p>
 
         <Link
             to="/login?mode=register"
             className="btn bg-[#005356] text-white hover:bg-[#005356]/80 btn-lg w-1/2 sm:w-auto h-12"
           >
-            Get Started
+            {tr('hero.getStarted', 'Get Started')}
           </Link>
 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-0 md:gap-8 opacity-60 mt-8">
   <img src={ChapaLogo} alt="Chapa" className="h-10 md:h-16 w-auto text-black" />
@@ -434,10 +473,10 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              How SafeDeal Works?
+              {tr('how.title', 'How SafeDeal Works?')}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Simple, secure, and transparent in 4 steps
+              {tr('how.subtitle', 'Simple, secure, and transparent in 4 steps')}
             </p>
           </div>
 
@@ -495,7 +534,7 @@ const LandingPage = () => {
               to="/login?mode=register"
               className="btn bg-[#005356] text-white hover:bg-[#005356]/80 btn-lg shadow-lg hover:shadow-xl transition-all"
             >
-              Start Your First Deal
+              {tr('how.cta', 'Start Your First Deal')}
             </Link>
           </motion.div>
         </div>
@@ -610,23 +649,23 @@ const LandingPage = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Ready to Start Trading Safely?
+              {tr('cta.title', 'Ready to Start Trading Safely?')}
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who trust SafeDeal for secure, transparent transactions
+              {tr('cta.subtitle', 'Join thousands of users who trust SafeDeal for secure, transparent transactions')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/login?mode=register"
                 className="btn bg-white text-[#005356] hover:bg-gray-100 btn-lg font-semibold shadow-lg hover:shadow-xl transition-all"
               >
-                Get Started Free
+                {tr('cta.getStartedFree', 'Get Started Free')}
               </Link>
               <Link
                 to="#how-it-works"
                 className="btn btn-outline border-white text-white hover:bg-white hover:text-[#005356] btn-lg"
               >
-                Learn More
+                {tr('cta.learnMore', 'Learn More')}
               </Link>
             </div>
           </motion.div>

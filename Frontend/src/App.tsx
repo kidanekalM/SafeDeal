@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, createContext, useMemo } from "react";
 import { useAuthStore } from "./store/authStore";
 import { useNotificationStore } from "./store/notificationStore";
 import { authApi, userApi, wsApi } from "./lib/api";
@@ -23,11 +23,24 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import NotificationToast from "./components/NotificationToast";
 import Contacts from "./pages/Contacts";
 
+export type Lang = 'en' | 'am';
+export const LanguageContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'en', setLang: () => {} });
+
 function App() {
   const { user, setUser, setLoading, isAuthenticated } = useAuthStore();
   const { setNotifications, addNotification } = useNotificationStore();
   const refreshTimeoutRef = useRef<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+
+  const [langState, setLangState] = useState<Lang>(() => (localStorage.getItem('lang') as Lang) === 'am' ? 'am' : 'en');
+  const [showLangModal, setShowLangModal] = useState<boolean>(() => !localStorage.getItem('lang'));
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem('lang', l);
+    document.documentElement.lang = l;
+    setShowLangModal(false);
+  };
+  const langContextValue = useMemo(() => ({ lang: langState, setLang }), [langState]);
 
   // 🧩 Initialize auth on page load
   useEffect(() => {
@@ -198,100 +211,133 @@ function App() {
   }, [user, isAuthenticated]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Routes>
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <LandingPage />
-            )
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <AuthPage />
-            )
-          }
-        />
+    <LanguageContext.Provider value={langContextValue}>
+      <div className="min-h-screen bg-gray-50 relative">
+        {showLangModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-md p-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">Choose your language</h2>
+              <p className="text-sm text-gray-600 mb-6 text-center">እባክዎ ቋንቋ ይምረጡ</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLang('en')}
+                  className="w-full py-3 rounded-xl border border-gray-200 hover:border-[#005356] hover:bg-gray-50 transition-colors font-medium"
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLang('am')}
+                  className="w-full py-3 rounded-xl border border-gray-200 hover:border-[#005356] hover:bg-gray-50 transition-colors font-medium"
+                >
+                  አማርኛ
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLangModal(false)}
+                className="mt-6 w-full py-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                Continue without choosing
+              </button>
+            </div>
+          </div>
+        )}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <LandingPage />
+              )
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <AuthPage />
+              )
+            }
+          />
 
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/create-escrow"
-          element={
-            <ProtectedRoute>
-              <CreateEscrow />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/escrow/:id"
-          element={
-            <ProtectedRoute>
-              <EscrowDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/escrows"
-          element={
-            <ProtectedRoute>
-              <AllEscrows />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/transactions"
-          element={
-            <ProtectedRoute>
-              <TransactionHistory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            <ProtectedRoute>
-              <UserSearch />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/contacts"
-          element={
-            <ProtectedRoute>
-              <Contacts />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create-escrow"
+            element={
+              <ProtectedRoute>
+                <CreateEscrow />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/escrow/:id"
+            element={
+              <ProtectedRoute>
+                <EscrowDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/escrows"
+            element={
+              <ProtectedRoute>
+                <AllEscrows />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute>
+                <TransactionHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <UserSearch />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contacts"
+            element={
+              <ProtectedRoute>
+                <Contacts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
 
-      <NotificationToast isEnabled={isAuthenticated} />
-    </div>
+        <NotificationToast isEnabled={isAuthenticated} />
+      </div>
+    </LanguageContext.Provider>
   );
 }
 
