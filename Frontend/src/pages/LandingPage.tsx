@@ -164,7 +164,7 @@ const LandingPage = () => {
           Made Simple
         </h2>
         <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-        The world's most trusted escrow platform. Secure your deals, and trade with confidence.
+        The trusted escrow platform. Secure your deals, and trade with confidence.
         </p>
 
         <Link
@@ -653,7 +653,7 @@ const LandingPage = () => {
                 <span className="text-2xl font-bold">SafeDeal</span>
               </div>
               <p className="text-gray-400 mb-6 max-w-md">
-                The world's most trusted escrow platform. Secure your deals and trade with confidence using blockchain technology.
+                The trusted escrow platform. Secure your deals and trade with confidence using blockchain technology.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#005356] transition-colors">
