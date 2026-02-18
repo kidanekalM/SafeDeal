@@ -5,9 +5,9 @@ go 1.21
 require (
     github.com/ethereum/go-ethereum v1.16.2
     github.com/go-playground/validator/v10 v10.11.1
-    github.com/gofiber/contrib/websocket v0.7.1
+    github.com/gofiber/websocket/v2 v2.6.0
     github.com/gofiber/fiber/v2 v2.52.0
-    github.com/gofiber/jwt/v3 v3.0.1
+    github.com/gofiber/jwt/v2 v2.8.2
     github.com/golang-jwt/jwt/v5 v5.2.2
     github.com/google/uuid v1.6.0
     github.com/joho/godotenv v1.5.1
