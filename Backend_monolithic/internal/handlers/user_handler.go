@@ -298,7 +298,24 @@ func (h *UserHandler) Search(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
-func (h *UserHandler) WalletAction(c *fiber.Ctx) error {
+func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
+	query := c.Query("q")
+	if query == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Query parameter is required"})
+	}
+
+	var users []models.User
+	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)", 
+		true, "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&users)
+	
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	return c.JSON(users)
+}
+
+func (h *UserHandler) ManageWallet(c *fiber.Ctx) error {
 	// Placeholder for wallet functionality
 	return c.JSON(fiber.Map{"message": "Wallet action endpoint"})
 }

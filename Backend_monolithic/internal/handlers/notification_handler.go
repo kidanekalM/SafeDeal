@@ -84,6 +84,10 @@ func (h *NotificationHandler) runHub() {
 	}
 }
 
+func (h *NotificationHandler) HandleWebSocket(c *websocket.Conn) {
+	h.NotificationWebSocket(c)
+}
+
 func (h *NotificationHandler) NotificationWebSocket(c *websocket.Conn) {
 
 	ctx := c.Locals("fiberCtx").(*fiber.Ctx)

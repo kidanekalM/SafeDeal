@@ -68,6 +68,10 @@ func (h *ChatHandler) runHub() {
 	}
 }
 
+func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
+	h.ChatWebSocket(c)
+}
+
 func (h *ChatHandler) ChatWebSocket(c *websocket.Conn) {
 
 	// Get HTTP context

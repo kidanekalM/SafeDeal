@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"net/http"
 	"os"
 	"time"
 
@@ -86,4 +87,28 @@ func (s *Service) GetUserByID(id uint) (*models.User, error) {
 		return nil, result.Error
 	}
 	return &user, nil
+}
+
+func (s *Service) JWTMiddleware(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Authorization header missing",
+		})
+	}
+
+	token := authHeader
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	}
+
+	claims, err := s.ValidateToken(token)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid token",
+		})
+	}
+
+	c.Locals("userID", claims.UserID)
+	return c.Next()
 }
