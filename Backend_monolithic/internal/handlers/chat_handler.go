@@ -28,7 +28,7 @@ type MessageData struct {
 }
 
 func NewChatHandler(db *gorm.DB, authService *auth.Service) *ChatHandler {
-	handler := &ChatHandler{
+	h := &ChatHandler{
 		DB:          db,
 		AuthService: authService,
 		clients:     make(map[*websocket.Conn]bool),
@@ -36,11 +36,8 @@ func NewChatHandler(db *gorm.DB, authService *auth.Service) *ChatHandler {
 		register:    make(chan *websocket.Conn),
 		unregister:  make(chan *websocket.Conn),
 	}
-
-	// Start the hub
-	go handler.runHub()
-
-	return handler
+	go h.runHub()
+	return h
 }
 
 func (h *ChatHandler) runHub() {
@@ -53,19 +50,16 @@ func (h *ChatHandler) runHub() {
 
 		case conn := <-h.unregister:
 			h.mutex.Lock()
-			if _, ok := h.clients[conn]; ok {
-				delete(h.clients, conn)
-				conn.Close()
-			}
+			delete(h.clients, conn)
+			conn.Close()
 			h.mutex.Unlock()
 
-		case message := <-h.broadcast:
+		case msg := <-h.broadcast:
 			h.mutex.RLock()
 			for conn := range h.clients {
-				if err := conn.WriteJSON(message); err != nil {
-					log.Printf("Error writing to WebSocket: %v", err)
-					delete(h.clients, conn)
+				if err := conn.WriteJSON(msg); err != nil {
 					conn.Close()
+					delete(h.clients, conn)
 				}
 			}
 			h.mutex.RUnlock()
@@ -74,89 +68,72 @@ func (h *ChatHandler) runHub() {
 }
 
 func (h *ChatHandler) ChatWebSocket(c *websocket.Conn) {
-	// Get user ID from token in query params or headers
-	userIDFloat, ok := c.Locals("userID").(float64)
-	if !ok {
-		// Try to parse from token
-		authHeader := c.Headers("authorization")
-		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-			token := authHeader[7:]
-			claims, err := h.AuthService.ValidateToken(token)
-			if err != nil {
-				log.Printf("Invalid token: %v", err)
-				return
-			}
-			userIDFloat = float64(claims.UserID)
-		} else {
-			log.Println("No valid user ID found")
-			return
-		}
-	}
 
-	userID := uint(userIDFloat)
+	// Get HTTP context
+	ctx := c.Locals("fiberCtx").(*fiber.Ctx)
 
-	// Get target escrow ID from the connection params
-	escrowID, err := h.getEscrowIDFromPath(c.Params("id"))
-	if err != nil {
-		log.Printf("Invalid escrow ID: %v", err)
+	// Extract token
+	authHeader := ctx.Get("Authorization")
+	if len(authHeader) <= 7 || authHeader[:7] != "Bearer " {
+		log.Println("missing auth header")
 		return
 	}
 
-	// Verify user is part of the escrow
+	token := authHeader[7:]
+	claims, err := h.AuthService.ValidateToken(token)
+	if err != nil {
+		log.Println("invalid token:", err)
+		return
+	}
+	userID := claims.UserID
+
+	// escrow id
+	escrowID, err := h.getEscrowIDFromPath(ctx.Params("id"))
+	if err != nil {
+		log.Println("invalid escrow id:", err)
+		return
+	}
+
 	var escrow models.Escrow
-	result := h.DB.First(&escrow, escrowID)
-	if result.Error != nil {
-		log.Printf("Escrow not found: %v", result.Error)
+	if err := h.DB.First(&escrow, escrowID).Error; err != nil {
+		log.Println("escrow not found")
 		return
 	}
 
 	if escrow.BuyerID != userID && escrow.SellerID != userID {
-		log.Println("User not authorized for this escrow")
+		log.Println("not authorized")
 		return
 	}
 
-	// Register the connection
-	h.register <- &c
+	h.register <- c
+	defer func() { h.unregister <- c }()
 
-	// Defer cleanup
-	defer func() {
-		h.unregister <- &c
-	}()
-
-	// Listen for messages
 	for {
 		var msg MessageData
 		if err := c.ReadJSON(&msg); err != nil {
-			log.Printf("Error reading WebSocket message: %v", err)
 			break
 		}
 
-		// Verify this user can send messages in this escrow
 		if msg.SenderID != userID || msg.EscrowID != escrowID {
 			continue
 		}
 
-		// Save message to database
 		message := models.Message{
-			EscrowID:  msg.EscrowID,
-			SenderID:  msg.SenderID,
-			Content:   msg.Content,
-			CreatedAt: "", // Will be set by GORM
+			EscrowID: msg.EscrowID,
+			SenderID: msg.SenderID,
+			Content:  msg.Content,
 		}
 
 		if err := h.DB.Create(&message).Error; err != nil {
-			log.Printf("Error saving message to database: %v", err)
 			continue
 		}
 
-		// Broadcast the message
 		h.broadcast <- msg
 	}
 }
 
-func (h *ChatHandler) getEscrowIDFromPath(pathParam string) (uint, error) {
-	// In a real implementation, you would convert the path param to uint
-	// For now, just returning a dummy value
-	var id uint = 1 // This should be properly parsed
-	return id, nil
+func (h *ChatHandler) getEscrowIDFromPath(id string) (uint, error) {
+	var parsed uint
+	_, err := fmt.Sscan(id, &parsed)
+	return parsed, err
 }
