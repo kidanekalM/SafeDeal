@@ -63,6 +63,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Email:          req.Email,
 		Password:       hashedPassword,
 		ActivationCode: activationCode,
+		Activated: true,
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
