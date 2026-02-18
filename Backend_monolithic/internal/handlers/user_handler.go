@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
