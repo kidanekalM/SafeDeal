@@ -45,7 +45,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://safedeal-be.onrender.com/',
         changeOrigin: true,
         secure: false,
       },
@@ -55,7 +55,7 @@ export default defineConfig({
   // ✅ Add this block for ngrok
   preview: {
     allowedHosts: [
-      "elida-necktieless-unaspiringly.ngrok-free.dev"
+      "https://safedeal-be.onrender.com/"
     ]
   }
 })

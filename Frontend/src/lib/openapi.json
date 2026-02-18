@@ -1,0 +1,237 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Generated API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/refresh-token": {
+      "post": {
+        "summary": "/refresh-token",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "/login",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "summary": "/register",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "summary": "/api/logout",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "summary": "/api/profile",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/updateprofile": {
+      "patch": {
+        "summary": "/api/updateprofile",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/search?q={encodeURIComponent(query)}": {
+      "get": {
+        "summary": "/api/search?q={encodeURIComponent(query)}",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/contacts": {
+      "get": {
+        "summary": "/api/escrows/contacts",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "/api/search",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/bank-details": {
+      "put": {
+        "summary": "/api/profile/bank-details",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/wallet": {
+      "post": {
+        "summary": "/api/wallet",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows": {
+      "post": {
+        "summary": "/api/escrows",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/my": {
+      "get": {
+        "summary": "/api/escrows/my",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/{id}": {
+      "get": {
+        "summary": "/api/escrows/{id}",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/{id}/accept": {
+      "post": {
+        "summary": "/api/escrows/{id}/accept",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/{id}/confirm-receipt": {
+      "post": {
+        "summary": "/api/escrows/{id}/confirm-receipt",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/dispute/{id}": {
+      "post": {
+        "summary": "/api/escrows/dispute/{id}",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "summary": "/api/escrows/dispute/{id}",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/{id}/cancel": {
+      "post": {
+        "summary": "/api/escrows/{id}/cancel",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/{id}/refund": {
+      "post": {
+        "summary": "/api/escrows/{id}/refund",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/escrows/{escrowId}": {
+      "get": {
+        "summary": "/api/escrows/{escrowId}",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/payments/initiate": {
+      "post": {
+        "summary": "/api/payments/initiate",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/payments/transactions": {
+      "get": {
+        "summary": "/api/payments/transactions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

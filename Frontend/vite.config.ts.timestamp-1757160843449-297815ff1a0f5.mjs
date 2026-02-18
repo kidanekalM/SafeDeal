@@ -7,7 +7,7 @@ var vite_config_default = defineConfig({
     port: 3e3,
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "https://safedeal-be.onrender.com/",
         changeOrigin: true,
         secure: false
       }
