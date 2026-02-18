@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-
+	"strings"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -32,12 +32,13 @@ func main() {
 		"https://elida-necktieless-unaspiringly.ngrok-free.dev",
 	}
 
+	
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://safe-deal.vercel.app,https://elida-necktieless-unaspiringly.ngrok-free.dev",
-		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-User-ID,ngrok-skip-browser-warning",
-		AllowCredentials: true,
-	}))
+    AllowOrigins:     strings.Join(allowedOrigins, ","),
+    AllowMethods:     "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS",
+    AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-User-ID,ngrok-skip-browser-warning",
+    AllowCredentials: true,
+}))
 
 	// Initialize database
 	db := configs.InitDB()

@@ -229,16 +229,7 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 	}
 
 	// Interact with blockchain to fund the escrow
-	if h.BlockchainClient != nil {
-		escrowID := big.NewInt(int64(escrow.ID))
-		
-		tx, err := h.BlockchainClient.FundEscrow(escrowID)
-		if err != nil {
-			log.Printf("Failed to fund escrow on blockchain for escrow %d: %v", escrow.ID, err)
-		} else {
-			log.Printf("Successfully funded escrow on blockchain for escrow %d with TX: %v", escrow.ID, tx.Hash().Hex())
-		}
-	}
+
 
 	return c.JSON(fiber.Map{"message": "Escrow accepted successfully"})
 }

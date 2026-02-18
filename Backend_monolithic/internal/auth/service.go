@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"time"
-
+	"github.com/gofiber/fiber/v2"
 	"backend_monolithic/internal/models"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
