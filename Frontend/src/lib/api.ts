@@ -82,10 +82,10 @@ api.interceptors.response.use(
 // ---------- API endpoints ----------
 export const authApi = {
   login: (data: LoginRequest): Promise<AxiosResponse<AuthResponse>> =>
-    api.post('/login', data),
+    api.post('/api/login', data),
 
   register: (data: RegisterRequest): Promise<AxiosResponse<AuthResponse>> =>
-    api.post('/register', data),
+    api.post('/api/register', data),
 
   logout: (): Promise<AxiosResponse<void>> => api.post('/api/logout'),
 
