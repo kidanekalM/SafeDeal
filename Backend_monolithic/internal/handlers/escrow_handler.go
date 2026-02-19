@@ -1,234 +1,3 @@
-package handlers
-
-import (
-	"errors"
-	"log"
-	"math/big"
-	"strconv"
-
-	"backend_monolithic/internal/auth"
-	"backend_monolithic/internal/blockchain"
-	"backend_monolithic/internal/models"
-	"backend_monolithic/internal/rabbitmq"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
-)
-
-type EscrowHandler struct {
-	DB             *gorm.DB
-	AuthService    *auth.Service
-	RabbitMQ       *rabbitmq.Producer
-	BlockchainClient *blockchain.Client
-}
-
-func NewEscrowHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer, blockchainClient *blockchain.Client) *EscrowHandler {
-	return &EscrowHandler{
-		DB:             db,
-		AuthService:    authService,
-		RabbitMQ:       rabbitMQ,
-		BlockchainClient: blockchainClient,
-	}
-}
-
-func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
-	if !ok {
-		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
-	var req struct {
-		SellerID   uint   `json:"seller_id" validate:"required"`
-		Amount     uint   `json:"amount" validate:"required,gt=0"`
-		Conditions string `json:"conditions,omitempty"`
-	}
-
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
-	}
-
-	// Check if seller exists
-	var seller models.User
-	if err := h.DB.First(&seller, req.SellerID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return c.Status(400).JSON(fiber.Map{"error": "Seller not found"})
-		}
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
-	}
-
-	// Get buyer from database to access their blockchain address
-	buyer, err := h.AuthService.GetUserByID(userID)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Buyer not found"})
-	}
-
-	// Get seller's blockchain address
-	sellerFromDB, err := h.AuthService.GetUserByID(req.SellerID)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Seller not found"})
-	}
-
-	escrow := &models.Escrow{
-		BuyerID:    userID,
-		SellerID:   req.SellerID,
-		Amount:     req.Amount,
-		Conditions: req.Conditions,
-		Status:     "Pending",
-	}
-
-	if err := h.DB.Create(escrow).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow"})
-	}
-
-	// Publish event to RabbitMQ
-	eventData := map[string]interface{}{
-		"escrow_id": escrow.ID,
-		"buyer_id":  escrow.BuyerID,
-		"seller_id": escrow.SellerID,
-		"amount":    escrow.Amount,
-	}
-	if err := h.RabbitMQ.Publish("escrow.created", eventData); err != nil {
-		log.Printf("Failed to publish escrow.created event: %v", err)
-	}
-
-	// Interact with blockchain to create the escrow
-	if h.BlockchainClient != nil {
-		buyerAddr := common.HexToAddress(buyer.WalletAddress) // Assuming WalletAddress field exists
-		sellerAddr := common.HexToAddress(sellerFromDB.WalletAddress)
-		amount := big.NewInt(int64(req.Amount))
-
-		tx, err := h.BlockchainClient.CreateEscrow(buyerAddr, sellerAddr, amount)
-		if err != nil {
-			log.Printf("Failed to create escrow on blockchain: %v", err)
-			// Note: We don't rollback the database transaction as that was successful
-		} else {
-			log.Printf("Successfully created escrow on blockchain with TX: %v", tx.Hash().Hex())
-		}
-	}
-
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
-}
-
-func (h *EscrowHandler) GetEscrowByID(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
-	}
-
-	var escrow models.Escrow
-	result := h.DB.Preload("Buyer").Preload("Seller").First(&escrow, uint(id))
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
-		}
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
-	}
-
-	// Check if the user is authorized to view this escrow
-	userID, ok := c.Locals("userID").(uint)
-	if !ok {
-		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
-	if escrow.BuyerID != userID && escrow.SellerID != userID {
-		return c.Status(403).JSON(fiber.Map{"error": "Forbidden"})
-	}
-
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
-}
-
-func (h *EscrowHandler) GetMyEscrows(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
-	if !ok {
-		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
-	var escrows []models.Escrow
-	result := h.DB.Where("buyer_id = ? OR seller_id = ?", userID, userID).
-		Preload("Buyer").Preload("Seller").Find(&escrows)
-	if result.Error != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
-	}
-
-	// Calculate summary
-	var total, active, completed int
-	for _, escrow := range escrows {
-		total++
-		switch escrow.Status {
-		case "Funded", "Active", "Disputed":
-			active++
-		case "Released", "Refunded", "Canceled":
-			completed++
-		}
-	}
-
-	response := fiber.Map{
-		"data": fiber.Map{
-			"escrows": escrows,
-			"summary": fiber.Map{
-				"total":     total,
-				"active":    active,
-				"completed": completed,
-			},
-		},
-	}
-
-	return c.JSON(response)
-}
-
-func (h *EscrowHandler) GetEscrowContacts(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
-	if !ok {
-		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
-	// Get distinct user IDs from escrows where the current user is involved
-	var escrows []models.Escrow
-	result := h.DB.Where("buyer_id = ? OR seller_id = ?", userID, userID).Find(&escrows)
-	if result.Error != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
-	}
-
-	// Collect unique contact IDs (other party in each escrow)
-	contactIDs := make(map[uint]bool)
-	var contacts []models.User
-
-	for _, escrow := range escrows {
-		if escrow.BuyerID == userID {
-			// This is a seller in this escrow, add as contact
-			if !contactIDs[escrow.SellerID] {
-				contactIDs[escrow.SellerID] = true
-				var seller models.User
-				if err := h.DB.First(&seller, escrow.SellerID).Error; err == nil {
-					contacts = append(contacts, seller)
-				}
-			}
-		} else if escrow.SellerID == userID {
-			// This is a buyer in this escrow, add as contact
-			if !contactIDs[escrow.BuyerID] {
-				contactIDs[escrow.BuyerID] = true
-				var buyer models.User
-				if err := h.DB.First(&buyer, escrow.BuyerID).Error; err == nil {
-					contacts = append(contacts, buyer)
-				}
-			}
-		}
-	}
-
-	response := fiber.Map{
-		"data": fiber.Map{
-			"contacts": contacts,
-			"total":    len(contacts),
-		},
-	}
-
-	return c.JSON(response)
-}
-
 func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
@@ -276,9 +45,7 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 	// Interact with blockchain to fund the escrow
 
 
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
+	return c.JSON(escrow)
 }
 
 func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
@@ -337,9 +104,7 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
+	return c.JSON(escrow)
 }
 
 func (h *EscrowHandler) CancelEscrow(c *fiber.Ctx) error {
@@ -386,9 +151,7 @@ func (h *EscrowHandler) CancelEscrow(c *fiber.Ctx) error {
 		log.Printf("Failed to publish escrow.canceled event: %v", err)
 	}
 
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
+	return c.JSON(escrow)
 }
 
 func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
@@ -435,9 +198,7 @@ func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 		log.Printf("Failed to publish escrow.disputed event: %v", err)
 	}
 
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
+	return c.JSON(escrow)
 }
 
 func (h *EscrowHandler) GetDispute(c *fiber.Ctx) error {
@@ -459,9 +220,7 @@ func (h *EscrowHandler) GetDispute(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in dispute"})
 	}
 
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
+	return c.JSON(escrow)
 }
 
 func (h *EscrowHandler) RefundEscrow(c *fiber.Ctx) error {
@@ -498,7 +257,33 @@ func (h *EscrowHandler) RefundEscrow(c *fiber.Ctx) error {
 		log.Printf("Failed to publish escrow.refunded event: %v", err)
 	}
 
-	return c.JSON(fiber.Map{
-		"data": escrow,
-	})
+	return c.JSON(escrow)
+}
+
+func (h *EscrowHandler) GetEscrowByID(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	var escrow models.Escrow
+	result := h.DB.Preload("Buyer").Preload("Seller").First(&escrow, uint(id))
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+		}
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	// Check if the user is authorized to view this escrow
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	if escrow.BuyerID != userID && escrow.SellerID != userID {
+		return c.Status(403).JSON(fiber.Map{"Forbidden"})
+	}
+
+	return c.JSON(escrow)
 }

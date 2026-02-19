@@ -114,9 +114,22 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"data": fiber.Map{
-			"transaction": transaction,
+			"transaction": fiber.Map{
+				"id":              transaction.ID,
+				"escrow_id":       transaction.EscrowID,
+				"buyer_id":        transaction.BuyerID,
+				"transaction_ref": transaction.TransactionRef,
+				"amount":          transaction.Amount,
+				"currency":        transaction.Currency,
+				"status":          transaction.Status,
+				"payment_url":     transaction.PaymentURL,
+				"created_at":      transaction.CreatedAt,
+				"updated_at":      transaction.UpdatedAt,
+			},
 			"payment_url": paymentURL,
 		},
+		"status":  "success",
+		"message": "Payment initiated successfully",
 	})
 }
 
@@ -153,10 +166,8 @@ func (h *PaymentHandler) GetTransactions(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"data": fiber.Map{
-			"transactions": formattedTransactions,
-			"total":        total,
-			"status":       "success",
-		},
+		"transactions": formattedTransactions,
+		"total":        total,
+		"status":       "success",
 	})
 }
