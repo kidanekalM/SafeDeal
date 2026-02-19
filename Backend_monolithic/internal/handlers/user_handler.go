@@ -63,19 +63,29 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Email:          req.Email,
 		Password:       hashedPassword,
 		ActivationCode: activationCode,
-		Activated: true,
+		Activated:      true, // Changed to true for testing purposes
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create user"})
 	}
 
+	// Generate token for the newly registered user
+	token, err := h.AuthService.GenerateToken(user.ID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
+	}
+
 	// TODO: Send activation email with activationCode
 	log.Printf("Activation code for %s: %s", req.Email, activationCode)
 
+	// Remove password from response
+	user.Password = ""
+
 	return c.JSON(fiber.Map{
-		"message": "Registration successful. Please check your email for activation.",
-		"user":    user,
+		"user":         user,
+		"access_token": token,
+		"message":      "Registration successful.",
 	})
 }
 
@@ -147,13 +157,38 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"user":         user,
 		"access_token": token,
+		// Note: refresh_token is optional since it should be handled via HTTP-only cookie in production
 	})
 }
 
 func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
-	// Implementation depends on refresh token strategy
+	// Extract user ID from the token passed in the Authorization header
+	authHeader := c.Get("Authorization")
+	if authHeader == "" || len(authHeader) <= 7 || authHeader[:7] != "Bearer " {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "Invalid authorization header format",
+		})
+	}
+
+	token := authHeader[7:]
+	claims, err := h.AuthService.ValidateToken(token)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "Invalid token",
+		})
+	}
+
+	// Generate a new access token
+	newToken, err := h.AuthService.GenerateToken(claims.UserID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Could not refresh token",
+		})
+	}
+
 	return c.JSON(fiber.Map{
-		"message": "Refresh token endpoint",
+		"access_token": newToken,
+		"expires_in":   86400, // 24 hours in seconds
 	})
 }
 
@@ -213,15 +248,15 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	// Remove password from response
 	user.Password = ""
 
-	return c.JSON(user)
+	return c.JSON(fiber.Map{
+		"data": user,
+	})
 }
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	userID, ok := c.Locals("userID").(uint)
 	if !ok {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
 	var updates map[string]interface{}
@@ -238,7 +273,14 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update profile"})
 	}
 
-	return c.JSON(fiber.Map{"message": "Profile updated successfully"})
+	// Fetch updated user to return
+	var updatedUser models.User
+	h.DB.First(&updatedUser, userID)
+	updatedUser.Password = "" // Remove password from response
+
+	return c.JSON(fiber.Map{
+		"data": updatedUser,
+	})
 }
 
 func (h *UserHandler) UpdateBankDetails(c *fiber.Ctx) error {
@@ -275,7 +317,14 @@ func (h *UserHandler) UpdateBankDetails(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.JSON(fiber.Map{"message": "Bank details updated successfully"})
+	// Return the updated user with bank details
+	var user models.User
+	h.DB.First(&user, userID)
+	user.Password = ""
+
+	return c.JSON(fiber.Map{
+		"data": user,
+	})
 }
 
 func (h *UserHandler) Search(c *fiber.Ctx) error {
@@ -313,12 +362,49 @@ func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	return c.JSON(users)
+	// Format response to match expected format with data wrapper
+	response := fiber.Map{
+		"data": fiber.Map{
+			"users": users,
+			"pagination": nil, // Frontend expects pagination field but setting to nil for now
+		},
+	}
+
+	return c.JSON(response)
 }
 
 func (h *UserHandler) ManageWallet(c *fiber.Ctx) error {
-	// Placeholder for wallet functionality
-	return c.JSON(fiber.Map{"message": "Wallet action endpoint"})
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	// Fetch the user to return in the response
+	var user models.User
+	result := h.DB.First(&user, userID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	// If the user doesn't have a wallet, create one
+	if user.WalletAddress == "" {
+		// This is a placeholder implementation
+		// In a real implementation, you would generate a wallet for the user
+		// and store the encrypted private key and wallet address in the database
+		return c.Status(501).JSON(fiber.Map{
+			"error": "Wallet creation not yet implemented in this version",
+		})
+	}
+
+	// Remove password from response
+	user.Password = ""
+
+	return c.JSON(fiber.Map{
+		"data": user,
+	})
 }
 
 func (h *UserHandler) Protect(c *fiber.Ctx) error {

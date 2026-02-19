@@ -43,17 +43,21 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 }
 
 func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
-	// Public routes
+	// Public routes - Direct endpoints (as expected by api.ts)
+	app.Post("/login", sc.UserHandler.Login)
+	app.Post("/register", sc.UserHandler.Register)
+	app.Post("/refresh-token", sc.UserHandler.RefreshToken) // Direct refresh token route
+	app.Post("/resend", sc.UserHandler.ResendActivation) // Direct resend route
+	
+	// Public routes under /api
 	public := app.Group("/api")
-	public.Post("/register", sc.UserHandler.Register)
-	public.Post("/login", sc.UserHandler.Login)
 	public.Get("/activate", sc.UserHandler.ActivateAccount)
 	public.Post("/resend-activation", sc.UserHandler.ResendActivation)
 	public.Get("/search", sc.UserHandler.SearchUsers)
-	
+
 	// Protected routes
 	protected := app.Group("/api", sc.AuthService.JWTMiddleware)
-	protected.Post("/logout", sc.UserHandler.Logout)
+	protected.Post("/logout", sc.UserHandler.Logout) // This maps to /api/logout
 	protected.Get("/profile", sc.UserHandler.GetProfile)
 	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile)
 	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
