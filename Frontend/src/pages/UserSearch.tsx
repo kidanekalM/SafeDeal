@@ -14,85 +14,52 @@ import { SearchUser } from '../types';
 const UserSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
-  const [allUsers, setAllUsers] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
-  // Load all users on component mount
-  const loadAllUsers = useCallback(async () => {
-    setIsLoadingUsers(true);
-    try {
-      // Use a broad search to get all users (or create a dedicated endpoint)
-      const response = await userApi.searchUsers(''); // Empty query to get all users
-      const users = response.data.users || [];
-      setAllUsers(users);
-      console.log('Loaded all users:', users.length);
-    } catch (error: any) {
-      console.error('Error loading users:', error);
-      // Fallback: try to get users with a common letter
-      try {
-        const fallbackResponse = await userApi.searchUsers('@');
-        setAllUsers(fallbackResponse.data.users || []);
-      } catch (fallbackError) {
-        console.error('Fallback search also failed:', fallbackError);
-      }
-    } finally {
-      setIsLoadingUsers(false);
-    }
-  }, []);
-
-  // Client-side search function with partial matching
-  const performClientSideSearch = useCallback((query: string) => {
+  // Server-side search function
+  const performServerSideSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
       setHasSearched(false);
       return;
     }
 
-    console.log('Client-side searching for:', query);
     setIsSearching(true);
     setHasSearched(true);
 
-    const searchQuery = query.trim().toLowerCase();
-    
-    // Filter users with partial matching on multiple fields
-    const filteredUsers = allUsers.filter(user => {
-      const firstName = (user.first_name || '').toLowerCase();
-      const lastName = (user.last_name || '').toLowerCase();
-      const profession = (user.profession || '').toLowerCase();
-      const fullName = `${firstName} ${lastName}`;
-      
-      return firstName.includes(searchQuery) ||
-             lastName.includes(searchQuery) ||
-             profession.includes(searchQuery) ||
-             fullName.includes(searchQuery);
-    });
-
-    setSearchResults(filteredUsers);
-    console.log('Client-side search results:', filteredUsers.length, 'users');
-    setIsSearching(false);
-  }, [allUsers]);
-
-  // Load users on component mount
-  useEffect(() => {
-    loadAllUsers();
-  }, [loadAllUsers]);
-
-  // Debounced client-side search
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      performClientSideSearch(searchTerm);
-    }, 150); // Faster since it's client-side
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, performClientSideSearch]);
+    try {
+      const response = await userApi.searchUsers(query);
+      const users = response.data.users || [];
+      setSearchResults(users);
+      console.log('Server-side search results:', users.length, 'users');
+    } catch (error: any) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
 
   const clearSearch = () => {
     setSearchTerm('');
     setSearchResults([]);
     setHasSearched(false);
   };
+
+  // Debounced server-side search
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      const timeoutId = setTimeout(() => {
+        performServerSideSearch(searchTerm.trim());
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSearchResults([]);
+      setHasSearched(false);
+    }
+  }, [searchTerm, performServerSideSearch]);
 
   return (
     <Layout>
@@ -109,11 +76,6 @@ const UserSearch = () => {
           <h1 className="text-3xl font-bold text-gray-900">Search Users</h1>
           <p className="text-gray-600 mt-2">
             Find users to create escrow transactions with
-            {isLoadingUsers && (
-              <span className="ml-2 text-primary-600">
-                <Loader2 className="inline h-4 w-4 animate-spin" /> Loading users...
-              </span>
-            )}
           </p>
         </div>
 
@@ -165,7 +127,7 @@ const UserSearch = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
                 <span className="ml-2 text-gray-600">Searching users...</span>
               </div>
-            ) : searchResults.length === 0 && searchTerm.length > 0 ? (
+            ) : searchResults.length === 0 && !isSearching ? (
               <div className="text-center py-6">
                 <p className="text-gray-600">
                   No people found for "{searchTerm}"

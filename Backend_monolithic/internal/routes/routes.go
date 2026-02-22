@@ -43,17 +43,18 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 }
 
 func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
-	// Public routes - Direct endpoints (as expected by api.ts)
-	app.Post("/login", sc.UserHandler.Login)
-	app.Post("/register", sc.UserHandler.Register)
-	app.Post("/refresh-token", sc.UserHandler.RefreshToken) // Direct refresh token route
-	app.Post("/resend", sc.UserHandler.ResendActivation) // Direct resend route
-	
-	// Public routes under /api
+	// Public routes
 	public := app.Group("/api")
+	public.Post("/register", sc.UserHandler.Register)
+	public.Post("/login", sc.UserHandler.Login)
+	public.Post("/refresh-token", sc.UserHandler.RefreshToken) // Add refresh token route
 	public.Get("/activate", sc.UserHandler.ActivateAccount)
 	public.Post("/resend-activation", sc.UserHandler.ResendActivation)
-	public.Get("/search", sc.UserHandler.SearchUsers)
+	// Removing public search for security - only allow authenticated users to search
+	// public.Get("/search", sc.UserHandler.Search)
+	
+	// Adding a separate route for resend that doesn't require authentication
+	app.Post("/resend", sc.UserHandler.ResendActivation) // Used by frontend without /api prefix
 
 	// Protected routes
 	protected := app.Group("/api", sc.AuthService.JWTMiddleware)
@@ -62,6 +63,9 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile)
 	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
 	protected.Post("/wallet", sc.UserHandler.ManageWallet)
+	
+	// Search endpoint - only available to authenticated users
+	protected.Get("/search", sc.UserHandler.SearchUsers)
 	
 	// Escrow routes
 	protected.Post("/escrows", sc.EscrowHandler.CreateEscrow)

@@ -113,23 +113,8 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 	h.DB.Save(transaction)
 
 	return c.JSON(fiber.Map{
-		"data": fiber.Map{
-			"transaction": fiber.Map{
-				"id":              transaction.ID,
-				"escrow_id":       transaction.EscrowID,
-				"buyer_id":        transaction.BuyerID,
-				"transaction_ref": transaction.TransactionRef,
-				"amount":          transaction.Amount,
-				"currency":        transaction.Currency,
-				"status":          transaction.Status,
-				"payment_url":     transaction.PaymentURL,
-				"created_at":      transaction.CreatedAt,
-				"updated_at":      transaction.UpdatedAt,
-			},
-			"payment_url": paymentURL,
-		},
-		"status":  "success",
-		"message": "Payment initiated successfully",
+		"transaction": transaction,
+		"payment_url": paymentURL,
 	})
 }
 
@@ -145,29 +130,5 @@ func (h *PaymentHandler) GetTransactions(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	// Calculate total count
-	total := len(transactions)
-
-	// Format response to match expected API response
-	var formattedTransactions []interface{}
-	for _, transaction := range transactions {
-		formattedTransactions = append(formattedTransactions, fiber.Map{
-			"id":              transaction.ID,
-			"escrow_id":       transaction.EscrowID,
-			"buyer_id":        transaction.BuyerID,
-			"transaction_ref": transaction.TransactionRef,
-			"amount":          transaction.Amount,
-			"currency":        transaction.Currency,
-			"status":          transaction.Status,
-			"payment_url":     transaction.PaymentURL,
-			"created_at":      transaction.CreatedAt,
-			"updated_at":      transaction.UpdatedAt,
-		})
-	}
-
-	return c.JSON(fiber.Map{
-		"transactions": formattedTransactions,
-		"total":        total,
-		"status":       "success",
-	})
+	return c.JSON(transactions)
 }
