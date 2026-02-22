@@ -320,7 +320,7 @@ func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 				"users":      users,
 				"pagination": fiber.Map{},
 			},
-			"message": "Users retrieved successfully",
+			"message": "All users retrieved successfully",
 		})
 	}
 
