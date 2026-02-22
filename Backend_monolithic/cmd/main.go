@@ -30,6 +30,7 @@ func main() {
 	allowedOrigins := []string{
 		"https://safe-deal.vercel.app",
 		"https://elida-necktieless-unaspiringly.ngrok-free.dev",
+		"http://localhost:3000", // Standard for React/Next.js
 	}
 
 	

@@ -32,7 +32,7 @@ const UserSearch = () => {
       console.error('Error loading users:', error);
       // Fallback: try to get users with a common letter
       try {
-        const fallbackResponse = await userApi.searchUsers('a');
+        const fallbackResponse = await userApi.searchUsers('@');
         setAllUsers(fallbackResponse.data.users || []);
       } catch (fallbackError) {
         console.error('Fallback search also failed:', fallbackError);
