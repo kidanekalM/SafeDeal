@@ -30,7 +30,7 @@ const UserSearch = () => {
 
     try {
       const response = await userApi.searchUsers(query);
-      const users = response.data.users || [];
+      const users = response.data.data.users || [];
       setSearchResults(users);
       console.log('Server-side search results:', users.length, 'users');
     } catch (error: any) {

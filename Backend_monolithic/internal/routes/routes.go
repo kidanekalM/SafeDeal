@@ -44,7 +44,7 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 
 func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	// Public routes
-	public := app.Group("/api")
+	public := app.Group("")
 	public.Post("/register", sc.UserHandler.Register)
 	public.Post("/login", sc.UserHandler.Login)
 	public.Post("/refresh-token", sc.UserHandler.RefreshToken) // Add refresh token route
