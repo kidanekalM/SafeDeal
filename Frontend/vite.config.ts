@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 
 export default defineConfig({
   plugins: [
@@ -57,5 +58,18 @@ export default defineConfig({
     allowedHosts: [
       "elida-necktieless-unaspiringly.ngrok-free.dev"
     ]
-  }
+  },
+  
+  define: {
+    global: 'globalThis',
+  },
+  
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
 })

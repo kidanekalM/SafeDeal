@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotificationToast from "./components/NotificationToast";
 import Contacts from "./pages/Contacts";
+import CbeVerificationTest from "./pages/CbeVerificationTest";
 
 export type Lang = 'en' | 'am';
 export const LanguageContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'en', setLang: () => {} });
@@ -329,6 +330,13 @@ function App() {
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/cbe-test"
+            element={
+                <CbeVerificationTest />
             }
           />
 

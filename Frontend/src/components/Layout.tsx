@@ -55,10 +55,18 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Transactions', href: '/transactions', icon: CreditCard },
     { name: 'Profile', href: '/profile', icon: User },
   ];
+  
+  // Only add CBE test page in development mode
+  const devNavigation = (import.meta as any).env.DEV 
+    ? [{ name: 'CBE Test', href: '/cbe-test', icon: Shield }] 
+    : [];
+    
+  const navigationWithDev = [...normalNavigation, ...devNavigation];
+  
   const adminNavigation = [
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
   ];
- const navigation = user?.id === 2 ? adminNavigation : normalNavigation;
+ const navigation = user?.id === 2 ? adminNavigation : navigationWithDev;
   const isActive = (path: string) => location.pathname === path;
 
   return (
