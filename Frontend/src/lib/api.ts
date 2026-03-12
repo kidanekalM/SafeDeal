@@ -242,7 +242,10 @@ export const wsApi = {
         const qs = token ? `?token=${encodeURIComponent(token)}` : '';
         const wsUrl = `${wsBase}/api/notifications/ws${qs}`;
         try {
-            return new WebSocket(wsUrl);
+            const ws = new WebSocket(wsUrl);
+            // Set binary type to handle different message formats
+            ws.binaryType = 'arraybuffer';
+            return ws;
         } catch (error) {
             const dummy = new WebSocket('ws://localhost:0');
             try { dummy.close(); } catch { }

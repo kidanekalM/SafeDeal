@@ -91,13 +91,14 @@ export const useNotificationStore = create<NotificationStore>()(
 
         set({ notifications: sorted, unreadCount });
       },
-}),
-{
-  name: 'notification-storage',
-  // Only persist notifications and unreadCount for immediate availability
-  partialize: (state) => ({
-    notifications: state.notifications,
-    unreadCount: state.unreadCount,
-  }),
-}
-));
+    }),
+    {
+      name: 'notification-storage',
+      // Only persist notifications and unreadCount for immediate availability
+      partialize: (state) => ({
+        notifications: state.notifications,
+        unreadCount: state.unreadCount,
+      }),
+    }
+  )
+);

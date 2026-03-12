@@ -14,13 +14,20 @@ export function formatCurrency(amount: number, currency: string = 'ETB'): string
 }
 
 export function formatDate(date: string | Date): string {
+    // Check if the date is valid
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime()) || date === '0001-01-01T00:00:00Z') {
+        // Return a default value or handle the invalid date case
+        return 'Invalid date';
+    }
+    
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-    }).format(new Date(date));
+    }).format(dateObj);
 }
 
 // Server time offset (difference between server and client time)
@@ -40,8 +47,14 @@ export function getServerTime(): Date {
 
 // Format relative time based on server time
 export function formatRelativeTimeFromServer(date: string | Date, serverCurrentTime?: Date): string {
+    const dateObj = new Date(date);
+    // Check if date is valid
+    if (isNaN(dateObj.getTime()) || date === '0001-01-01T00:00:00Z') {
+        return 'Invalid date';
+    }
+    
     const now = serverCurrentTime || getServerTime();
-    const targetDate = new Date(date);
+    const targetDate = dateObj;
     const diffInSeconds = Math.floor((now.getTime() - targetDate.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
@@ -62,8 +75,14 @@ export function formatRelativeTimeFromServer(date: string | Date, serverCurrentT
 
 // Legacy function for backward compatibility (uses client time)
 export function formatRelativeTime(date: string | Date): string {
+    const dateObj = new Date(date);
+    // Check if date is valid
+    if (isNaN(dateObj.getTime()) || date === '0001-01-01T00:00:00Z') {
+        return 'Invalid date';
+    }
+    
     const now = new Date();
-    const targetDate = new Date(date);
+    const targetDate = dateObj;
     const diffInSeconds = Math.floor((now.getTime() - targetDate.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
@@ -146,12 +165,14 @@ export function generateId(): string {
 }
 
 export function debounce<T extends (...args: any[]) => any>(
-    func: T,
-    wait: number
+  func: T,
+  wait: number
 ): (...args: Parameters<T>) => void {
-    let timeout: number;
-    return (...args: Parameters<T>) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
+  let timeout: number | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = window.setTimeout(() => func(...args), wait) as unknown as number;
+  };
 }
