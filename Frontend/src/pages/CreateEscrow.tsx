@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User as UserIcon, DollarSign, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, DollarSign, Shield, CheckCircle, Plus, Minus } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { escrowApi } from '../lib/api';
 import { toast } from 'react-hot-toast';
-import { CreateEscrowRequest } from '../types';
+import { CreateEscrowRequest, Milestone } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 
@@ -17,6 +17,21 @@ const CreateEscrow = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedSeller, setSelectedSeller] = useState<{ id: number; name: string } | null>(null);
+  const [useMilestones, setUseMilestones] = useState(false);
+  const [milestones, setMilestones] = useState<Milestone[]>([
+    { 
+      id: Date.now(), 
+      title: '', 
+      description: '', 
+      amount: 0, 
+      due_date: '', 
+      order_index: 0, 
+      status: 'Pending' as const,
+      escrow_id: 0,
+      approver_id: user?.id
+    }
+  ]);
+  const [totalMilestoneAmount, setTotalMilestoneAmount] = useState(0);
 
   const {
     register,
@@ -24,6 +39,7 @@ const CreateEscrow = () => {
     formState: { errors },
     watch,
     setValue,
+    getValues,
   } = useForm<
     CreateEscrowRequest & {
       seller_name: string;
@@ -40,7 +56,6 @@ const CreateEscrow = () => {
     }
   >();
 
-
   // Pre-fill seller name/id if coming from search
   useEffect(() => {
     const sellerName = searchParams.get('seller');
@@ -55,6 +70,43 @@ const CreateEscrow = () => {
       setValue('seller_id' as any, sellerId);
     }
   }, [searchParams, setValue]);
+
+  // Recalculate total milestone amount when milestones change
+  useEffect(() => {
+    const total = milestones.reduce((sum, milestone) => sum + milestone.amount, 0);
+    setTotalMilestoneAmount(total);
+  }, [milestones]);
+
+  // Function to add a new milestone
+  const addMilestone = () => {
+    const newMilestone: Milestone = {
+      id: Date.now() + Math.floor(Math.random() * 1000), // Ensure uniqueness
+      title: '',
+      description: '',
+      amount: 0,
+      due_date: '',
+      order_index: milestones.length,
+      status: 'Pending',
+      escrow_id: 0,
+      approver_id: user?.id
+    };
+    setMilestones([...milestones, newMilestone]);
+  };
+
+  // Remove a milestone
+  const removeMilestone = (index: number) => {
+    if (milestones.length <= 1) return;
+    const newMilestones = [...milestones];
+    newMilestones.splice(index, 1);
+    setMilestones(newMilestones);
+  };
+
+  // Update a milestone property
+  const updateMilestone = (index: number, field: keyof Milestone, value: any) => {
+    const newMilestones = [...milestones];
+    newMilestones[index] = { ...newMilestones[index], [field]: value };
+    setMilestones(newMilestones);
+  };
 
   const buildConditionsText = (
     data: Partial<{
@@ -172,6 +224,24 @@ const CreateEscrow = () => {
         return;
       }
 
+      // If using milestones, validate them
+      if (useMilestones) {
+        if (milestones.some(m => !m.title.trim())) {
+          toast.error('All milestones must have titles');
+          return;
+        }
+        
+        if (milestones.some(m => m.amount <= 0)) {
+          toast.error('All milestones must have positive amounts');
+          return;
+        }
+        
+        if (totalMilestoneAmount !== data.amount) {
+          toast.error(`Milestone total (${formatCurrency(totalMilestoneAmount)}) must match escrow amount (${formatCurrency(data.amount)})`);
+          return;
+        }
+      }
+
       // Create the escrow request with only the required fields
       // The backend will automatically set buyer_id from the authenticated user
       // Compose a presentable conditions string from all inputs
@@ -191,6 +261,7 @@ const CreateEscrow = () => {
         seller_id: sellerId,
         amount: parseFloat(data.amount.toString()),
         conditions: composedConditions,
+        ...(useMilestones && { milestones: milestones.map(({ id, ...rest }) => rest) }),
       };
 
       
@@ -398,335 +469,279 @@ const CreateEscrow = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Step 1: Seller Details */}
             {step === 1 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Seller Information
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Search for the seller or enter their ID
-                  </p>
-                </div>
-
-                <div>
-                  <div className="mb-3">
-                    <Link to="/search" className="btn btn-outline btn-sm w-full sm:w-auto">Search Users</Link>
-                  </div>
-                  
-                  {selectedSeller ? (
-                    // Show selected seller from search
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Selected Seller
-                      </label>
-                      <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <UserIcon className="h-6 w-6 text-green-600" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">{selectedSeller.name}</p>
-                            <p className="text-sm text-gray-600">User ID: {selectedSeller.id}</p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedSeller(null);
-                            setValue('seller_name', '');
-                            setValue('seller_id' as any, '');
-                          }}
-                          className="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded text-sm font-medium transition-colors"
-                        >
-                          Change
-                        </button>
-                      </div>
-                      <p className="text-sm text-green-600 mt-2 flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Seller selected from search results
-                      </p>
-                    </div>
-                  ) : (
-                    // Show search requirement message
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        No Seller Selected
-                      </h4>
-                      <p className="text-gray-600 mb-4">
-                        Please use the search button above to find and select a seller for this escrow.
-                      </p>
-                      <Link to="/search" className="btn btn-primary btn-sm sm:btn-md w-full sm:w-auto">
-                        Search for Seller
-                      </Link>
-                    </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Seller ID
+                  </label>
+                  <input
+                    {...register('seller_id' as any, { required: true })}
+                    type="number"
+                    disabled={!!selectedSeller}
+                    className="input w-full"
+                    placeholder="Enter seller ID or select from search"
+                  />
+                  {errors.seller_id && (
+                    <p className="mt-1 text-sm text-red-600">Seller ID is required</p>
                   )}
                 </div>
 
-
-                {selectedSeller && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex">
-                      <Shield className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-medium text-gray-900 mb-2">Selected Seller</h3>
+                  {selectedSeller ? (
+                    <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-sm font-medium text-blue-900">
-                          Secure Transaction
-                        </h4>
-                        <p className="text-sm text-blue-700 mt-1">
-                          The seller's account status, bank details, and wallet will be validated when creating the escrow. Your funds will be held securely until the transaction is completed.
-                        </p>
+                        <p className="font-medium">{selectedSeller.name}</p>
+                        <p className="text-sm text-gray-600">ID: {selectedSeller.id}</p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSeller(null);
+                          setValue('seller_id' as any, '');
+                        }}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Clear
+                      </button>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-gray-600">No seller selected. Search for a user first.</p>
+                  )}
+                </div>
 
-              </motion.div>
+                <div className="flex justify-center">
+                  <Link
+                    to="/search"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Search for Seller
+                  </Link>
+                </div>
+              </div>
             )}
 
             {/* Step 2: Amount & Conditions */}
             {step === 2 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Transaction Details
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Specify the amount and conditions for your escrow
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Amount (ETB)
                   </label>
-                  <div className="relative">
-                    <input
-                      {...register('amount', {
-                        required: 'Amount is required',
-                        min: { value: 100, message: 'Minimum amount is 100 ETB' },
-                        max: { value: 1000000, message: 'Maximum amount is 1,000,000 ETB' }
-                      })}
-                      type="number"
-                      className="input w-full pl-8"
-                      placeholder="0.00"
-                      min="100"
-                      max="1000000"
-                    />
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  </div>
+                  <input
+                    {...register('amount', { required: true, valueAsNumber: true })}
+                    type="number"
+                    className="input w-full"
+                    placeholder="0.00"
+                  />
                   {errors.amount && (
-                    <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
+                    <p className="mt-1 text-sm text-red-600">Amount is required</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Item Description
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Conditions
                   </label>
                   <textarea
-                    {...register('item_description')}
-                    rows={3}
+                    {...register('conditions')}
+                    rows={4}
                     className="input w-full"
-                    placeholder="Describe the item/service being transacted"
+                    placeholder="Describe the terms and conditions of the escrow..."
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Delivery Date
+                {/* Milestone Toggle */}
+                <div className="pt-4">
+                  <div className="flex items-center">
+                    <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                      <input
+                        type="checkbox"
+                        checked={useMilestones}
+                        onChange={() => setUseMilestones(!useMilestones)}
+                        id="milestone-toggle"
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="milestone-toggle"
+                        className={`block h-6 w-10 rounded-full cursor-pointer ${
+                          useMilestones ? 'bg-primary-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                            useMilestones ? 'transform translate-x-4' : ''
+                          }`}
+                        />
+                      </label>
+                    </div>
+                    <label htmlFor="milestone-toggle" className="text-sm font-medium text-gray-700">
+                      Split into Milestones
                     </label>
-                    <input
-                      type="date"
-                      {...register('delivery_date')}
-                      className="input w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Delivery Method
-                    </label>
-                    <input
-                      type="text"
-                      {...register('delivery_method')}
-                      className="input w-full"
-                      placeholder="e.g., Courier, Pickup, Digital Delivery"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payment Release Condition
-                  </label>
-                  <textarea
-                    {...register('payment_release_condition')}
-                    rows={3}
-                    className="input w-full"
-                    placeholder="e.g., Release after delivery confirmation and quality inspection"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Inspection/Dispute Period (days)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      {...register('inspection_period_days', { valueAsNumber: true })}
-                      className="input w-full"
-                      placeholder="e.g., 3"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Governing Law / Jurisdiction
-                    </label>
-                    <select
-                      {...register('governing_law')}
-                      className="input w-full"
-                    >
-                      <option value="Ethiopia">Ethiopia</option>
-                      <option value="Eritrea">Eritrea</option>
-                      <option value="Somalia">Somalia</option>
-                      <option value="Sudan">Sudan</option>
-                      <option value="Kenya">Kenya</option>
-                      <option value="Uganda">Uganda</option>
-                      <option value="Tanzania">Tanzania</option>
-                      <option value="Burundi">Burundi</option>
-                      <option value="Rwanda">Rwanda</option>
-                      <option value="Other">Other</option>
-                    </select>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Refund Policy
-                  </label>
-                  <textarea
-                    {...register('refund_policy')}
-                    rows={3}
-                    className="input w-full"
-                    placeholder="Describe the refund policy (if applicable)"
-                  />
-                </div>
+                {/* Milestone Form */}
+                {useMilestones && (
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-gray-900">Milestones</h3>
+                      <button
+                        type="button"
+                        onClick={addMilestone}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Milestone
+                      </button>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Details (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    {...register('contact_details')}
-                    className="input w-full"
-                    placeholder="Phone or email for updates/issues"
-                  />
-                </div>
+                    {milestones.map((milestone, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-sm font-medium text-gray-700">Milestone #{index + 1}</h4>
+                          {milestones.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeMilestone(index)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Additional Notes (Optional)
-                  </label>
-                  <textarea
-                    {...register('additional_notes')}
-                    rows={3}
-                    className="input w-full"
-                    placeholder="Any extra notes to include in the agreement"
-                  />
-                </div>
-              </motion.div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">
+                            Title *
+                          </label>
+                          <input
+                            type="text"
+                            value={milestone.title}
+                            onChange={(e) => updateMilestone(index, 'title', e.target.value)}
+                            className="input w-full"
+                            placeholder="Milestone title"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            value={milestone.description}
+                            onChange={(e) => updateMilestone(index, 'description', e.target.value)}
+                            className="input w-full"
+                            placeholder="Description of milestone"
+                            rows={2}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">
+                              Amount *
+                            </label>
+                            <input
+                              type="number"
+                              value={milestone.amount}
+                              onChange={(e) => updateMilestone(index, 'amount', parseFloat(e.target.value) || 0)}
+                              className="input w-full"
+                              placeholder="0.00"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">
+                              Due Date (optional)
+                            </label>
+                            <input
+                              type="date"
+                              value={milestone.due_date}
+                              onChange={(e) => updateMilestone(index, 'due_date', e.target.value)}
+                              className="input w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="pt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">Total:</span>
+                        <span className={`text-sm font-semibold ${
+                          totalMilestoneAmount === watch('amount')
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}>
+                          {formatCurrency(totalMilestoneAmount)}
+                          {watch('amount') && totalMilestoneAmount !== watch('amount') && (
+                            <span className="ml-2 text-xs">
+                              (Should match escrow amount: {formatCurrency(watch('amount') || 0)})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
-            {/* Step 3: Review & Create */}
+            {/* Step 3: Review & Confirm */}
             {step === 3 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Review Your Escrow
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Please review all details before creating the escrow
+                  <h3 className="text-lg font-medium text-gray-900">Review Escrow Details</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Please review the details before creating the escrow
                   </p>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Seller ID:</span>
-                    <span className="font-medium">{watch('seller_id' as any)}</span>
-                  </div>
-                  {watch('seller_name') && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Seller Name:</span>
-                      <span className="font-medium">{watch('seller_name')}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-medium">{formatCurrency(watch('amount') || 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">
-                      {formatCurrency((watch('amount') || 0))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t pt-4">
-                    <span className="text-gray-600">Total to Pay:</span>
-                    <span className="font-bold text-lg">
-                      {formatCurrency((watch('amount') || 0))}
-                    </span>
-                  </div>
-                  {(() => {
-                    const v = watch();
-                    const preview = buildConditionsText({
-                      item_description: v?.item_description,
-                      delivery_date: v?.delivery_date,
-                      delivery_method: v?.delivery_method,
-                      payment_release_condition: v?.payment_release_condition,
-                      inspection_period_days: v?.inspection_period_days,
-                      refund_policy: v?.refund_policy,
-                      governing_law: v?.governing_law,
-                      contact_details: v?.contact_details,
-                      additional_notes: v?.additional_notes,
-                    });
-                    return preview ? (
-                      <div>
-                        <span className="text-gray-600 block mb-2">Composed Conditions:</span>
-                        <pre className="text-sm bg-white p-3 rounded border whitespace-pre-wrap">{preview}</pre>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex">
-                    <Shield className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
+                <div className="border border-gray-200 rounded-lg divide-y divide-gray-200">
+                  <div className="p-4 grid grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium text-yellow-900">
-                        Important Notice
-                      </h4>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        Once created, the escrow will be sent to the seller for acceptance. 
-                        You will be able to make payment only after the seller accepts the escrow.
+                      <p className="text-sm text-gray-600">Seller</p>
+                      <p className="font-medium">
+                        {selectedSeller ? selectedSeller.name : 'Not selected'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Amount</p>
+                      <p className="font-medium">{formatCurrency(watch('amount') || 0)}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-600">Conditions</p>
+                      <p className="font-medium text-sm whitespace-pre-line">
+                        {watch('conditions') || 'No conditions specified'}
                       </p>
                     </div>
                   </div>
+
+                  {useMilestones && milestones.length > 0 && (
+                    <div className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Milestones</h4>
+                      <div className="space-y-2">
+                        {milestones.map((milestone, index) => (
+                          <div key={index} className="flex justify-between text-sm">
+                            <span>
+                              {milestone.title || 'Untitled Milestone'} - {formatCurrency(milestone.amount)}
+                              {milestone.due_date && ` (Due: ${milestone.due_date})`}
+                            </span>
+                            <span className="text-gray-500">
+                              {milestone.order_index + 1}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between pt-2 border-t border-gray-200 font-medium">
+                          <span>Total:</span>
+                          <span>{formatCurrency(totalMilestoneAmount)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Navigation Buttons */}
@@ -752,6 +767,33 @@ const CreateEscrow = () => {
                         return;
                       }
                     }
+                    
+                    // Validate amount on step 2
+                    if (step === 2) {
+                      const amount = watch('amount');
+                      if (!amount || amount <= 0) {
+                        toast.error('Please enter a valid amount');
+                        return;
+                      }
+                      
+                      if (useMilestones) {
+                        if (milestones.some(m => !m.title.trim())) {
+                          toast.error('All milestones must have titles');
+                          return;
+                        }
+                        
+                        if (milestones.some(m => m.amount <= 0)) {
+                          toast.error('All milestones must have positive amounts');
+                          return;
+                        }
+                        
+                        if (totalMilestoneAmount !== amount) {
+                          toast.error(`Milestone total (${formatCurrency(totalMilestoneAmount)}) must match escrow amount (${formatCurrency(amount)})`);
+                          return;
+                        }
+                      }
+                    }
+                    
                     setStep(step + 1);
                   }}
                   className="btn btn-primary btn-md"

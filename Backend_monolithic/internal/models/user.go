@@ -23,8 +23,8 @@ type User struct {
 
 type BankDetails struct {
 	gorm.Model
-	UserID      uint   `json:"user_id" gorm:"not null"`
-	AccountName string `json:"account_name" validate:"required"`
+	UserID        uint   `json:"user_id" gorm:"not null"`
+	AccountName   string `json:"account_name" validate:"required"`
 	AccountNumber string `json:"account_number" validate:"required"`
-	BankCode    int    `json:"bank_code" validate:"required"`
+	BankCode      int    `json:"bank_code" validate:"required"`
 }

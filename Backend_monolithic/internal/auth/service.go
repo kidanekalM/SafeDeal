@@ -1,15 +1,15 @@
 package auth
 
 import (
-	"errors"
-	"net/http"
-	"os"
-	"time"
-	"github.com/gofiber/fiber/v2"
 	"backend_monolithic/internal/models"
+	"errors"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"net/http"
+	"os"
+	"time"
 )
 
 type Service struct {

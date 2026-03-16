@@ -25,12 +25,12 @@ type ChapaRequest struct {
 	Email             string `json:"email"`
 	FirstName         string `json:"first_name,omitempty"`
 	LastName          string `json:"last_name,omitempty"`
-	PhoneNumber       string `json:"phone_number,omitempty"` 
+	PhoneNumber       string `json:"phone_number,omitempty"`
 	TxRef             string `json:"tx_ref"`
 	CallbackURL       string `json:"callback_url"`
 	ReturnURL         string `json:"return_url"`
-	CustomTitle       string `json:"customization[title]"`     
-	CustomDescription string `json:"customization[description]"` 
+	CustomTitle       string `json:"customization[title]"`
+	CustomDescription string `json:"customization[description]"`
 	HideReceipt       string `json:"meta[hide_receipt]"`
 }
 
@@ -41,7 +41,6 @@ type ChapaResponse struct {
 	} `json:"data"`
 	Message string `json:"message"`
 }
-
 
 func (c *ChapaClient) InitiatePayment(req ChapaRequest) (string, string, error) {
 	body, _ := json.Marshal(req)
@@ -98,7 +97,7 @@ func (c *ChapaClient) InitiatePayment(req ChapaRequest) (string, string, error) 
 
 	txRefRaw, ok := dataMap["tx_ref"]
 	if !ok || txRefRaw == nil {
-		return paymentURL, "", nil 
+		return paymentURL, "", nil
 	}
 
 	txRef, ok := txRefRaw.(string)

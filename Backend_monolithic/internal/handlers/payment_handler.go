@@ -63,11 +63,11 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 
 	// Create transaction record
 	transaction := &models.Transaction{
-		EscrowID:   req.EscrowID,
-		BuyerID:    userID,
-		Amount:     req.Amount,
-		Currency:   "ETB",
-		Status:     "Pending",
+		EscrowID:       req.EscrowID,
+		BuyerID:        userID,
+		Amount:         req.Amount,
+		Currency:       "ETB",
+		Status:         "Pending",
 		TransactionRef: fmt.Sprintf("TXN_%d_%d", req.EscrowID, time.Now().Unix()),
 	}
 
@@ -86,16 +86,16 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 	}
 
 	paymentReq := chapa.ChapaRequest{
-		Amount: fmt.Sprintf("%.2f", float64(req.Amount)),
-		Currency: "ETB",
-		Email: user.Email,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		TxRef: transaction.TransactionRef,
-		CallbackURL: fmt.Sprintf("https://yoursite.com/api/payments/callback/%s", transaction.TransactionRef),
-		CustomTitle: "Escrow Payment",
+		Amount:            fmt.Sprintf("%.2f", float64(req.Amount)),
+		Currency:          "ETB",
+		Email:             user.Email,
+		FirstName:         user.FirstName,
+		LastName:          user.LastName,
+		TxRef:             transaction.TransactionRef,
+		CallbackURL:       fmt.Sprintf("https://yoursite.com/api/payments/callback/%s", transaction.TransactionRef),
+		CustomTitle:       "Escrow Payment",
 		CustomDescription: "Secure escrow transaction via Chapa",
-		HideReceipt: "true",
+		HideReceipt:       "true",
 	}
 
 	paymentURL, _, err := chapaClient.InitiatePayment(paymentReq)
@@ -109,7 +109,7 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 	// Update transaction with payment URL
 	transaction.PaymentURL = paymentURL
 	transaction.Status = "Pending"
-	
+
 	h.DB.Save(transaction)
 
 	return c.JSON(fiber.Map{

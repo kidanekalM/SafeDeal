@@ -56,5 +56,5 @@ func main() {
 
     internal.SetupRoutes(app, db.DB)
 
-    app.Listen(":8081")
+    app.Listen(":8080")
 }

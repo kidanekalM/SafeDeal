@@ -707,6 +707,59 @@ const EscrowDetails = () => {
                     </div>
                   );
                 })()}
+                
+                {/* Milestones section if any exist */}
+                {escrow.milestones && escrow.milestones.length > 0 && (
+                  <div className="pt-6 border-t border-gray-200">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">Milestones</h4>
+                    <div className="space-y-4">
+                      {escrow.milestones.map((milestone) => (
+                        <div 
+                          key={milestone.id} 
+                          className={`p-4 rounded-lg border ${
+                            milestone.status === 'Pending' ? 'border-yellow-200 bg-yellow-50' :
+                            milestone.status === 'Funded' ? 'border-blue-200 bg-blue-50' :
+                            milestone.status === 'Submitted' ? 'border-purple-200 bg-purple-50' :
+                            milestone.status === 'Approved' ? 'border-green-200 bg-green-50' :
+                            milestone.status === 'Rejected' ? 'border-red-200 bg-red-50' :
+                            milestone.status === 'Released' ? 'border-indigo-200 bg-indigo-50' :
+                            'border-gray-200 bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h5 className="font-medium text-gray-900">{milestone.title}</h5>
+                              <p className="text-sm text-gray-600 mt-1">{milestone.description}</p>
+                              <div className="flex items-center space-x-4 mt-2 text-sm">
+                                <span className="text-gray-700">Amount: {formatCurrency(milestone.amount)}</span>
+                                <span className="text-gray-700">Status: <span className="font-medium">{milestone.status}</span></span>
+                                {milestone.approver && (
+                                  <span className="text-gray-700">Approver: {milestone.approver.first_name} {milestone.approver.last_name}</span>
+                                )}
+                              </div>
+                              {milestone.due_date && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  Due: {formatDateSafe(milestone.due_date)}
+                                </div>
+                              )}
+                            </div>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              milestone.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                              milestone.status === 'Funded' ? 'bg-blue-100 text-blue-800' :
+                              milestone.status === 'Submitted' ? 'bg-purple-100 text-purple-800' :
+                              milestone.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                              milestone.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                              milestone.status === 'Released' ? 'bg-indigo-100 text-indigo-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {milestone.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {escrow.blockchain_tx_hash && (
                   <div>

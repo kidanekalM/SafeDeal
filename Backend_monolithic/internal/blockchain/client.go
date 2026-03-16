@@ -30,7 +30,7 @@ func NewClient() (*Client, error) {
 		log.Print("empty ETHEREUM_NODE_URL")
 		return nil, fmt.Errorf("ETHEREUM_NODE_URL is not set")
 	}
-	
+
 	privateKeyStr := os.Getenv("PRIVATE_KEY")
 	if privateKeyStr == "" {
 		log.Print("empty PRIVATE_KEY")

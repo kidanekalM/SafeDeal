@@ -20,4 +20,3 @@ func (p *Producer) Close() error {
 	// Mock implementation - nothing to close
 	return nil
 }
-

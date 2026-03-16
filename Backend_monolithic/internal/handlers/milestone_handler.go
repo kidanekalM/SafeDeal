@@ -26,13 +26,13 @@ func (h *MilestoneHandler) CreateMilestone(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		EscrowID     uint   `json:"escrow_id" validate:"required"`
-		Title        string `json:"title" validate:"required"`
-		Description  string `json:"description"`
-		Amount       uint   `json:"amount" validate:"required,gt=0"`
-		DueDate      string `json:"due_date"`
-		OrderIndex   int    `json:"order_index"`
-		ApproverID   *uint  `json:"approver_id"` // Optional - can be assigned later
+		EscrowID       uint    `json:"escrow_id" validate:"required"`
+		Title          string  `json:"title" validate:"required"`
+		Description    string  `json:"description"`
+		Amount         uint    `json:"amount" validate:"required,gt=0"`
+		DueDate        string  `json:"due_date"`
+		OrderIndex     int     `json:"order_index"`
+		ApproverID     *uint   `json:"approver_id"` // Optional - can be assigned later
 		DeliverableURL *string `json:"deliverable_url"`
 	}
 
@@ -69,14 +69,14 @@ func (h *MilestoneHandler) CreateMilestone(c *fiber.Ctx) error {
 	}
 
 	milestone := &models.Milestone{
-		EscrowID:     req.EscrowID,
-		Title:        req.Title,
-		Description:  req.Description,
-		Amount:       req.Amount,
-		DueDate:      &req.DueDate,
-		Status:       models.MilestonePending,
-		OrderIndex:   req.OrderIndex,
-		ApproverID:   req.ApproverID,
+		EscrowID:       req.EscrowID,
+		Title:          req.Title,
+		Description:    req.Description,
+		Amount:         req.Amount,
+		DueDate:        &req.DueDate,
+		Status:         models.MilestonePending,
+		OrderIndex:     req.OrderIndex,
+		ApproverID:     req.ApproverID,
 		DeliverableURL: req.DeliverableURL,
 	}
 
@@ -109,8 +109,8 @@ func (h *MilestoneHandler) GetMilestone(c *fiber.Ctx) error {
 	}
 
 	// Check if the user is involved in the parent escrow
-	if milestone.Escrow.BuyerID != userID && milestone.Escrow.SellerID != userID && 
-	   (milestone.ApproverID != nil && *milestone.ApproverID != userID) {
+	if milestone.Escrow.BuyerID != userID && milestone.Escrow.SellerID != userID &&
+		(milestone.ApproverID != nil && *milestone.ApproverID != userID) {
 		return c.Status(403).JSON(fiber.Map{"error": "Forbidden"})
 	}
 
@@ -185,11 +185,11 @@ func (h *MilestoneHandler) UpdateMilestone(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		Title        *string `json:"title"`
-		Description  *string `json:"description"`
-		DueDate      *string `json:"due_date"`
-		OrderIndex   *int    `json:"order_index"`
-		ApproverID   *uint   `json:"approver_id"`
+		Title          *string `json:"title"`
+		Description    *string `json:"description"`
+		DueDate        *string `json:"due_date"`
+		OrderIndex     *int    `json:"order_index"`
+		ApproverID     *uint   `json:"approver_id"`
 		DeliverableURL *string `json:"deliverable_url"`
 	}
 
@@ -198,7 +198,7 @@ func (h *MilestoneHandler) UpdateMilestone(c *fiber.Ctx) error {
 	}
 
 	updates := make(map[string]interface{})
-	
+
 	if req.Title != nil {
 		updates["title"] = *req.Title
 	}
