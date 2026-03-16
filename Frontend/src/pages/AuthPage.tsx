@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Shield, ArrowLeft } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import { useLocation, useNavigate } from 'react-router-dom';
-import GreenGirl from '../assets/GreenGirl.jpg';
+import GreenGirl from '../assets/GreenGirl.png';
 
 const AuthPage = () => {
   const location = useLocation();
@@ -13,7 +13,7 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
       <div
-        className="hidden md:flex relative items-center justify-center p-12 bg-black"
+        className="hidden md:flex relative items-start justify-center p-12 bg-black"
         style={{ backgroundImage: `url(${GreenGirl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
       >
         <div className="absolute inset-0 bg-black/50" />
@@ -25,7 +25,6 @@ const AuthPage = () => {
             <span className="text-3xl font-semibold">SafeDeal</span>
           </div>
           <h1 className="text-4xl font-bold mb-3">Transfer with confidence</h1>
-          <p className="text-gray-200">Secure deals from around the world</p>
         </div>
       </div>
 
