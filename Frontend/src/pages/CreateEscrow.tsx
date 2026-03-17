@@ -28,7 +28,17 @@ const CreateEscrow = () => {
       order_index: 0, 
       status: 'Pending' as const,
       escrow_id: 0,
-      approver_id: user?.id
+      approver_id: user?.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      // Court-compliant fields (with defaults)
+      milestone_name: '',
+      completion_status: 'Pending',
+      completion_timestamp: '',
+      approved_by: undefined,
+      evidence_uri: '',
+      auto_release: false,
+      required_approvals: 1
     }
   ]);
   const [totalMilestoneAmount, setTotalMilestoneAmount] = useState(0);
@@ -88,7 +98,15 @@ const CreateEscrow = () => {
       order_index: milestones.length,
       status: 'Pending',
       escrow_id: 0,
-      approver_id: user?.id
+      approver_id: user?.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      // Court-compliant fields
+      milestone_name: '',
+      completion_status: '',
+      completion_timestamp: '',
+      approved_by: undefined,
+      evidence_uri: '',
     };
     setMilestones([...milestones, newMilestone]);
   };
@@ -540,15 +558,179 @@ const CreateEscrow = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Conditions
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Item Description (optional)
                   </label>
                   <textarea
-                    {...register('conditions')}
-                    rows={4}
-                    className="input w-full"
-                    placeholder="Describe the terms and conditions of the escrow..."
+                    {...register('item_description')}
+                    className="input input-bordered w-full"
+                    placeholder="Describe the item or service being purchased"
+                    rows={3}
                   />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Delivery Date (optional)
+                    </label>
+                    <input
+                      type="date"
+                      {...register('delivery_date')}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Delivery Method (optional)
+                    </label>
+                    <input
+                      type="text"
+                      {...register('delivery_method')}
+                      className="input input-bordered w-full"
+                      placeholder="How will the item/service be delivered?"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Release Condition (optional)
+                  </label>
+                  <input
+                    type="text"
+                    {...register('payment_release_condition')}
+                    className="input input-bordered w-full"
+                    placeholder="Under what conditions should payment be released?"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Inspection Period (days, optional)
+                    </label>
+                    <input
+                      type="number"
+                      {...register('inspection_period_days', { valueAsNumber: true })}
+                      className="input input-bordered w-full"
+                      placeholder="Days for inspection"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Governing Law (optional)
+                    </label>
+                    <input
+                      type="text"
+                      {...register('governing_law')}
+                      className="input input-bordered w-full"
+                      placeholder="Which jurisdiction governs this agreement?"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Jurisdiction (optional)
+                    </label>
+                    <input
+                      type="text"
+                      {...register('jurisdiction')}
+                      className="input input-bordered w-full"
+                      placeholder="Legal jurisdiction for disputes"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Deadline (optional)
+                    </label>
+                    <input
+                      type="date"
+                      {...register('deadline')}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Contract Hash (optional)
+                    </label>
+                    <input
+                      type="text"
+                      {...register('contract_hash')}
+                      className="input input-bordered w-full"
+                      placeholder="Hash of contract document"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Document Storage URI (optional)
+                    </label>
+                    <input
+                      type="text"
+                      {...register('document_storage_uri')}
+                      className="input input-bordered w-full"
+                      placeholder="URI to full contract document"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Deposit Timestamp (optional)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      {...register('deposit_timestamp')}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Auto Release (optional)
+                    </label>
+                    <div className="flex items-center mt-2">
+                      <input
+                        type="checkbox"
+                        {...register('auto_release')}
+                        className="h-4 w-4 text-primary-600 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Enable automatic release after deadline</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Required Approvals (optional)
+                    </label>
+                    <input
+                      type="number"
+                      {...register('required_approvals', { valueAsNumber: true })}
+                      className="input input-bordered w-full"
+                      placeholder="Number of approvals required"
+                      min="1"
+                      max="10"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Evidence URI (optional)
+                    </label>
+                    <input
+                      type="text"
+                      {...register('evidence_uri')}
+                      className="input input-bordered w-full"
+                      placeholder="URI to evidence document"
+                    />
+                  </div>
                 </div>
 
                 {/* Milestone Toggle */}
@@ -583,105 +765,175 @@ const CreateEscrow = () => {
 
                 {/* Milestone Form */}
                 {useMilestones && (
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-gray-900">Milestones</h3>
-                      <button
-                        type="button"
-                        onClick={addMilestone}
-                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Milestone
-                      </button>
-                    </div>
-
-                    {milestones.map((milestone, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-sm font-medium text-gray-700">Milestone #{index + 1}</h4>
+                  <div className="space-y-6 pt-4 border-t border-gray-200">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium text-blue-800">Milestones</h3>
+                        <div className="text-sm text-blue-700">
+                          Total: {formatCurrency(totalMilestoneAmount)} / {formatCurrency(watch('amount') || 0)}
+                        </div>
+                      </div>
+                      
+                      {milestones.map((milestone, index) => (
+                        <div key={milestone.id} className="card p-4 mb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Title *
+                              </label>
+                              <input
+                                type="text"
+                                value={milestone.title}
+                                onChange={(e) => updateMilestone(index, 'title', e.target.value)}
+                                className="input input-bordered w-full"
+                                placeholder="Milestone title"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Amount *
+                              </label>
+                              <input
+                                type="number"
+                                value={milestone.amount}
+                                onChange={(e) => updateMilestone(index, 'amount', parseFloat(e.target.value) || 0)}
+                                className="input input-bordered w-full"
+                                placeholder="Amount"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Due Date (optional)
+                              </label>
+                              <input
+                                type="date"
+                                value={milestone.due_date || ''}
+                                onChange={(e) => updateMilestone(index, 'due_date', e.target.value)}
+                                className="input input-bordered w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Order Index
+                              </label>
+                              <input
+                                type="number"
+                                value={milestone.order_index}
+                                onChange={(e) => updateMilestone(index, 'order_index', parseInt(e.target.value) || 0)}
+                                className="input input-bordered w-full"
+                                min="0"
+                              />
+                            </div>
+                            
+                            {/* Court-compliant fields for milestones */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Completion Status
+                              </label>
+                              <select
+                                value={milestone.completion_status || 'Pending'}
+                                onChange={(e) => updateMilestone(index, 'completion_status', e.target.value)}
+                                className="input input-bordered w-full"
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Completed">Completed</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Auto Release
+                              </label>
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={!!milestone.auto_release}
+                                  onChange={(e) => updateMilestone(index, 'auto_release', e.target.checked)}
+                                  className="h-4 w-4 text-primary-600 rounded"
+                                />
+                                <span className="ml-2 text-sm text-gray-600">Enable automatic release</span>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Required Approvals
+                              </label>
+                              <input
+                                type="number"
+                                value={milestone.required_approvals || 1}
+                                onChange={(e) => updateMilestone(index, 'required_approvals', parseInt(e.target.value) || 1)}
+                                className="input input-bordered w-full"
+                                min="1"
+                                max="10"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Evidence URI
+                              </label>
+                              <input
+                                type="text"
+                                value={milestone.evidence_uri || ''}
+                                onChange={(e) => updateMilestone(index, 'evidence_uri', e.target.value)}
+                                className="input input-bordered w-full"
+                                placeholder="URI to evidence document"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Description
+                            </label>
+                            <textarea
+                              value={milestone.description}
+                              onChange={(e) => updateMilestone(index, 'description', e.target.value)}
+                              className="input input-bordered w-full"
+                              placeholder="Description of milestone requirements"
+                              rows={2}
+                            />
+                          </div>
+                          
                           {milestones.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeMilestone(index)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
+                            <div className="mt-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => removeMilestone(index)}
+                                className="btn btn-sm btn-error"
+                              >
+                                Remove Milestone
+                              </button>
+                            </div>
                           )}
                         </div>
-
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">
-                            Title *
-                          </label>
-                          <input
-                            type="text"
-                            value={milestone.title}
-                            onChange={(e) => updateMilestone(index, 'title', e.target.value)}
-                            className="input w-full"
-                            placeholder="Milestone title"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">
-                            Description
-                          </label>
-                          <textarea
-                            value={milestone.description}
-                            onChange={(e) => updateMilestone(index, 'description', e.target.value)}
-                            className="input w-full"
-                            placeholder="Description of milestone"
-                            rows={2}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">
-                              Amount *
-                            </label>
-                            <input
-                              type="number"
-                              value={milestone.amount}
-                              onChange={(e) => updateMilestone(index, 'amount', parseFloat(e.target.value) || 0)}
-                              className="input w-full"
-                              placeholder="0.00"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">
-                              Due Date (optional)
-                            </label>
-                            <input
-                              type="date"
-                              value={milestone.due_date}
-                              onChange={(e) => updateMilestone(index, 'due_date', e.target.value)}
-                              className="input w-full"
-                            />
-                          </div>
-                        </div>
+                      ))}
+                      
+                      <div className="mt-4">
+                        <button
+                          type="button"
+                          onClick={addMilestone}
+                          className="btn btn-outline btn-sm w-full"
+                        >
+                          + Add Another Milestone
+                        </button>
                       </div>
-                    ))}
-
-                    <div className="pt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-700">Total:</span>
-                        <span className={`text-sm font-semibold ${
-                          totalMilestoneAmount === watch('amount')
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}>
-                          {formatCurrency(totalMilestoneAmount)}
-                          {watch('amount') && totalMilestoneAmount !== watch('amount') && (
-                            <span className="ml-2 text-xs">
-                              (Should match escrow amount: {formatCurrency(watch('amount') || 0)})
-                            </span>
-                          )}
-                        </span>
-                      </div>
+                      
+                      {totalMilestoneAmount > 0 && totalMilestoneAmount !== (watch('amount') || 0) && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-700">
+                            ⚠️ Milestone total ({formatCurrency(totalMilestoneAmount)}) does not match escrow amount ({formatCurrency(watch('amount') || 0)})
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

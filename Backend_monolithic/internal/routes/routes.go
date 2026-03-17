@@ -19,7 +19,8 @@ type ServiceContainer struct {
 	PaymentHandler      *handlers.PaymentHandler
 	ChatHandler         *handlers.ChatHandler
 	NotificationHandler *handlers.NotificationHandler
-	MilestoneHandler    *handlers.MilestoneHandler
+MilestoneHandler    *handlers.MilestoneHandler
+	BlockChainClient *blockchain.Client
 }
 
 func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
@@ -37,7 +38,7 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		PaymentHandler:      handlers.NewPaymentHandler(db, authService, rabbitMQ),
 		ChatHandler:         handlers.NewChatHandler(db, authService),
 		NotificationHandler: handlers.NewNotificationHandler(db, authService),
-		MilestoneHandler:    handlers.NewMilestoneHandler(db),
+	MilestoneHandler: handlers.NewMilestoneHandler(db, sc.BlockChainClient),
 	}
 }
 

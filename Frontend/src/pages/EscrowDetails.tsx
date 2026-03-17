@@ -707,7 +707,56 @@ const EscrowDetails = () => {
                     </div>
                   );
                 })()}
-                
+
+                {/* Additional court-compliant fields */}
+                {(escrow.governing_law || escrow.jurisdiction || escrow.contract_hash || escrow.document_storage_uri || escrow.evidence_uri) && (
+                  <div className="pt-6 border-t border-gray-200">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">Legal Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {escrow.governing_law && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">
+                            Governing Law
+                          </label>
+                          <p className="text-gray-900 text-sm mt-1">{escrow.governing_law}</p>
+                        </div>
+                      )}
+                      {escrow.jurisdiction && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">
+                            Jurisdiction
+                          </label>
+                          <p className="text-gray-900 text-sm mt-1">{escrow.jurisdiction}</p>
+                        </div>
+                      )}
+                      {escrow.contract_hash && (
+                        <div className="col-span-2">
+                          <label className="text-sm font-medium text-gray-600">
+                            Contract Hash
+                          </label>
+                          <p className="text-gray-900 text-sm mt-1 font-mono break-all">{escrow.contract_hash}</p>
+                        </div>
+                      )}
+                      {escrow.document_storage_uri && (
+                        <div className="col-span-2">
+                          <label className="text-sm font-medium text-gray-600">
+                            Document Storage URI
+                          </label>
+                          <p className="text-gray-900 text-sm mt-1 font-mono break-all">{escrow.document_storage_uri}</p>
+                        </div>
+                      )}
+                      {escrow.evidence_uri && (
+                        <div className="col-span-2">
+                          <label className="text-sm font-medium text-gray-600">
+                            Evidence URI
+                          </label>
+                          <p className="text-gray-900 text-sm mt-1 font-mono break-all">{escrow.evidence_uri}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Milestones section if any exist */}
                 {escrow.milestones && escrow.milestones.length > 0 && (
                   <div className="pt-6 border-t border-gray-200">
@@ -740,6 +789,33 @@ const EscrowDetails = () => {
                               {milestone.due_date && (
                                 <div className="text-sm text-gray-600 mt-1">
                                   Due: {formatDateSafe(milestone.due_date)}
+                                </div>
+                              )}
+                              
+                              {/* Milestone court-compliant fields */}
+                              {milestone.completion_status && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  Completion Status: {milestone.completion_status}
+                                </div>
+                              )}
+                              {milestone.evidence_uri && (
+                                <div className="text-sm text-gray-600 mt-1">
+
+                                </div>
+                              )}
+                              {milestone.verification_method && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  Verification Method: {milestone.verification_method}
+                                </div>
+                              )}
+                              {milestone.required_approvals && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  Required Approvals: {milestone.required_approvals}
+                                </div>
+                              )}
+                              {milestone.contract_hash && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  Contract Hash: {truncateAddress(milestone.contract_hash)}
                                 </div>
                               )}
                             </div>

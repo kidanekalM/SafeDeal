@@ -38,10 +38,19 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		SellerID   uint             `json:"seller_id" validate:"required"`
-		Amount     uint             `json:"amount" validate:"required,gt=0"`
-		Conditions string           `json:"conditions"`
-		Milestones []models.Milestone `json:"milestones,omitempty"` // Optional milestones
+		SellerID       uint             `json:"seller_id" validate:"required"`
+		Amount         uint             `json:"amount" validate:"required,gt=0"`
+		Conditions     string           `json:"conditions"`
+		Milestones     []models.Milestone `json:"milestones,omitempty"` // Optional milestones
+		GoverningLaw   string           `json:"governing_law,omitempty"`
+		Jurisdiction   string           `json:"jurisdiction,omitempty"`
+		ContractHash   string           `json:"contract_hash,omitempty"`
+		DocumentStorageURI string       `json:"document_storage_uri,omitempty"`
+		DepositTimestamp string       `json:"deposit_timestamp,omitempty"`
+		Deadline       string           `json:"deadline,omitempty"`
+		AutoRelease    bool             `json:"auto_release"`
+		RequiredApprovals int           `json:"required_approvals"`
+		EvidenceURI    string           `json:"evidence_uri,omitempty"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -60,11 +69,20 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	// Create escrow record
 	escrow := &models.Escrow{
-		BuyerID:    userID,
-		SellerID:   req.SellerID,
-		Amount:     req.Amount,
-		Conditions: req.Conditions,
-		Status:     "Pending",
+		BuyerID:            userID,
+		SellerID:           req.SellerID,
+		Amount:             req.Amount,
+		Conditions:         req.Conditions,
+		Status:             "Pending",
+		GoverningLaw:       req.GoverningLaw,
+		Jurisdiction:       req.Jurisdiction,
+		ContractHash:       req.ContractHash,
+		DocumentStorageURI: req.DocumentStorageURI,
+		DepositTimestamp:   req.DepositTimestamp,
+		Deadline:           req.Deadline,
+		AutoRelease:        req.AutoRelease,
+		RequiredApprovals:  req.RequiredApprovals,
+		EvidenceURI:        req.EvidenceURI,
 	}
 
 	result = h.DB.Create(escrow)
@@ -91,6 +109,11 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			
 			if req.Milestones[i].Amount == 0 {
 				return c.Status(400).JSON(fiber.Map{"error": "Milestone amount is required"})
+			}
+			
+			// Set court-compliant fields if not provided
+			if req.Milestones[i].Name == "" {
+				req.Milestones[i].Name = req.Milestones[i].Title
 			}
 			
 			// Create milestone
@@ -124,6 +147,11 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			// Note: We don't rollback the database transaction as that was successful
 		} else {
 			log.Printf("Successfully created escrow on blockchain with TX: %v", tx.Hash().Hex())
+			
+			// Update escrow with blockchain details
+			escrow.BlockchainTxHash = tx.Hash().Hex()
+			escrow.BlockchainEscrowID = escrow.ID // In our system, we use the DB ID as the blockchain ID
+			h.DB.Save(escrow)
 		}
 	}
 
