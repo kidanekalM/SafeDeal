@@ -64,95 +64,39 @@ export interface Escrow {
     updated_at: string;
     buyer?: User;
     seller?: User;
+    // Add milestones to escrow
     milestones?: Milestone[];
+    // Court-compliant fields
+    contract_id?: string; // UUID for legal identification
+    contract_version?: string;
+    contract_type?: string; // escrow, conditional payment, milestone escrow
+    contract_status?: string; // draft, active, completed, disputed, terminated
+    activated_at?: string;
+    terminated_at?: string;
+    governing_law?: string; // Jurisdiction's governing law
+    jurisdiction?: string; // Legal jurisdiction
+    contract_hash?: string; // Hash of the signed document
+    document_storage_uri?: string; // URI where document is stored
+    evidence_uri?: string; // URI for evidence storage
+    dispute_resolution_status?: string;
+    termination_reason?: string;
 }
 
 export interface CreateEscrowRequest {
     seller_id: number;
     amount: number;
     conditions?: string;
-    milestones?: Array<{
-        title: string;
-        description: string;
-        amount: number;
-        due_date?: string;
-        order_index?: number;
-        approver_id?: number;
-        deliverable_url?: string;
-    }>;
+    // Add milestones to the request
+    milestones?: CreateMilestoneRequest[];
+    // Court-compliant fields
+    contract_type?: string;
+    governing_law?: string;
+    jurisdiction?: string;
 }
 
 export type TransactionStatus = 'Pending' | 'Completed' | 'Failed' | 'Refunded';
 
-export interface EscrowPayment {
-    id: number;
-    escrow_id: number;
-    buyer_id: number;
-    transaction_ref: string;
-    amount: number;
-    currency: string;
-    status: TransactionStatus;
-    payment_url?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-export interface Message {
-    id: number;
-    escrow_id: number;
-    sender_id: number;
-    content: string;
-    created_at: string;
-    sender?: User;
-}
-
-export interface BankDetails {
-    account_name: string;
-    account_number: string;
-    bank_code: number;
-}
-
-export interface ApiResponse<T> {
-    data: T;
-    message?: string;
-    success: boolean;
-}
-
-export interface PaginatedResponse<T> {
-    data: T[];
-    total: number;
-    page: number;
-    limit: number;
-    total_pages: number;
-}
-
-export interface Notification {
-    id: number;
-    user_id: number;
-    type: string;
-    title: string;
-    message: string;
-    read: boolean;
-    metadata?: string;
-    created_at: string;
-}
-
-export interface TransactionHistory {
-    id: number;
-    escrow_id: number;
-    buyer_id: number;
-    transaction_ref: string;
-    amount: number;
-    currency: string;
-    status: TransactionStatus;
-    payment_url?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-// Milestone types
-export type MilestoneStatus = 'Pending' | 'Funded' | 'Submitted' | 'Approved' | 'Rejected' | 'Released';
-
+// Define Milestone type
 export interface Milestone {
     id: number;
     escrow_id: number;
@@ -160,7 +104,7 @@ export interface Milestone {
     description: string;
     amount: number;
     due_date?: string;
-    status: MilestoneStatus;
+    status: 'Pending' | 'Funded' | 'Submitted' | 'Approved' | 'Rejected' | 'Released';
     order_index: number;
     approver_id?: number;
     submitted_at?: string;
@@ -169,4 +113,36 @@ export interface Milestone {
     created_at: string;
     updated_at: string;
     approver?: User;
+    // Court-compliant fields
+    milestone_name?: string;
+    completion_status?: string;
+    completion_timestamp?: string;
+    approved_by?: number; // ID of approving user
+    evidence_uri?: string; // URI for milestone completion evidence
+}
+
+export interface CreateMilestoneRequest {
+    escrow_id: number;
+    title: string;
+    description: string;
+    amount: number;
+    due_date?: string;
+    order_index: number;
+    approver_id?: number;
+    deliverable_url?: string;
+    // Court-compliant fields
+    milestone_name?: string;
+    evidence_uri?: string;
+}
+
+export interface UpdateMilestoneRequest {
+    title?: string;
+    description?: string;
+    due_date?: string;
+    order_index?: number;
+    approver_id?: number;
+    deliverable_url?: string;
+    // Court-compliant fields
+    completion_status?: string;
+    evidence_uri?: string;
 }

@@ -18,7 +18,7 @@ const AuthPage = () => {
       >
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-xl text-white">
-          <div className="flex items-center space-x-3 mb-6">
+          <div className="flex items-center space-x-3 mb-6 min-h-[30rem]">
             <div className="w-12 h-12 rounded-xl bg-teal-900 flex items-center justify-center shadow-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>

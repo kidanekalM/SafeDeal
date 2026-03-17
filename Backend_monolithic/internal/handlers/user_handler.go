@@ -63,7 +63,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Email:          req.Email,
 		Password:       hashedPassword,
 		ActivationCode: activationCode,
-		Activated: true,
+		Activated:      true,
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
@@ -289,9 +289,9 @@ func (h *UserHandler) Search(c *fiber.Ctx) error {
 	}
 
 	var users []models.User
-	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)", 
+	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)",
 		true, "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&users)
-	
+
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
@@ -306,7 +306,7 @@ func (h *UserHandler) Search(c *fiber.Ctx) error {
 
 func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 	query := c.Query("q")
-	
+
 	// If no query is provided, return all activated users
 	if query == "" {
 		var users []models.User
@@ -325,9 +325,9 @@ func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 	}
 
 	var users []models.User
-	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)", 
+	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)",
 		true, "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&users)
-	
+
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
@@ -368,7 +368,7 @@ func (h *UserHandler) CreateWallet(c *fiber.Ctx) error {
 	// 这里应该实现钱包创建逻辑，但目前我们只返回用户信息
 	// 因为完整的钱包实现需要更多区块链相关代码
 	user.Password = "" // 不返回密码
-	
+
 	return c.JSON(fiber.Map{
 		"message": "Wallet created successfully",
 		"user":    user,
