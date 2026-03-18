@@ -16,18 +16,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
+	"regexp"
 )
 
 type UserHandler struct {
-	DB          *gorm.DB
-	AuthService *auth.Service
+	DB                  *gorm.DB
+	AuthService         *auth.Service
+	NotificationHandler *NotificationHandler
 }
 
-func NewUserHandler(db *gorm.DB, authService *auth.Service) *UserHandler {
+func NewUserHandler(db *gorm.DB, authService *auth.Service, notificationHandler *NotificationHandler) *UserHandler {
 	_ = godotenv.Load()
 	return &UserHandler{
-		DB:          db,
-		AuthService: authService,
+		DB:                  db,
+		AuthService:         authService,
+		NotificationHandler: notificationHandler,
 	}
 }
 
@@ -67,15 +70,40 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Email:          req.Email,
 		Password:       hashedPassword,
 		ActivationCode: activationCode,
-		Activated: true,
+		Activated:      true, // Auto-activate for testing purposes
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create user"})
 	}
 
+	// Automatically create a wallet for the new user
+	wallet, err := generateWallet()
+	if err != nil {
+		log.Printf("Failed to generate wallet for user %s: %v", req.Email, err)
+		// Don't fail the registration if wallet creation fails
+	} else {
+		// Encrypt the private key before storing
+		encryptedPrivateKey := base64.StdEncoding.EncodeToString(wallet.PrivateKey)
+
+		// Update the user's record with wallet info
+		updateErr := h.DB.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+			"wallet_address":        wallet.Address,
+			"encrypted_private_key": encryptedPrivateKey,
+		}).Error
+
+		if updateErr != nil {
+			log.Printf("Failed to update user %d with wallet info: %v", user.ID, updateErr)
+		} else {
+			log.Printf("Wallet created for user %s with address %s", req.Email, wallet.Address)
+		}
+	}
+
 	// TODO: Send activation email with activationCode
 	log.Printf("Activation code for %s: %s", req.Email, activationCode)
+
+	// Remove password from response
+	user.Password = ""
 
 	return c.JSON(fiber.Map{
 		"message": "Registration successful. Please check your email for activation.",
@@ -155,9 +183,32 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
-	// Implementation depends on refresh token strategy
+	// In this implementation, we'll just generate a new token 
+	// based on the valid token in the Authorization header.
+	// In a more robust system, you'd use a dedicated refresh token.
+	
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(401).JSON(fiber.Map{"error": "Authorization header missing"})
+	}
+
+	token := authHeader
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	}
+
+	claims, err := h.AuthService.ValidateToken(token)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": "Invalid token"})
+	}
+
+	newToken, err := h.AuthService.GenerateToken(claims.UserID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
+	}
+
 	return c.JSON(fiber.Map{
-		"message": "Refresh token endpoint",
+		"access_token": newToken,
 	})
 }
 
@@ -334,6 +385,20 @@ func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 	
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	// Check if we should send an invitation (if query is an email and no results found)
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	if len(users) == 0 && emailRegex.MatchString(query) {
+		h.NotificationHandler.InviteUser(query)
+		return c.JSON(fiber.Map{
+			"data": fiber.Map{
+				"users":      []models.User{},
+				"pagination": fiber.Map{},
+				"invited":    true,
+			},
+			"message": "User not found. Invitation sent to " + query,
+		})
 	}
 
 	return c.JSON(fiber.Map{

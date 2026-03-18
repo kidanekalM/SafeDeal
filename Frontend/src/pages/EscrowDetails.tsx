@@ -18,6 +18,7 @@ import {
   Edit3,
   Check,
   XCircle,
+  Scale,
 } from "lucide-react";
 import { milestoneApi } from "../lib/api";
 import type { Milestone } from "../types";
@@ -972,10 +973,23 @@ const isSeller = user?.id === escrow?.seller_id;
                   <div>
                     <p className="font-medium text-gray-900">Seller</p>
                     <p className="text-sm text-gray-600">
-                      User #{escrow.seller_id}
+                      {isSeller ? "You" : `User #${escrow.seller_id}`}
                     </p>
                   </div>
                 </div>
+                {escrow.mediator_id && (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Mediator</p>
+                      <p className="text-sm text-gray-600">
+                        {user?.id === escrow.mediator_id ? "You" : `User #${escrow.mediator_id}`}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1022,6 +1036,36 @@ const isSeller = user?.id === escrow?.seller_id;
                 )}
               </div>
             </div>
+
+            {/* Legal Compliance */}
+            {(escrow.jurisdiction || escrow.governing_law || escrow.dispute_resolution) && (
+              <div className="card p-6 bg-blue-50/50 border-blue-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Scale className="h-5 w-5 text-blue-600" />
+                  Legal Compliance
+                </h3>
+                <div className="space-y-3">
+                  {escrow.jurisdiction && (
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Jurisdiction</label>
+                      <p className="text-sm font-medium text-gray-900">{escrow.jurisdiction}</p>
+                    </div>
+                  )}
+                  {escrow.governing_law && (
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Governing Law</label>
+                      <p className="text-sm font-medium text-gray-900">{escrow.governing_law}</p>
+                    </div>
+                  )}
+                  {escrow.dispute_resolution && (
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Dispute Resolution</label>
+                      <p className="text-sm font-medium text-gray-900">{escrow.dispute_resolution}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
         </div>
 
 

@@ -14,13 +14,17 @@ export function formatCurrency(amount: number, currency: string = 'ETB'): string
 }
 
 export function formatDate(date: string | Date): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return 'Invalid date';
+    
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-    }).format(new Date(date));
+    }).format(d);
 }
 
 // Server time offset (difference between server and client time)

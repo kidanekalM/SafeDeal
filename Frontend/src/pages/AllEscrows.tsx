@@ -242,7 +242,7 @@ const AllEscrows = () => {
                     <p className="text-xl font-bold text-gray-900">
                       {formatCurrency(escrow.amount)}
                     </p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-2 mt-2 flex-wrap gap-y-2">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
                           escrow.status
@@ -251,6 +251,12 @@ const AllEscrows = () => {
                         {getStatusIcon(escrow.status)}
                         <span className="ml-1">{escrow.status}</span>
                       </span>
+                      {escrow.milestones && escrow.milestones.length > 0 && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          {escrow.milestones.length} Milestones
+                        </span>
+                      )}
                     </div>
                     <Link
                       to={`/escrow/${escrow.id}`}

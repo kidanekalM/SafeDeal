@@ -77,14 +77,20 @@ func (h *ChatHandler) ChatWebSocket(c *websocket.Conn) {
 	// Get HTTP context
 	ctx := c.Locals("fiberCtx").(*fiber.Ctx)
 
-	// Extract token
+	// Extract token from header or query parameter
+	var token string
 	authHeader := ctx.Get("Authorization")
-	if len(authHeader) <= 7 || authHeader[:7] != "Bearer " {
-		log.Println("missing auth header")
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	} else {
+		token = ctx.Query("token")
+	}
+
+	if token == "" {
+		log.Println("missing auth token")
 		return
 	}
 
-	token := authHeader[7:]
 	claims, err := h.AuthService.ValidateToken(token)
 	if err != nil {
 		log.Println("invalid token:", err)

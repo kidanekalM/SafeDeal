@@ -91,17 +91,24 @@ func (h *NotificationHandler) HandleWebSocket(c *websocket.Conn) {
 func (h *NotificationHandler) NotificationWebSocket(c *websocket.Conn) {
 
 	ctx := c.Locals("fiberCtx").(*fiber.Ctx)
-	authHeader := ctx.Get("Authorization")
 
-	if len(authHeader) <= 7 || authHeader[:7] != "Bearer " {
-		log.Println("missing auth header")
+	// Extract token from header or query parameter
+	var token string
+	authHeader := ctx.Get("Authorization")
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	} else {
+		token = ctx.Query("token")
+	}
+
+	if token == "" {
+		log.Println("missing auth token")
 		return
 	}
 
-	token := authHeader[7:]
 	claims, err := h.AuthService.ValidateToken(token)
 	if err != nil {
-		log.Println("invalid token")
+		log.Println("invalid token:", err)
 		return
 	}
 
@@ -118,4 +125,10 @@ func (h *NotificationHandler) NotificationWebSocket(c *websocket.Conn) {
 			break
 		}
 	}
+}
+
+// InviteUser simulates sending an invitation to a non-existent user
+func (h *NotificationHandler) InviteUser(email string) {
+	log.Printf("INVITATION SENT: User with email %s has been invited to join SafeDeal", email)
+	// In a real implementation, this would trigger an email via a mailer service
 }

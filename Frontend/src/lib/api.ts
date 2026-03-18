@@ -105,7 +105,7 @@ export const userApi = {
       },
     }),
   
-  searchUsers: (query: string): Promise<AxiosResponse<{ users: SearchUser[]; pagination: any }>> =>
+  searchUsers: (query: string): Promise<AxiosResponse<{ data: { users: SearchUser[]; pagination: any; invited?: boolean }; message: string }>> =>
     api.get(`/api/search?q=${encodeURIComponent(query)}`),
 
   getContacts: (): Promise<AxiosResponse<{ contacts: SearchUser[]; total: number }>> => 

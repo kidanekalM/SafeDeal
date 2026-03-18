@@ -54,9 +54,13 @@ export interface Escrow {
     id: number;
     buyer_id: number;
     seller_id: number;
+    mediator_id?: number;
     amount: number;
     status: EscrowStatus;
     conditions?: string;
+    jurisdiction?: string;
+    governing_law?: string;
+    dispute_resolution?: string;
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
     active: boolean;
@@ -64,12 +68,25 @@ export interface Escrow {
     updated_at: string;
     buyer?: User;
     seller?: User;
+    mediator?: User;
+    milestones?: Milestone[];
 }
 
 export interface CreateEscrowRequest {
-    seller_id: number;
+    creator_role: 'seller' | 'buyer' | 'mediator';
+    buyer_id?: number;
+    seller_id?: number;
+    mediator_id?: number;
+    buyer_email?: string;
+    seller_email?: string;
+    mediator_email?: string;
+    counterparty_email?: string;
     amount: number;
     conditions?: string;
+    jurisdiction?: string;
+    governing_law?: string;
+    dispute_resolution?: string;
+    milestones?: Partial<Milestone>[];
 }
 
 export type TransactionStatus = 'Pending' | 'Completed' | 'Failed' | 'Refunded';

@@ -38,33 +38,75 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		SellerID   uint             `json:"seller_id" validate:"required"`
-		Amount     uint             `json:"amount" validate:"required,gt=0"`
-		Conditions string           `json:"conditions"`
-		Milestones []models.Milestone `json:"milestones,omitempty"` // Optional milestones
+		BuyerID           uint               `json:"buyer_id"`
+		SellerID          uint               `json:"seller_id" validate:"required"`
+		MediatorID        *uint              `json:"mediator_id,omitempty"`
+		Amount            uint               `json:"amount" validate:"required,gt=0"`
+		Conditions        string             `json:"conditions"`
+		Jurisdiction      string             `json:"jurisdiction"`
+		GoverningLaw      string             `json:"governing_law"`
+		DisputeResolution string             `json:"dispute_resolution"`
+		Milestones        []models.Milestone `json:"milestones,omitempty"` // Optional milestones
 	}
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// Verify that the seller exists
-	var seller models.User
-	result := h.DB.First(&seller, req.SellerID)
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return c.Status(404).JSON(fiber.Map{"error": "Seller not found"})
+	// Determine roles based on creator and handle mediator assignment
+	var finalBuyerID, finalSellerID uint
+	creatorRole := c.Query("role", "buyer")
+
+	if creatorRole == "mediator" {
+		if req.BuyerID == 0 || req.SellerID == 0 {
+			return c.Status(400).JSON(fiber.Map{"error": "Mediator must specify both buyer and seller"})
 		}
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+		finalBuyerID = req.BuyerID
+		finalSellerID = req.SellerID
+		// Set creator as the mediator by default if not specified
+		if req.MediatorID == nil {
+			req.MediatorID = &userID
+		}
+	} else if creatorRole == "seller" {
+		finalBuyerID = req.BuyerID
+		finalSellerID = userID
+		if finalBuyerID == 0 {
+			return c.Status(400).JSON(fiber.Map{"error": "Seller must specify a buyer"})
+		}
+	} else { // buyer
+		finalBuyerID = userID
+		finalSellerID = req.SellerID
+		if finalSellerID == 0 {
+			return c.Status(400).JSON(fiber.Map{"error": "Buyer must specify a seller"})
+		}
+	}
+
+	// Verify all parties exist
+	var buyerUser, sellerUser models.User
+	if err := h.DB.First(&buyerUser, finalBuyerID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Buyer not found"})
+	}
+	if err := h.DB.First(&sellerUser, finalSellerID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Seller not found"})
+	}
+	if req.MediatorID != nil {
+		var mediatorUser models.User
+		if err := h.DB.First(&mediatorUser, *req.MediatorID).Error; err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "Mediator not found"})
+		}
 	}
 
 	// Create escrow record
 	escrow := &models.Escrow{
-		BuyerID:    userID,
-		SellerID:   req.SellerID,
-		Amount:     req.Amount,
-		Conditions: req.Conditions,
-		Status:     "Pending",
+		BuyerID:           finalBuyerID,
+		SellerID:          finalSellerID,
+		MediatorID:        req.MediatorID,
+		Amount:            req.Amount,
+		Conditions:        req.Conditions,
+		Jurisdiction:      req.Jurisdiction,
+		GoverningLaw:      req.GoverningLaw,
+		DisputeResolution: req.DisputeResolution,
+		Status:            "Pending",
 	}
 
 	result = h.DB.Create(escrow)
@@ -127,9 +169,13 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		}
 	}
 
+	// Fetch the complete escrow with preloads for the response
+	var completeEscrow models.Escrow
+	h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").First(&completeEscrow, escrow.ID)
+
 	return c.JSON(fiber.Map{
 		"message": "Escrow created successfully",
-		"data":    escrow,
+		"data":    completeEscrow,
 	})
 }
 
@@ -140,7 +186,7 @@ func (h *EscrowHandler) GetEscrowByID(c *fiber.Ctx) error {
 	}
 
 	var escrow models.Escrow
-	result := h.DB.Preload("Buyer").Preload("Seller").Preload("Milestones").Preload("Milestones.Approver").First(&escrow, uint(id))
+	result := h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Milestones.Approver").First(&escrow, uint(id))
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
@@ -168,8 +214,8 @@ func (h *EscrowHandler) GetMyEscrows(c *fiber.Ctx) error {
 	}
 
 	var escrows []models.Escrow
-	result := h.DB.Where("buyer_id = ? OR seller_id = ?", userID, userID).
-		Preload("Buyer").Preload("Seller").Preload("Milestones").Preload("Milestones.Approver").Find(&escrows)
+	result := h.DB.Where("buyer_id = ? OR seller_id = ? OR mediator_id = ?", userID, userID, userID).
+		Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Milestones.Approver").Find(&escrows)
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}

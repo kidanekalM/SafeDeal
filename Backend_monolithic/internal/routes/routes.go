@@ -36,7 +36,7 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 	return &ServiceContainer{
 		DB:                  db,
 		AuthService:         authService,
-		UserHandler:         handlers.NewUserHandler(db, authService),
+		UserHandler:         handlers.NewUserHandler(db, authService, notificationHandler),
 		EscrowHandler:       handlers.NewEscrowHandler(db, authService, rabbitMQ, blockchainClient),
 		PaymentHandler:      handlers.NewPaymentHandler(db, authService, rabbitMQ),
 		ChatHandler:         handlers.NewChatHandler(db, authService),
@@ -52,6 +52,24 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	public.Post("/register", sc.UserHandler.Register)
 	public.Post("/login", sc.UserHandler.Login)
 	public.Get("/activate", sc.UserHandler.ActivateAccount)
+	public.Post("/refresh-token", sc.UserHandler.RefreshToken)
+	
+	// WebSocket routes moved to public group for better auth handling
+	public.Get("/api/chat/ws/:id", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("fiberCtx", c)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	}, websocket.New(sc.ChatHandler.HandleWebSocket))
+
+	public.Get("/api/notifications/ws", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("fiberCtx", c)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	}, websocket.New(sc.NotificationHandler.HandleWebSocket))
 
 	// Protected routes
 	protected := app.Group("/api", sc.AuthService.JWTMiddleware)
@@ -61,6 +79,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
 	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
 	protected.Post("/wallet", sc.UserHandler.CreateWallet) // Endpoint for creating Ethereum wallet
+	protected.Post("/logout", sc.UserHandler.Logout)
 
 	// Escrow routes
 	protected.Post("/escrows", sc.EscrowHandler.CreateEscrow)
@@ -90,12 +109,6 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	// Payment routes
 	protected.Post("/payments/initiate", sc.PaymentHandler.InitiatePayment)
 	protected.Get("/payments/transactions", sc.PaymentHandler.GetTransactions)
-
-	// Chat routes
-	protected.Get("/chat/ws/:id", websocket.New(sc.ChatHandler.HandleWebSocket))
-
-	// Notification routes
-	protected.Get("/notifications/ws", websocket.New(sc.NotificationHandler.HandleWebSocket))
 }
 
 // Export the service container for use in verification handler
