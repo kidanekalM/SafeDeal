@@ -1,7 +1,7 @@
 import React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Shield, User, Mail, DollarSign, FileText, ArrowLeft } from 'lucide-react';
+import { Plus, Shield, Mail, DollarSign, ArrowLeft } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
 import { escrowApi } from '../lib/api';
@@ -28,7 +28,6 @@ const CreateEscrow = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
     watch,
-    control,
   } = useForm<CreateEscrowForm>({
     resolver: zodResolver(CreateEscrowSchema),
     mode: 'onChange',
@@ -46,7 +45,7 @@ const CreateEscrow = () => {
         conditions: data.conditions,
       };
 
-      await escrowApi.createEscrow(payload);
+      await escrowApi.create(payload);
       toast.success('Escrow created successfully!');
       navigate('/escrows');
     } catch (error: any) {
@@ -220,4 +219,3 @@ const CreateEscrow = () => {
 };
 
 export default CreateEscrow;
-
