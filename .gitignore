@@ -4,3 +4,4 @@ node_modules/
 dist/
 android_build
 docker-compose*.yml
+.aider*

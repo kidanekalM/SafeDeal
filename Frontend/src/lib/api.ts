@@ -11,6 +11,8 @@ import {
   EscrowPayment,
   BankDetails,
   TransactionHistory,
+  Milestone,
+  CreateMilestoneRequest,
 } from '../types';
 
 
@@ -125,8 +127,9 @@ export const escrowApi = {
 
     // GET My Escrows - Get user's escrows
     // Backend returns: { escrows: Escrow[], summary: { total, active, completed } }
-    getMyEscrows: (): Promise<AxiosResponse<{ escrows: Escrow[]; summary: { total: number; active: number; completed: number } }>> =>
-        api.get('/api/escrows/my'),
+    // Fix route mismatch - backend: /api/escrows, frontend was /my  
+    getMyEscrows: (): Promise<AxiosResponse<Escrow[]>> =>
+        api.get('/api/escrows'),
 
     // GET Fetch-escrow
     getById: (id: number): Promise<AxiosResponse<Escrow>> =>
@@ -166,6 +169,30 @@ export const escrowApi = {
                 result.status === 'fulfilled')
             .map(result => result.value.data);
     },
+};
+
+// NEW: Milestone API - matches backend milestone_handler.go
+export const milestoneApi = {
+  getByEscrow: (escrowId: number): Promise<AxiosResponse<Milestone[]>> =>
+    api.get(`/api/escrows/${escrowId}/milestones`),
+
+  create: (data: CreateMilestoneRequest): Promise<AxiosResponse<Milestone>> =>
+    api.post('/api/milestones', data),
+
+  getById: (id: number): Promise<AxiosResponse<Milestone>> =>
+    api.get(`/api/milestones/${id}`),
+
+  update: (id: number, data: Partial<CreateMilestoneRequest>): Promise<AxiosResponse<Milestone>> =>
+    api.put(`/api/milestones/${id}`, data),
+
+  submit: (id: number): Promise<AxiosResponse<{message: string, milestone: Milestone}>> =>
+    api.put(`/api/milestones/${id}/submit`),
+
+  approve: (id: number): Promise<AxiosResponse<{message: string, milestone: Milestone}>> =>
+    api.put(`/api/milestones/${id}/approve`),
+
+  reject: (id: number): Promise<AxiosResponse<{message: string, milestone: Milestone}>> =>
+    api.put(`/api/milestones/${id}/reject`),
 };
 
 // Payment API - Based on backend endpoints

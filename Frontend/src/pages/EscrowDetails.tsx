@@ -14,7 +14,13 @@ import {
   FileText,
   ExternalLink,
   RotateCcw,
+  Plus,
+  Edit3,
+  Check,
+  XCircle,
 } from "lucide-react";
+import { milestoneApi } from "../lib/api";
+import type { Milestone } from "../types";
 import Layout from "../components/Layout";
 import { useAuthStore } from "../store/authStore";
 import { escrowApi, paymentApi } from "../lib/api";
@@ -64,11 +70,16 @@ const EscrowDetails = () => {
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
-  const [isBackendBusy, setIsBackendBusy] = useState(false);
+const [isBackendBusy, setIsBackendBusy] = useState(false);
 
-  // Calculate user roles early so they can be used in useEffects
-  const isBuyer = user?.id === escrow?.buyer_id;
-  const isSeller = user?.id === escrow?.seller_id;
+// NEW: Milestones state
+const [milestones, setMilestones] = useState<Milestone[]>([]);
+const [loadingMilestones, setLoadingMilestones] = useState(false);
+const [showCreateMilestone, setShowCreateMilestone] = useState(false);
+
+// Calculate user roles early so they can be used in useEffects
+const isBuyer = user?.id === escrow?.buyer_id;
+const isSeller = user?.id === escrow?.seller_id;
 
   useEffect(() => {
     if (id) {
@@ -76,6 +87,17 @@ const EscrowDetails = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // NEW: Fetch milestones when escrow loads
+  useEffect(() => {
+    if (escrow?.id && !loadingMilestones) {
+      setLoadingMilestones(true);
+      milestoneApi.getByEscrow(escrow.id as number)
+        .then((res) => setMilestones(res.data))
+        .catch(() => toast.error('Failed to load milestones'))
+        .finally(() => setLoadingMilestones(false));
+    }
+  }, [escrow?.id, loadingMilestones]);
 
   // Auto-reload escrow details for buyer when seller accepts
   useEffect(() => {
@@ -564,6 +586,77 @@ const EscrowDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* NEW: Milestones Section */}
+            {milestones.length > 0 && (
+              <div className="card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Milestones ({milestones.length})</h3>
+                  {isBuyer && (
+                    <button onClick={() => setShowCreateMilestone(true)} className="btn btn-primary btn-sm">
+                      <Plus className="h-4 w-4 mr-1" /> Add Milestone
+                    </button>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-4 font-medium text-gray-700">#</th>
+                        <th className="text-left py-2 px-4 font-medium text-gray-700">Title</th>
+                        <th className="text-left py-2 px-4 font-medium text-gray-700">Amount</th>
+                        <th className="text-left py-2 px-4 font-medium text-gray-700">Status</th>
+                        <th className="text-left py-2 px-4 font-medium text-gray-700">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {milestones.map((m, i) => (
+                        <tr key={m.id} className="border-b last:border-b-0 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-mono text-sm">M{i+1}</td>
+                          <td className="py-3 px-4 font-medium">{m.title}</td>
+                          <td className="py-3 px-4">{formatCurrency(m.amount)}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              m.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                              m.status === 'Funded' ? 'bg-blue-100 text-blue-800' :
+                              m.status === 'Submitted' ? 'bg-yellow-100 text-yellow-800' :
+                              m.status === 'Pending' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {m.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            {isSeller && m.status === 'Funded' && (
+                              <button onClick={() => milestoneApi.submit(m.id).then(fetchEscrowDetails)} className="btn btn-sm btn-outline mr-1">
+                                Submit
+                              </button>
+                            )}
+                            {m.approver_id === user?.id && m.status === 'Submitted' && (
+                              <>
+                                <button onClick={() => milestoneApi.approve(m.id).then(fetchEscrowDetails)} className="btn btn-sm btn-success mr-1">
+                                  <Check className="h-3 w-3" />
+                                </button>
+                                <button onClick={() => milestoneApi.reject(m.id).then(fetchEscrowDetails)} className="btn btn-sm btn-error">
+                                  <XCircle className="h-3 w-3" />
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {loadingMilestones && <p className="text-sm text-gray-500 mt-2">Loading milestones...</p>}
+                {milestones.length === 0 && !loadingMilestones && (
+                  <div className="text-center py-8">
+                    <Shield className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No milestones yet. {isBuyer && <button onClick={() => setShowCreateMilestone(true)} className="text-primary-600 hover:underline font-medium">Add first milestone →</button>}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Transaction Info */}
             <div className="card p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">

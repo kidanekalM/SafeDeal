@@ -139,3 +139,36 @@ export interface TransactionHistory {
     created_at: string;
     updated_at: string;
 }
+
+// NEW: Milestone types
+export type MilestoneStatus = 'Pending' | 'Funded' | 'Submitted' | 'Approved' | 'Rejected' | 'Released';
+
+export interface Milestone {
+    id: number;
+    escrow_id: number;
+    title: string;
+    description?: string;
+    amount: number;
+    due_date?: string;
+    status: MilestoneStatus;
+    order_index: number;
+    approver_id?: number;
+    submitted_at?: string;
+    approved_at?: string;
+    deliverable_url?: string;
+    created_at: string;
+    updated_at: string;
+    approver?: User;
+    escrow?: Escrow;
+}
+
+export interface CreateMilestoneRequest {
+    escrow_id: number;
+    title: string;
+    description?: string;
+    amount: number;
+    due_date?: string;
+    order_index?: number;
+    approver_id?: number;
+    deliverable_url?: string;
+}

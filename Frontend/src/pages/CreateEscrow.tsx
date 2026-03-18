@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Shield, Mail, DollarSign, ArrowLeft } from 'lucide-react';
@@ -22,7 +22,7 @@ type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
 
 const CreateEscrow = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+
   const {
     register,
     handleSubmit,
