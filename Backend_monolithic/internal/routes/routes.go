@@ -19,8 +19,8 @@ type ServiceContainer struct {
 	PaymentHandler      *handlers.PaymentHandler
 	ChatHandler         *handlers.ChatHandler
 	NotificationHandler *handlers.NotificationHandler
-MilestoneHandler    *handlers.MilestoneHandler
-	BlockChainClient *blockchain.Client
+	BlockChainClient    *blockchain.Client
+	MilestoneHandler    *handlers.MilestoneHandler
 }
 
 func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
@@ -30,6 +30,9 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		panic(err) // Handle error appropriately in production
 	}
 
+	notificationHandler := handlers.NewNotificationHandler(db, authService)
+	milestoneHandler := handlers.NewMilestoneHandler(db, blockchainClient)
+
 	return &ServiceContainer{
 		DB:                  db,
 		AuthService:         authService,
@@ -37,8 +40,9 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		EscrowHandler:       handlers.NewEscrowHandler(db, authService, rabbitMQ, blockchainClient),
 		PaymentHandler:      handlers.NewPaymentHandler(db, authService, rabbitMQ),
 		ChatHandler:         handlers.NewChatHandler(db, authService),
-		NotificationHandler: handlers.NewNotificationHandler(db, authService),
-	MilestoneHandler: handlers.NewMilestoneHandler(db, sc.BlockChainClient),
+		NotificationHandler: notificationHandler,
+		MilestoneHandler:    milestoneHandler,
+		BlockChainClient:    blockchainClient,
 	}
 }
 
@@ -53,24 +57,26 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected := app.Group("/api", sc.AuthService.JWTMiddleware)
 
 	// User routes
-	protected.Get("/profile", sc.UserHandler.GetProfile)  // 添加缺失的路由
-	protected.Put("/profile", sc.UserHandler.UpdateProfile)
-	protected.Put("/bank-details", sc.UserHandler.UpdateBankDetails)
-	
+	protected.Get("/profile", sc.UserHandler.GetProfile)            // GET request to fetch profile
+	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
+	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
+	protected.Post("/wallet", sc.UserHandler.CreateWallet) // Endpoint for creating Ethereum wallet
+
 	// Escrow routes
 	protected.Post("/escrows", sc.EscrowHandler.CreateEscrow)
 	protected.Get("/escrows/:id", sc.EscrowHandler.GetEscrowByID)
-	protected.Get("/escrows/my", sc.EscrowHandler.GetMyEscrows)  // 确保此路由存在
+	protected.Get("/escrows", sc.EscrowHandler.GetMyEscrows)
 	protected.Put("/escrows/:id/accept", sc.EscrowHandler.AcceptEscrow)
 	protected.Put("/escrows/:id/cancel", sc.EscrowHandler.CancelEscrow)
 	protected.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
-	protected.Post("/escrows/:id/dispute", sc.EscrowHandler.CreateDispute)
-	protected.Get("/escrows/:id/dispute", sc.EscrowHandler.GetDispute)
-	protected.Put("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow)
+	protected.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
+	protected.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)
+	protected.Post("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow) // Changed to POST to match standard REST practices
 	protected.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
 
-	// Search route - 添加缺失的路由
-	protected.Get("/search", sc.UserHandler.SearchUsers)
+	// Search routes - for finding users
+	protected.Get("/search", sc.UserHandler.GetAllUsers)        // Endpoint for getting all users
+	protected.Get("/search/:query", sc.UserHandler.SearchUsers) // Endpoint for searching users by query
 
 	// Milestone routes
 	protected.Post("/milestones", sc.MilestoneHandler.CreateMilestone)

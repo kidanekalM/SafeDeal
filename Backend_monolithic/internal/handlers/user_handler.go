@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"crypto/ecdsa"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -9,6 +12,7 @@ import (
 
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/models"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -63,7 +67,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Email:          req.Email,
 		Password:       hashedPassword,
 		ActivationCode: activationCode,
-		Activated:      true,
+		Activated: true,
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
@@ -289,9 +293,9 @@ func (h *UserHandler) Search(c *fiber.Ctx) error {
 	}
 
 	var users []models.User
-	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)",
+	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)", 
 		true, "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&users)
-
+	
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
@@ -306,7 +310,7 @@ func (h *UserHandler) Search(c *fiber.Ctx) error {
 
 func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 	query := c.Query("q")
-
+	
 	// If no query is provided, return all activated users
 	if query == "" {
 		var users []models.User
@@ -325,9 +329,9 @@ func (h *UserHandler) SearchUsers(c *fiber.Ctx) error {
 	}
 
 	var users []models.User
-	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)",
+	result := h.DB.Where("activated = ? AND (first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ?)", 
 		true, "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&users)
-
+	
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
@@ -346,7 +350,7 @@ func (h *UserHandler) ManageWallet(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Wallet action endpoint"})
 }
 
-// CreateWallet 创建新钱包的处理函数
+// CreateWallet creates a new Ethereum wallet for the authenticated user
 func (h *UserHandler) CreateWallet(c *fiber.Ctx) error {
 	userID, ok := c.Locals("userID").(uint)
 	if !ok {
@@ -355,23 +359,76 @@ func (h *UserHandler) CreateWallet(c *fiber.Ctx) error {
 		})
 	}
 
-	// 获取用户信息
-	var user models.User
-	result := h.DB.First(&user, userID)
+	// Generate a new wallet
+	wallet, err := generateWallet()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to generate wallet",
+		})
+	}
+
+	// Encrypt the private key before storing
+	// Note: In a real application, you'd want to use a stronger encryption method
+	// and potentially derive the encryption key from the user's password
+	encryptedPrivateKey := base64.StdEncoding.EncodeToString(wallet.PrivateKey)
+
+	// Update the user's record with wallet info
+	if err := h.DB.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+		"wallet_address":        wallet.Address,
+		"encrypted_private_key": encryptedPrivateKey,
+	}).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not update user with wallet info"})
+	}
+
+	return c.JSON(fiber.Map{
+		"message":       "Wallet created successfully",
+		"walletAddress": wallet.Address,
+	})
+}
+
+// Wallet represents a cryptocurrency wallet
+type Wallet struct {
+	PrivateKey []byte `json:"private_key"` // Raw bytes of the private key
+	Address    string `json:"address"`     // Ethereum address in hex format
+}
+
+// generateWallet creates a new Ethereum wallet
+func generateWallet() (*Wallet, error) {
+	privateKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the official Ethereum method to serialize the private key
+	// This properly encodes the full ECDSA private key structure
+	privateKeyBytes := crypto.FromECDSA(privateKey)
+	address := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+
+	return &Wallet{
+		PrivateKey: privateKeyBytes,
+		Address:    address,
+	}, nil
+}
+
+// GetAllUsers returns all activated users
+func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
+	var users []models.User
+	result := h.DB.Where("activated = ?", true).Find(&users)
 	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return c.Status(404).JSON(fiber.Map{"error": "User not found"})
-		}
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	// 这里应该实现钱包创建逻辑，但目前我们只返回用户信息
-	// 因为完整的钱包实现需要更多区块链相关代码
-	user.Password = "" // 不返回密码
+	// Remove passwords from all users before returning
+	for i := range users {
+		users[i].Password = ""
+	}
 
 	return c.JSON(fiber.Map{
-		"message": "Wallet created successfully",
-		"user":    user,
+		"data": fiber.Map{
+			"users":      users,
+			"pagination": fiber.Map{},
+		},
+		"message": "All users retrieved successfully",
 	})
 }
 

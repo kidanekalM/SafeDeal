@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"backend_monolithic/internal/blockchain"
 	"backend_monolithic/internal/models"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -15,17 +17,9 @@ type MilestoneHandler struct {
 	BlockChainClient *blockchain.Client
 }
 
-import (
-	"backend_monolithic/internal/blockchain"
-	// ... existing imports
-)
-
 func NewMilestoneHandler(db *gorm.DB, bc *blockchain.Client) *MilestoneHandler {
 	return &MilestoneHandler{DB: db, BlockChainClient: bc}
 }
-
-// NewMilestoneHandler signature updated above with blockchain client
-
 
 // CreateMilestone creates a new milestone for an escrow
 func (h *MilestoneHandler) CreateMilestone(c *fiber.Ctx) error {
@@ -247,16 +241,6 @@ func (h *MilestoneHandler) UpdateMilestone(c *fiber.Ctx) error {
 
 // SubmitMilestone marks a milestone as submitted for approval
 func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
-	// Log to blockchain for audit trail (court compliance)
-	if h.BlockChainClient != nil {
-		escrowID := big.NewInt(int64(milestone.EscrowID))
-		milestoneID := big.NewInt(int64(milestone.ID))
-		// TODO: Implement MilestoneSubmitted event in Escrow.sol
-		// tx, err := h.BlockChainClient.Contract.LogMilestoneSubmitted(h.BlockChainClient.Auth, escrowID, milestoneID)
-		// if err != nil {
-		// 	log.Printf("Blockchain logging failed: %v", err)
-		// }
-	}
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid milestone ID"})
@@ -285,8 +269,19 @@ func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Milestone must be funded before submission"})
 	}
 
+	// Log to blockchain for audit trail (court compliance)
+	// if h.BlockChainClient != nil {
+	// 	escrowID := big.NewInt(int64(milestone.EscrowID))
+	// 	milestoneID := big.NewInt(int64(milestone.ID))
+	// 	// TODO: Implement MilestoneSubmitted event in Escrow.sol
+	// 	// tx, err := h.BlockChainClient.Contract.LogMilestoneSubmitted(h.BlockChainClient.Auth, escrowID, milestoneID)
+	// 	// if err != nil {
+	// 	// 	log.Printf("Blockchain logging failed: %v", err)
+	// 	// }
+	// }
+
 	// Use ISO 8601 format for consistency
-	now := time.Now().Format("2006-01-02T15:04:05Z07:00")
+	now := time.Now().Format(time.RFC3339)
 	milestone.Status = models.MilestoneSubmitted
 	milestone.SubmittedAt = &now
 
@@ -334,12 +329,12 @@ func (h *MilestoneHandler) ApproveMilestone(c *fiber.Ctx) error {
 	milestone.ApprovedAt = &now
 	
 	// Log APPROVAL to blockchain (court critical)
-	if h.BlockChainClient != nil {
-		milestoneID := big.NewInt(int64(milestone.ID))
-		approverID := big.NewInt(int64(userID))
-		// TODO: tx, err := h.BlockChainClient.Contract.LogMilestoneApproved(h.BlockChainClient.Auth, milestoneID, approverID)
-		// log.Printf("Milestone approved on-chain: %s", tx.Hash().Hex())
-	}
+	// if h.BlockChainClient != nil {
+	// 	milestoneID := big.NewInt(int64(milestone.ID))
+	// 	approverID := big.NewInt(int64(userID))
+	// 	// TODO: tx, err := h.BlockChainClient.Contract.LogMilestoneApproved(h.BlockChainClient.Auth, milestoneID, approverID)
+	// 	// log.Printf("Milestone approved on-chain: %s", tx.Hash().Hex())
+	// }
 
 	if err := h.DB.Save(&milestone).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update milestone"})
@@ -383,12 +378,12 @@ func (h *MilestoneHandler) RejectMilestone(c *fiber.Ctx) error {
 	milestone.Status = models.MilestoneRejected
 	
 	// Log REJECTION to blockchain
-	if h.BlockChainClient != nil {
-		milestoneID := big.NewInt(int64(milestone.ID))
-		approverID := big.NewInt(int64(userID))
-		// TODO: tx, err := h.BlockChainClient.Contract.LogMilestoneRejected(h.BlockChainClient.Auth, milestoneID, approverID)
-		// log.Printf("Milestone rejected on-chain: %s", tx.Hash().Hex())
-	}
+	// if h.BlockChainClient != nil {
+	// 	milestoneID := big.NewInt(int64(milestone.ID))
+	// 	approverID := big.NewInt(int64(userID))
+	// 	// TODO: tx, err := h.BlockChainClient.Contract.LogMilestoneRejected(h.BlockChainClient.Auth, milestoneID, approverID)
+	// 	// log.Printf("Milestone rejected on-chain: %s", tx.Hash().Hex())
+	// }
 
 	if err := h.DB.Save(&milestone).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update milestone"})

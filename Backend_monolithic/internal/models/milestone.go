@@ -27,21 +27,6 @@ type Milestone struct {
 	SubmittedAt    *string         `json:"submitted_at,omitempty"`
 	ApprovedAt     *string         `json:"approved_at,omitempty"`
 	DeliverableURL *string         `json:"deliverable_url,omitempty"`
-	
-	// Court-compliant fields
-	Name             string          `json:"name,omitempty"`
-	CompletionStatus string          `json:"completion_status,omitempty"`
-	CompletionTimestamp *string      `json:"completion_timestamp,omitempty"`
-	EvidenceURI      string          `json:"evidence_uri,omitempty"`
-	VerificationMethod string        `json:"verification_method,omitempty"`
-	RequiredApprovals  int           `json:"required_approvals" gorm:"default:1"`
-	ApprovedBy         *uint         `json:"approved_by" gorm:"default:null"`
-	AutoRelease        bool          `json:"auto_release" gorm:"default:false"`
-	Deadline           *string       `json:"deadline,omitempty"`
-	ContractHash       string        `json:"contract_hash,omitempty"`
-	DocumentStorageURI string        `json:"document_storage_uri,omitempty"`
-	TermsAcceptedAt    *string       `json:"terms_accepted_at,omitempty"`
-	SignatureHash      string        `json:"signature_hash,omitempty"`
 
 	// Associations
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`

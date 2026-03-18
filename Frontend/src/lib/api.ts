@@ -11,11 +11,10 @@ import {
   EscrowPayment,
   BankDetails,
   TransactionHistory,
-  Milestone,
 } from '../types';
 
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8081';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080';
 
 // Create Axios instance
 const api = axios.create({
@@ -157,30 +156,6 @@ export const escrowApi = {
     // POST Refund
     refund: (id: number): Promise<AxiosResponse<Escrow>> =>
         api.post(`/api/escrows/${id}/refund`),
-
-    // GET Milestones by escrow ID
-    getMilestones: (escrowId: number): Promise<AxiosResponse<{ milestones: Milestone[] }>> =>
-        api.get(`/api/escrows/${escrowId}/milestones`),
-
-    // POST Create milestone
-    createMilestone: (data: Partial<Milestone>): Promise<AxiosResponse<Milestone>> =>
-        api.post('/api/milestones', data),
-
-    // PUT Update milestone
-    updateMilestone: (id: number, data: Partial<Milestone>): Promise<AxiosResponse<Milestone>> =>
-        api.put(`/api/milestones/${id}`, data),
-
-    // PUT Submit milestone for approval
-    submitMilestone: (id: number): Promise<AxiosResponse<Milestone>> =>
-        api.put(`/api/milestones/${id}/submit`),
-
-    // PUT Approve milestone
-    approveMilestone: (id: number): Promise<AxiosResponse<Milestone>> =>
-        api.put(`/api/milestones/${id}/approve`),
-
-    // PUT Reject milestone
-    rejectMilestone: (id: number): Promise<AxiosResponse<Milestone>> =>
-        api.put(`/api/milestones/${id}/reject`),
 
     // Helper function to get multiple escrows by IDs
     getMultipleByIds: async (ids: number[]): Promise<Escrow[]> => {
