@@ -68,10 +68,27 @@ const EscrowDetails = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
 const [isBackendBusy, setIsBackendBusy] = useState(false);
+
+const handleUploadReceipt = async () => {
+    if (!receiptUrl) return;
+    setIsProcessing(true);
+    try {
+        await escrowApi.uploadReceipt(escrow!.id, receiptUrl);
+        toast.success("Receipt submitted! Escrow status updated.");
+        setShowReceiptModal(false);
+        fetchEscrowDetails();
+    } catch (error: any) {
+        toast.error(error.response?.data?.error || "Failed to upload receipt");
+    } finally {
+        setIsProcessing(false);
+    }
+};
 
 // NEW: Milestones state
 const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -826,28 +843,72 @@ const isSeller = user?.id === escrow?.seller_id;
               </div>
             </div>
 
+            {/* Funds Secured Indicator */}
+            {escrow.status === "Funded" && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 p-6 bg-[#014d46] rounded-[2rem] text-white flex items-center gap-6 shadow-xl relative overflow-hidden"
+              >
+                <div className="p-4 bg-white/10 rounded-2xl relative z-10">
+                  <Lock className="h-8 w-8 text-teal-300" />
+                </div>
+                <div className="relative z-10">
+                  <h4 className="text-xl font-black uppercase tracking-tight">Funds Secured</h4>
+                  <p className="text-teal-100 text-sm opacity-80">SafeDeal has verified the payment. Funds are held in our secure vault.</p>
+                </div>
+                <Shield className="absolute -right-4 -bottom-4 h-32 w-32 opacity-5 rotate-12" />
+              </motion.div>
+            )}
+
             {/* Actions */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Actions
+            <div className="card p-6 rounded-[2rem]">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">
+                Deal Actions
               </h3>
               <div className="space-y-4">
                 {isBuyer && escrow.status === "Pending" && (
-                  <button
-                    onClick={handleInitiatePayment}
-                    disabled={isProcessing}
-                    className="btn btn-primary btn-lg w-full"
-                  >
-                    <CreditCard className="h-5 w-5 mr-2" />
-                    {isProcessing ? "Initiating..." : "Make Payment"}
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={handleInitiatePayment}
+                      disabled={isProcessing}
+                      className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2"
+                    >
+                      <Zap className="h-6 w-6" />
+                      <div className="text-center">
+                        <p className="font-black">Pay with Chapa</p>
+                        <p className="text-[10px] opacity-60">Instant Automated Verification</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setShowReceiptModal(true)}
+                      disabled={isProcessing}
+                      className="btn btn-outline btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2 border-dashed"
+                    >
+                      <FileText className="h-6 w-6" />
+                      <div className="text-center">
+                        <p className="font-black">Bank Transfer</p>
+                        <p className="text-[10px] opacity-60">Manual Receipt Upload</p>
+                      </div>
+                    </button>
+                  </div>
+                )}
+
+                {escrow.receipt_url && (
+                  <div className="p-4 bg-blue-50 rounded-2xl border-2 border-blue-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="text-blue-600" />
+                      <span className="text-sm font-bold text-blue-900">Payment Receipt Attached</span>
+                    </div>
+                    <a href={escrow.receipt_url} target="_blank" rel="noreferrer" className="text-xs font-black text-blue-600 uppercase underline">View Receipt</a>
+                  </div>
                 )}
 
                 {isSeller && !escrow.active && escrow.status === "Funded" && (
                   <button
                     onClick={handleAccept}
                     disabled={isProcessing}
-                    className="btn btn-primary btn-lg w-full"
+                    className="btn btn-primary btn-lg w-full rounded-2xl h-16 font-black"
                   >
                     <CheckCircle className="h-5 w-5 mr-2" />
                     {isProcessing ? "Accepting..." : "Accept Funded Escrow"}
@@ -1281,6 +1342,52 @@ const isSeller = user?.id === escrow?.seller_id;
                   >
                     Create Dispute
                   </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Receipt Upload Modal */}
+          {showReceiptModal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border-2 border-[#014d46]/10">
+                <div className="p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">Verify Payment</h3>
+                    <button onClick={() => setShowReceiptModal(false)} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 transition-all"><X size={20} /></button>
+                  </div>
+
+                  <div className="p-5 bg-[#e6f7f4] rounded-2xl border-2 border-[#ccefe8] space-y-2">
+                    <p className="text-[10px] font-black text-[#014d46] uppercase tracking-widest">Target Bank Account (CBE)</p>
+                    <div className="flex justify-between items-center font-mono text-sm">
+                      <span className="text-[#02665c]">Account:</span>
+                      <span className="font-bold text-[#014d46]">1000123456789</span>
+                    </div>
+                    <p className="text-[8px] text-[#02665c] opacity-70 italic">Please transfer exactly {formatCurrency(escrow!.amount)} before uploading.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Receipt URL / Reference</label>
+                      <div className="relative">
+                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="Paste reference or image link..." 
+                          className="input pl-12 h-14 rounded-2xl bg-gray-50"
+                          value={receiptUrl}
+                          onChange={(e) => setReceiptUrl(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      onClick={handleUploadReceipt}
+                      disabled={isProcessing || !receiptUrl}
+                      className="btn btn-primary w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-[#014d46]/20"
+                    >
+                      {isProcessing ? 'Verifying...' : 'Submit Evidence'}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>

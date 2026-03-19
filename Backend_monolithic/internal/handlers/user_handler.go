@@ -36,11 +36,15 @@ func NewUserHandler(db *gorm.DB, authService *auth.Service, notificationHandler 
 
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req struct {
-		FirstName  string `json:"first_name" validate:"required,min=2,max=32"`
-		LastName   string `json:"last_name" validate:"required,min=2,max=32"`
-		Profession string `json:"profession"`
-		Email      string `json:"email" validate:"required,email"`
-		Password   string `json:"password" validate:"required,min=8"`
+		FirstName     string `json:"first_name" validate:"required,min=2,max=32"`
+		LastName      string `json:"last_name" validate:"required,min=2,max=32"`
+		Profession    string `json:"profession"`
+		Email         string `json:"email" validate:"required,email"`
+		Password      string `json:"password" validate:"required,min=8"`
+		AccountName   string `json:"account_name" validate:"required"`
+		AccountNumber string `json:"account_number" validate:"required"`
+		BankCode      int    `json:"bank_code" validate:"required"`
+		BankName      string `json:"bank_name" validate:"required"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -69,6 +73,10 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		Profession:     req.Profession,
 		Email:          req.Email,
 		Password:       hashedPassword,
+		AccountName:    req.AccountName,
+		AccountNumber:  req.AccountNumber,
+		BankCode:       req.BankCode,
+		BankName:       req.BankName,
 		ActivationCode: activationCode,
 		Activated:      true, // Auto-activate for testing purposes
 	}
@@ -76,6 +84,16 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	if err := h.DB.Create(user).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create user"})
 	}
+
+	// Also create entry in BankDetails table
+	bankDetails := &models.BankDetails{
+		UserID:        user.ID,
+		AccountName:   req.AccountName,
+		AccountNumber: req.AccountNumber,
+		BankCode:      req.BankCode,
+		BankName:      req.BankName,
+	}
+	h.DB.Create(bankDetails)
 
 	// Automatically create a wallet for the new user
 	wallet, err := generateWallet()

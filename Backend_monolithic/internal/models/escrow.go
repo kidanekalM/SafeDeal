@@ -17,6 +17,7 @@ type Escrow struct {
 	Jurisdiction       string      `json:"jurisdiction,omitempty"`
 	GoverningLaw       string      `json:"governing_law,omitempty"`
 	DisputeResolution  string      `json:"dispute_resolution,omitempty"`
+	ReceiptURL         string      `json:"receipt_url,omitempty"`
 	Buyer              *User       `json:"buyer,omitempty" gorm:"foreignKey:BuyerID"`
 	Seller             *User       `json:"seller,omitempty" gorm:"foreignKey:SellerID"`
 	Mediator           *User       `json:"mediator,omitempty" gorm:"foreignKey:MediatorID"`

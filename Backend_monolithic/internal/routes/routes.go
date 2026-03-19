@@ -91,6 +91,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
 	protected.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)
 	protected.Post("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow) // Changed to POST to match standard REST practices
+	protected.Post("/escrows/:id/receipt", sc.EscrowHandler.UploadReceipt)
 	protected.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
 
 	// Search routes - for finding users

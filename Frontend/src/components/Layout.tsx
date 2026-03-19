@@ -48,11 +48,9 @@ const Layout = ({ children }: LayoutProps) => {
 
   const normalNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'My Escrows', href: '/escrows', icon: Shield },
-    { name: 'Create Escrow', href: '/create-escrow', icon: Plus },
-    { name: 'Search Users', href: '/search', icon: Search },
-    { name: 'Contacts', href: '/contacts', icon: Phone },
-    { name: 'Transactions', href: '/transactions', icon: CreditCard },
+    { name: 'Start Deal', href: '/create-escrow', icon: Plus },
+    { name: 'Directory', href: '/search', icon: Search },
+    { name: 'Payments', href: '/transactions', icon: CreditCard },
     { name: 'Profile', href: '/profile', icon: User },
   ];
   

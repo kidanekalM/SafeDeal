@@ -535,4 +535,48 @@ func (h *EscrowHandler) RefundEscrow(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Escrow refunded successfully"})
 }
 
+func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req struct {
+		ReceiptURL string `json:"receipt_url" validate:"required"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	var escrow models.Escrow
+	result := h.DB.First(&escrow, uint(id))
+	if result.Error != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	if escrow.BuyerID != userID {
+		return c.Status(403).JSON(fiber.Map{"error": "Only buyer can upload receipt"})
+	}
+
+	escrow.ReceiptURL = req.ReceiptURL
+	// When receipt is uploaded, we mark as Funded (pending verification if we had an admin)
+	// For now, we auto-verify to move flow forward
+	escrow.Status = "Funded" 
+	
+	if err := h.DB.Save(&escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Receipt uploaded successfully. Funds marked as secured.",
+		"data":    escrow,
+	})
+}
+
 // CancelEscrow continues...

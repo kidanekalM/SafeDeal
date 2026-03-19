@@ -61,6 +61,7 @@ export interface Escrow {
     jurisdiction?: string;
     governing_law?: string;
     dispute_resolution?: string;
+    receipt_url?: string;
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
     active: boolean;

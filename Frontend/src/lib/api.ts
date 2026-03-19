@@ -148,9 +148,13 @@ export const escrowApi = {
         api.post(`/api/escrows/dispute/${id}`, { reason }),
 
     // POST Cancel
-    cancel: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/${id}/cancel`),
+    cancel: (id: number): Promise<AxiosResponse<void>> =>
+        api.put(`/api/escrows/${id}/cancel`),
 
+    // POST Upload-receipt
+    uploadReceipt: (id: number, receiptUrl: string): Promise<AxiosResponse<Escrow>> =>
+        api.post(`/api/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
+    };
     // GET Dispute (if available)
     getDispute: (id: number): Promise<AxiosResponse<any>> =>
         api.get(`/api/escrows/dispute/${id}`),

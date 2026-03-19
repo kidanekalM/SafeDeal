@@ -18,6 +18,7 @@ type User struct {
 	AccountName         string `json:"account_name,omitempty"`
 	AccountNumber       string `json:"account_number,omitempty"`
 	BankCode            int    `json:"bank_code,omitempty"`
+	BankName            string `json:"bank_name,omitempty"`
 	ActivationCode      string `json:"-"`
 }
 
@@ -27,4 +28,5 @@ type BankDetails struct {
 	AccountName   string `json:"account_name" validate:"required"`
 	AccountNumber string `json:"account_number" validate:"required"`
 	BankCode      int    `json:"bank_code" validate:"required"`
+	BankName      string `json:"bank_name" validate:"required"`
 }

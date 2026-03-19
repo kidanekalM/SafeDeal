@@ -5,7 +5,7 @@ import {
   Plus, Shield, Mail, DollarSign, ArrowLeft, 
   Search, Check, UserPlus, FileText, Scale, 
   ChevronRight, ChevronLeft, Trash2, Calendar,
-  Settings, Zap, ListChecks, Gavel
+  Settings, Zap, ListChecks, Gavel, LayoutTemplate
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -43,6 +43,24 @@ const CreateEscrowSchema = z.object({
 });
 
 type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
+
+const TEMPLATES = [
+  { 
+    id: 'freelance', 
+    name: 'Freelance Work', 
+    conditions: '1. Deliverables: [List deliverables here]\n2. Revisions: [Number] rounds included.\n3. Timeline: Completion within [X] days of funding.\n4. Intellectual Property: Assigned to buyer upon full payment.'
+  },
+  { 
+    id: 'product', 
+    name: 'Product Sale', 
+    conditions: '1. Item: [Name and Quantity]\n2. Shipping: Within [X] days of funding via [Carrier].\n3. Inspection: Buyer has [X] days to verify product quality.\n4. Returns: [Return policy details].'
+  },
+  { 
+    id: 'service', 
+    name: 'Consulting Service', 
+    conditions: '1. Scope: [Describe service scope]\n2. Performance: Professional standard of care.\n3. Payment: Based on [Hours/Deliverables].\n4. Confidentiality: Both parties agree to NDA terms.'
+  }
+];
 
 const CreateEscrow = () => {
   const navigate = useNavigate();
@@ -89,20 +107,19 @@ const CreateEscrow = () => {
   const amount = watch('amount');
   const milestones = watch('milestones') || [];
 
-  // Dynamic Steps based on isDetailed
+  // Dynamic Steps - Simplified
   const steps = isDetailed 
     ? [
         { id: 'role', title: 'Role', icon: Shield },
         { id: 'parties', title: 'Parties', icon: Search },
-        { id: 'details', title: 'Basic Terms', icon: FileText },
+        { id: 'details', title: 'Terms', icon: FileText },
         { id: 'milestones', title: 'Milestones', icon: ListChecks },
-        { id: 'legal', title: 'Legal', icon: Scale },
-        { id: 'review', title: 'Final Review', icon: Check },
+        { id: 'final', title: 'Finalize', icon: Check },
       ]
     : [
         { id: 'role', title: 'Role', icon: Shield },
         { id: 'parties', title: 'Parties', icon: Search },
-        { id: 'details', title: 'Details & Submit', icon: Check },
+        { id: 'final', title: 'Finalize', icon: Check },
       ];
 
   // Sync total amount with milestones if enabled
@@ -162,6 +179,14 @@ const CreateEscrow = () => {
     setSearchTerm('');
   };
 
+  const applyTemplate = (templateId: string) => {
+    const template = TEMPLATES.find(t => t.id === templateId);
+    if (template) {
+      setValue('conditions', template.conditions);
+      toast.success(`${template.name} template applied`);
+    }
+  };
+
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
     if (step === 0) fieldsToValidate = ['creator_role', 'isDetailed'];
@@ -178,12 +203,13 @@ const CreateEscrow = () => {
         }
       }
     }
-    if (step === 2) fieldsToValidate = ['amount', 'conditions'];
     
-    // Comprehensive steps validation
-    if (isDetailed) {
-      if (step === 3) fieldsToValidate = ['milestones'];
-      if (step === 4) fieldsToValidate = ['jurisdiction', 'governing_law', 'dispute_resolution'];
+    if (!isDetailed && step === 1) {
+        // Skip details/milestones in simple mode
+        fieldsToValidate = ['amount', 'conditions'];
+    } else if (isDetailed) {
+        if (step === 2) fieldsToValidate = ['amount', 'conditions'];
+        if (step === 3) fieldsToValidate = ['milestones'];
     }
 
     const isStepValid = await trigger(fieldsToValidate as any);
@@ -229,7 +255,6 @@ const CreateEscrow = () => {
         payload.seller_id = data.counterparty_id;
       }
 
-      // Append role query param for backend logic
       const url = `/api/escrows?role=${data.creator_role}`;
       await api.post(url, payload);
       
@@ -248,8 +273,8 @@ const CreateEscrow = () => {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">Configure Your Deal</h2>
-              <p className="text-gray-500 mt-2">Start by defining your role and complexity level</p>
+              <h2 className="text-2xl font-bold text-gray-900">New SafeDeal</h2>
+              <p className="text-gray-500 mt-2">Choose how you want to structure this transaction</p>
             </div>
             
             <div className="space-y-6">
@@ -257,9 +282,9 @@ const CreateEscrow = () => {
                 <label className="block text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">I am the...</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
-                    { id: 'buyer', label: 'Buyer', icon: UserPlus, desc: 'Paying for service' },
-                    { id: 'seller', label: 'Seller', icon: DollarSign, desc: 'Providing service' },
-                    { id: 'mediator', label: 'Mediator', icon: Shield, desc: 'Neutral third party' },
+                    { id: 'buyer', label: 'Buyer', icon: UserPlus },
+                    { id: 'seller', label: 'Seller', icon: DollarSign },
+                    { id: 'mediator', label: 'Mediator', icon: Shield },
                   ].map((role) => (
                     <label
                       key={role.id}
@@ -272,18 +297,17 @@ const CreateEscrow = () => {
                       <input type="radio" value={role.id} {...register('creator_role')} className="sr-only" />
                       <role.icon size={28} className={creatorRole === role.id ? 'text-[#014d46]' : 'text-gray-400'} />
                       <span className="mt-3 font-bold text-gray-900">{role.label}</span>
-                      <span className="mt-1 text-[10px] text-center text-gray-500 uppercase tracking-tighter">{role.desc}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
               <div className="pt-4 border-t">
-                <label className="block text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Deal Complexity</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Transaction Type</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { id: false, label: 'Simple Mode', icon: Zap, desc: 'Quick setup, one-time payment' },
-                    { id: true, label: 'Ultra Comprehensive', icon: Settings, desc: 'Mediators, milestones, legal compliance' },
+                    { id: false, label: 'Quick Escrow', icon: Zap, desc: 'Simple 3-step setup' },
+                    { id: true, label: 'Ultra Comprehensive', icon: Settings, desc: 'Milestones & legal protection' },
                   ].map((mode) => (
                     <label
                       key={mode.id.toString()}
@@ -318,178 +342,110 @@ const CreateEscrow = () => {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">Identify Parties</h2>
-              <p className="text-gray-500 mt-2">Search for SafeDeal users to include in the transaction</p>
+              <h2 className="text-2xl font-bold text-gray-900">Counterparties</h2>
+              <p className="text-gray-500 mt-2">Who are you dealing with?</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {creatorRole === 'mediator' ? (
                 <>
                   <div className="space-y-4">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Buyer Party</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Buyer</label>
                     {selectedBuyer ? (
                       <div className="flex items-center justify-between p-4 bg-white border-2 border-[#014d46] rounded-2xl">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#014d46] text-white flex items-center justify-center font-bold">
-                            {selectedBuyer.first_name[0]}{selectedBuyer.last_name[0]}
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm">{selectedBuyer.first_name} {selectedBuyer.last_name}</p>
-                            <p className="text-xs text-gray-500">{selectedBuyer.email}</p>
-                          </div>
+                          <div className="w-10 h-10 rounded-full bg-[#014d46] text-white flex items-center justify-center font-bold">{selectedBuyer.first_name[0]}</div>
+                          <div className="text-sm font-bold">{selectedBuyer.first_name} {selectedBuyer.last_name}</div>
                         </div>
-                        <button onClick={() => setSelectedBuyer(null)} className="text-gray-400 hover:text-red-500 p-1"><Trash2 size={18} /></button>
+                        <button onClick={() => setSelectedBuyer(null)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
                       </div>
                     ) : (
                       <div className="relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                          type="text"
-                          placeholder="Search buyer..."
-                          className="input pl-12 h-14 rounded-2xl"
-                          onChange={(e) => handleSearch(e.target.value, 'buyer')}
-                        />
+                        <input type="text" placeholder="Find buyer..." className="input pl-12 h-14 rounded-2xl" onChange={(e) => handleSearch(e.target.value, 'buyer')} />
                       </div>
                     )}
                   </div>
-
                   <div className="space-y-4">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Seller Party</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Seller</label>
                     {selectedSeller ? (
                       <div className="flex items-center justify-between p-4 bg-white border-2 border-[#014d46] rounded-2xl">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#014d46] text-white flex items-center justify-center font-bold">
-                            {selectedSeller.first_name[0]}{selectedSeller.last_name[0]}
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm">{selectedSeller.first_name} {selectedSeller.last_name}</p>
-                            <p className="text-xs text-gray-500">{selectedSeller.email}</p>
-                          </div>
+                          <div className="w-10 h-10 rounded-full bg-[#014d46] text-white flex items-center justify-center font-bold">{selectedSeller.first_name[0]}</div>
+                          <div className="text-sm font-bold">{selectedSeller.first_name} {selectedSeller.last_name}</div>
                         </div>
-                        <button onClick={() => setSelectedSeller(null)} className="text-gray-400 hover:text-red-500 p-1"><Trash2 size={18} /></button>
+                        <button onClick={() => setSelectedSeller(null)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
                       </div>
                     ) : (
                       <div className="relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                          type="text"
-                          placeholder="Search seller..."
-                          className="input pl-12 h-14 rounded-2xl"
-                          onChange={(e) => handleSearch(e.target.value, 'seller')}
-                        />
+                        <input type="text" placeholder="Find seller..." className="input pl-12 h-14 rounded-2xl" onChange={(e) => handleSearch(e.target.value, 'seller')} />
                       </div>
                     )}
                   </div>
                 </>
               ) : (
-                <div className="space-y-4 md:col-span-1">
+                <div className="space-y-4">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                    Counterparty ({creatorRole === 'buyer' ? 'Seller' : 'Buyer'})
+                    The {creatorRole === 'buyer' ? 'Seller' : 'Buyer'}
                   </label>
                   {selectedCounterparty ? (
                     <div className="flex items-center justify-between p-5 bg-white border-2 border-[#014d46] rounded-2xl shadow-sm">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-[#014d46] text-white flex items-center justify-center font-bold text-lg">
-                          {selectedCounterparty.first_name[0]}{selectedCounterparty.last_name[0]}
-                        </div>
+                        <div className="w-12 h-12 rounded-full bg-[#014d46] text-white flex items-center justify-center font-bold text-lg">{selectedCounterparty.first_name[0]}</div>
                         <div>
-                          <p className="font-bold text-gray-900">{selectedCounterparty.first_name} {selectedCounterparty.last_name}</p>
-                          <p className="text-sm text-gray-500">{selectedCounterparty.email}</p>
+                          <p className="font-bold text-gray-900">{selectedCounterparty.first_name}</p>
+                          <p className="text-xs text-gray-500">{selectedCounterparty.email}</p>
                         </div>
                       </div>
-                      <button onClick={() => setSelectedCounterparty(null)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
-                        <Trash2 size={20} />
-                      </button>
+                      <button onClick={() => setSelectedCounterparty(null)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={20} /></button>
                     </div>
                   ) : (
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        placeholder={`Find your ${creatorRole === 'buyer' ? 'seller' : 'buyer'}...`}
-                        className="input pl-14 h-16 rounded-2xl text-lg shadow-sm"
-                        value={searchType === 'counterparty' ? searchTerm : ''}
-                        onChange={(e) => handleSearch(e.target.value, 'counterparty')}
-                      />
+                      <input type="text" placeholder={`Search by name or email...`} className="input pl-14 h-16 rounded-2xl text-lg shadow-sm" value={searchType === 'counterparty' ? searchTerm : ''} onChange={(e) => handleSearch(e.target.value, 'counterparty')} />
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Optional Mediator Selection (Only in Detailed mode for non-mediator creators) */}
               {isDetailed && creatorRole !== 'mediator' && (
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Gavel size={14} className="text-[#014d46]" /> Assign Mediator (Optional)
-                  </label>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Gavel size={14} /> Assign Mediator (Optional)</label>
                   {selectedMediator ? (
-                    <div className="flex items-center justify-between p-5 bg-white border-2 border-[#014d46] rounded-2xl shadow-sm border-dashed">
+                    <div className="flex items-center justify-between p-5 bg-white border-2 border-dashed border-[#014d46] rounded-2xl shadow-sm">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-lg">
-                          {selectedMediator.first_name[0]}{selectedMediator.last_name[0]}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900">{selectedMediator.first_name} {selectedMediator.last_name}</p>
-                          <p className="text-sm text-gray-500">{selectedMediator.email}</p>
-                        </div>
+                        <div className="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-lg">{selectedMediator.first_name[0]}</div>
+                        <div className="font-bold text-gray-900">{selectedMediator.first_name}</div>
                       </div>
-                      <button onClick={() => setSelectedMediator(null)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
-                        <Trash2 size={20} />
-                      </button>
+                      <button onClick={() => setSelectedMediator(null)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={20} /></button>
                     </div>
                   ) : (
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        placeholder="Search for a neutral mediator..."
-                        className="input pl-14 h-16 rounded-2xl text-lg shadow-sm bg-gray-50/50"
-                        value={searchType === 'mediator' ? searchTerm : ''}
-                        onChange={(e) => handleSearch(e.target.value, 'mediator')}
-                      />
+                      <input type="text" placeholder="Find a neutral mediator..." className="input pl-14 h-16 rounded-2xl text-lg shadow-sm bg-gray-50/50" value={searchType === 'mediator' ? searchTerm : ''} onChange={(e) => handleSearch(e.target.value, 'mediator')} />
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Results */}
             <AnimatePresence>
               {searchResults.length > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="max-w-xl mx-auto bg-white border-2 rounded-2xl shadow-xl overflow-hidden z-20"
-                >
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-xl mx-auto bg-white border-2 rounded-2xl shadow-xl overflow-hidden z-20">
                   {searchResults.map((u) => (
-                    <button
-                      key={u.id}
-                      onClick={() => selectUser(u, searchType)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 border-b last:border-0 transition-all group"
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                        searchType === 'mediator' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'
-                      } group-hover:bg-[#014d46] group-hover:text-white`}>
-                        {u.first_name[0]}{u.last_name[0]}
-                      </div>
-                      <div className="flex-1 text-left">
+                    <button key={u.id} onClick={() => selectUser(u, searchType)} className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 border-b last:border-0 transition-all text-left">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${searchType === 'mediator' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'}`}>{u.first_name[0]}</div>
+                      <div className="flex-1">
                         <p className="font-bold text-gray-900">{u.first_name} {u.last_name}</p>
                         <p className="text-xs text-gray-500">{u.email}</p>
                       </div>
-                      <Plus size={18} className="text-[#014d46] opacity-0 group-hover:opacity-100 transition-all" />
+                      <Plus size={18} className="text-[#014d46]" />
                     </button>
                   ))}
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {invitationSent && (
-              <div className="max-w-xl mx-auto p-4 bg-green-50 border-2 border-green-100 rounded-2xl flex items-center gap-3">
-                <Check className="text-green-600" size={20} />
-                <p className="text-sm text-green-800">User not found. We've sent an invite to <strong>{invitationSent}</strong>.</p>
-              </div>
-            )}
           </div>
         );
 
@@ -497,47 +453,38 @@ const CreateEscrow = () => {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">Transaction Details</h2>
-              <p className="text-gray-500 mt-2">Define the financial and descriptive terms of the deal</p>
+              <h2 className="text-2xl font-bold text-gray-900">Agreement Terms</h2>
+              <p className="text-gray-500 mt-2">Define the financial and descriptive terms</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Amount (ETB)</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...register('amount')}
-                      readOnly={isDetailed}
-                      className={`input pl-12 h-14 rounded-2xl text-xl font-bold ${isDetailed ? 'bg-gray-50 cursor-not-allowed text-[#014d46]' : ''}`}
-                    />
+            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Agreement Conditions</label>
+                  <div className="flex gap-2">
+                    {TEMPLATES.map(t => (
+                      <button key={t.id} type="button" onClick={() => applyTemplate(t.id)} className="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded-md flex items-center gap-1"><LayoutTemplate size={10} /> {t.name.split(' ')[0]}</button>
+                    ))}
                   </div>
-                  {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
-                  {isDetailed && <p className="mt-2 text-xs text-[#014d46] font-medium flex items-center gap-1"><Settings size={12} /> Auto-calculated from milestones</p>}
                 </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Agreement Conditions</label>
-                  <textarea
-                    rows={8}
-                    placeholder="Provide specific details about deliverables, timelines, and acceptance criteria..."
-                    {...register('conditions')}
-                    className="w-full p-5 border-2 border-gray-100 rounded-2xl focus:border-[#014d46] focus:ring-0 outline-none transition-all"
-                  ></textarea>
-                  {errors.conditions && <p className="mt-1 text-xs text-red-600">{errors.conditions.message}</p>}
-                </div>
+                <textarea rows={10} placeholder="Describe the deliverables, timeline, and terms..." {...register('conditions')} className="w-full p-5 border-2 border-gray-100 rounded-2xl focus:border-[#014d46] outline-none transition-all"></textarea>
+                {errors.conditions && <p className="text-red-500 text-xs">{errors.conditions.message}</p>}
               </div>
 
-              <div className="hidden md:flex flex-col items-center justify-center p-8 bg-[#e6f7f4] rounded-3xl border-2 border-[#ccefe8]">
-                <FileText size={64} className="text-[#014d46] opacity-20 mb-4" />
-                <h4 className="font-bold text-[#014d46]">Why detailed conditions matter?</h4>
-                <p className="text-xs text-center text-[#02665c] mt-2 leading-relaxed max-w-xs">
-                  Clearly defined terms help our AI Arbitrator and manual mediators resolve disputes fairly by referencing your original agreement.
-                </p>
+              <div className="space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Total Amount (ETB)</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input type="number" step="0.01" placeholder="0.00" {...register('amount')} readOnly={isDetailed} className={`input pl-12 h-14 rounded-2xl text-xl font-bold ${isDetailed ? 'bg-gray-50 text-[#014d46]' : ''}`} />
+                  </div>
+                  {isDetailed && <p className="mt-2 text-[10px] text-[#014d46] font-bold uppercase tracking-tighter flex items-center gap-1"><Settings size={10} /> Auto-synced with milestones</p>}
+                </div>
+                
+                <div className="p-5 bg-teal-50 rounded-2xl border border-teal-100">
+                    <h4 className="text-xs font-black text-teal-800 uppercase mb-2">SafeDeal Guarantee</h4>
+                    <p className="text-[10px] text-teal-700 leading-relaxed">Funds are held in a secure vault and only released when terms are met. Our AI Arbitrator stands by to resolve any disputes.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -548,210 +495,100 @@ const CreateEscrow = () => {
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900">Project Milestones</h2>
-              <p className="text-gray-500 mt-2">Break down the payment into specific deliverables</p>
+              <p className="text-gray-500 mt-2">Break down the payment into specific stages</p>
             </div>
 
             <div className="max-w-3xl mx-auto space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Milestones List</span>
-                <button
-                  type="button"
-                  onClick={() => append({ title: '', amount: 0 })}
-                  className="btn btn-primary btn-sm rounded-xl gap-1"
-                >
-                  <Plus size={14} /> Add Milestone
-                </button>
+                <button type="button" onClick={() => append({ title: '', amount: 0 })} className="btn btn-primary btn-sm rounded-xl gap-1"><Plus size={14} /> Add</button>
               </div>
 
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                 {fields.map((field, index) => (
-                  <motion.div 
-                    key={field.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-5 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-gray-200 transition-all flex flex-col md:flex-row gap-4 relative group"
-                  >
-                    <div className="flex-1 space-y-3">
-                      <div className="flex gap-4">
-                        <input
-                          placeholder="Milestone Title (e.g. Design Phase)"
-                          {...register(`milestones.${index}.title` as const)}
-                          className="flex-1 text-sm font-bold border-b-2 border-gray-50 focus:border-[#014d46] outline-none py-1 transition-all"
-                        />
-                        <div className="w-32 relative">
-                          <DollarSign className="absolute left-0 top-1.5 text-gray-400" size={14} />
-                          <input
-                            type="number"
-                            placeholder="Amount"
-                            {...register(`milestones.${index}.amount` as const)}
-                            className="w-full pl-5 text-xs font-semibold border-b border-gray-100 focus:border-[#014d46] outline-none py-1 transition-all"
-                          />
-                        </div>
-                      </div>
-                      
-                      <textarea
-                        placeholder="Deliverable description and acceptance criteria..."
-                        {...register(`milestones.${index}.description` as const)}
-                        rows={2}
-                        className="w-full text-xs p-2 bg-gray-50 rounded-lg border-none focus:ring-1 focus:ring-[#014d46] outline-none transition-all resize-none"
-                      />
-
-                      <div className="flex gap-4 items-center">
-                        <div className="flex-1 relative">
-                          <Calendar className="absolute left-0 top-1.5 text-gray-400" size={14} />
-                          <input
-                            type="date"
-                            {...register(`milestones.${index}.due_date` as const)}
-                            className="w-full pl-5 text-xs text-gray-500 border-b border-gray-100 focus:border-[#014d46] outline-none py-1 transition-all"
-                          />
-                        </div>
-                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">
-                          Approver: {creatorRole === 'seller' ? (selectedCounterparty?.first_name || 'Buyer') : 'You'}
-                        </div>
+                  <motion.div key={field.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="p-5 bg-white border-2 border-gray-100 rounded-2xl shadow-sm flex flex-col gap-4 relative">
+                    <div className="flex gap-4">
+                      <input placeholder="Milestone Title" {...register(`milestones.${index}.title` as const)} className="flex-1 text-sm font-bold border-b-2 border-gray-50 focus:border-[#014d46] outline-none py-1" />
+                      <div className="w-32 relative">
+                        <DollarSign className="absolute left-0 top-1.5 text-gray-400" size={14} />
+                        <input type="number" placeholder="Amount" {...register(`milestones.${index}.amount` as const)} className="w-full pl-5 text-xs font-semibold border-b border-gray-100 focus:border-[#014d46] outline-none py-1" />
                       </div>
                     </div>
-                    {fields.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="self-start p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
+                    <textarea placeholder="Deliverable details..." {...register(`milestones.${index}.description` as const)} rows={2} className="w-full text-xs p-2 bg-gray-50 rounded-lg border-none focus:ring-1 focus:ring-[#014d46] outline-none resize-none" />
+                    {fields.length > 1 && <button type="button" onClick={() => remove(index)} className="absolute -right-2 -top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-all"><Trash2 size={14} /></button>}
                   </motion.div>
                 ))}
               </div>
 
-              <div className="p-4 bg-white border-2 border-[#014d46] rounded-2xl flex justify-between items-center shadow-lg shadow-[#014d46]/5">
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Calculated Amount</span>
-                <span className="text-2xl font-black text-[#014d46]">{Number(amount).toLocaleString()} ETB</span>
+              <div className="p-4 bg-[#014d46] rounded-2xl flex justify-between items-center text-white">
+                <span className="text-xs font-bold uppercase tracking-widest opacity-60">Total Budget</span>
+                <span className="text-2xl font-black">{Number(amount).toLocaleString()} ETB</span>
               </div>
             </div>
           </div>
         );
 
-      case 'legal':
+      case 'final':
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">Legal Enforcement</h2>
-              <p className="text-gray-500 mt-2">Ensure the agreement is compliant with your jurisdiction</p>
+              <h2 className="text-2xl font-bold text-gray-900">Finalize Deal</h2>
+              <p className="text-gray-500 mt-2">Confirm compliance and launch your secure escrow</p>
             </div>
 
-            <div className="max-w-xl mx-auto space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Jurisdiction</label>
-                  <select
-                    {...register('jurisdiction')}
-                    className="input h-14 rounded-2xl bg-white shadow-sm"
-                  >
-                    <option value="Ethiopia">Ethiopia</option>
-                    <option value="Kenya">Kenya</option>
-                    <option value="International">International</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Governing Law</label>
-                  <input
-                    type="text"
-                    {...register('governing_law')}
-                    placeholder="e.g. Commercial Code"
-                    className="input h-14 rounded-2xl shadow-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Dispute Resolution</label>
-                <select
-                  {...register('dispute_resolution')}
-                  className="input h-14 rounded-2xl bg-white shadow-sm"
-                >
-                  <option value="AI Arbitration via SafeDeal">AI Arbitration (Smart Resolution)</option>
-                  <option value="Ethiopian Arbitration and Conciliation Center (EACC)">EACC (Formal Arbitration)</option>
-                  <option value="Mediation via Third Party">Third-party Mediation</option>
-                </select>
-              </div>
-
-              <div className="p-5 bg-[#014d46] rounded-3xl text-white flex gap-4 shadow-xl">
-                <Scale className="shrink-0 text-[#ccefe8]" size={28} />
-                <div>
-                  <h5 className="font-bold text-sm">Blockchain-Backed Evidence</h5>
-                  <p className="text-[10px] text-[#ccefe8] mt-1 leading-relaxed opacity-80">
-                    SafeDeal transaction states are recorded on Ethereum. In case of legal proceedings, this immutable record provides strong evidence of agreement terms and payment status.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'review':
-        return (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">Final Confirmation</h2>
-              <p className="text-gray-500 mt-2">One last look at your secure deal configuration</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-6">
-                <div className="bg-white border-2 border-gray-100 rounded-3xl p-6 shadow-sm">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Agreement Terms</h3>
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{watch('conditions')}</p>
-                </div>
-
-                {isDetailed && milestones.length > 0 && (
-                  <div className="bg-[#e6f7f4] border-2 border-[#ccefe8] rounded-3xl p-6">
-                    <h3 className="text-xs font-bold text-[#014d46] uppercase tracking-widest mb-4">Milestone Breakdown</h3>
-                    <div className="space-y-2">
-                      {milestones.map((m, i) => (
-                        <div key={i} className="flex justify-between items-center text-sm p-3 bg-white rounded-xl shadow-sm">
-                          <span className="font-bold text-gray-800">{i+1}. {m.title}</span>
-                          <span className="font-black text-[#014d46]">{Number(m.amount).toLocaleString()} ETB</span>
-                        </div>
-                      ))}
-                    </div>
+            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="bg-white border-2 border-gray-100 rounded-3xl p-6">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Agreement Preview</h3>
+                  <div className="max-h-40 overflow-y-auto text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">{watch('conditions')}</div>
+                  <div className="border-t pt-4 flex justify-between items-center">
+                    <span className="text-xs font-bold text-gray-400 uppercase">Total Amount</span>
+                    <span className="text-xl font-black text-[#014d46]">{Number(amount).toLocaleString()} ETB</span>
                   </div>
-                )}
+                </div>
+
+                <div className="p-5 bg-[#014d46] rounded-3xl text-white flex gap-4 shadow-xl">
+                  <Scale className="shrink-0 text-[#ccefe8]" size={28} />
+                  <div>
+                    <h5 className="font-bold text-sm">Legally Enforceable</h5>
+                    <p className="text-[10px] text-[#ccefe8] mt-1 leading-relaxed opacity-80">This deal is backed by blockchain evidence and governed by {watch('governing_law') || 'local law'}.</p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-[#014d46] text-white rounded-3xl p-6 shadow-xl">
-                  <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest mb-4">Summary</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                      <span className="text-xs">Total Amount</span>
-                      <span className="text-2xl font-black">{Number(amount).toLocaleString()} ETB</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="opacity-60">Buyer</span>
-                      <span className="font-bold">{creatorRole === 'buyer' ? 'You' : (selectedBuyer?.first_name || (creatorRole === 'seller' ? selectedCounterparty?.first_name : '...'))}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="opacity-60">Seller</span>
-                      <span className="font-bold">{creatorRole === 'seller' ? 'You' : (selectedSeller?.first_name || (creatorRole === 'buyer' ? selectedCounterparty?.first_name : '...'))}</span>
-                    </div>
-                    {isDetailed && selectedMediator && (
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="opacity-60">Mediator</span>
-                        <span className="font-bold text-indigo-300">{selectedMediator.first_name}</span>
-                      </div>
-                    )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Jurisdiction</label>
+                    <select {...register('jurisdiction')} className="input h-12 rounded-xl bg-white text-xs">
+                      <option value="Ethiopia">Ethiopia</option>
+                      <option value="Kenya">Kenya</option>
+                      <option value="International">International</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Governing Law</label>
+                    <input type="text" {...register('governing_law')} className="input h-12 rounded-xl text-xs" />
                   </div>
                 </div>
 
-                {isDetailed && (
-                  <div className="bg-gray-50 rounded-3xl p-6 border-2 border-gray-100">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Compliance</h3>
-                    <div className="space-y-2 text-xs">
-                      <p><span className="text-gray-400">Jurisdiction:</span> <span className="font-bold">{watch('jurisdiction')}</span></p>
-                      <p><span className="text-gray-400">Law:</span> <span className="font-bold">{watch('governing_law')}</span></p>
-                    </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Dispute Resolution</label>
+                  <select {...register('dispute_resolution')} className="input h-12 rounded-xl bg-white text-xs">
+                    <option value="AI Arbitration via SafeDeal">AI Smart Resolution</option>
+                    <option value="Ethiopian Arbitration and Conciliation Center (EACC)">EACC Formal</option>
+                    <option value="Mediation via Third Party">Third-party Mediation</option>
+                  </select>
+                </div>
+
+                <div className="bg-gray-50 rounded-3xl p-6 border-2 border-gray-100">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Stakeholders</h3>
+                  <div className="space-y-2 text-xs">
+                    <p className="flex justify-between"><span className="text-gray-400">Buyer:</span> <span className="font-bold">{creatorRole === 'buyer' ? 'You' : (selectedBuyer?.first_name || (creatorRole === 'seller' ? selectedCounterparty?.first_name : '...'))}</span></p>
+                    <p className="flex justify-between"><span className="text-gray-400">Seller:</span> <span className="font-bold">{creatorRole === 'seller' ? 'You' : (selectedSeller?.first_name || (creatorRole === 'buyer' ? selectedCounterparty?.first_name : '...'))}</span></p>
+                    {selectedMediator && <p className="flex justify-between"><span className="text-gray-400">Mediator:</span> <span className="font-bold text-indigo-600">{selectedMediator.first_name}</span></p>}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -765,12 +602,8 @@ const CreateEscrow = () => {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6">
-        {/* Progress Header */}
         <div className="flex items-center justify-between mb-12">
-          <button
-            onClick={() => step === 0 ? navigate(-1) : prevStep()}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold transition-all"
-          >
+          <button onClick={() => step === 0 ? navigate(-1) : prevStep()} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold transition-all">
             <div className="p-2 bg-gray-100 rounded-full"><ChevronLeft size={20} /></div>
             <span className="hidden sm:inline">Back</span>
           </button>
@@ -778,54 +611,25 @@ const CreateEscrow = () => {
           <div className="flex-1 max-w-2xl mx-12">
             <div className="flex justify-between items-center relative">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gray-100 w-full z-0 rounded-full" />
-              <div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#014d46] z-0 rounded-full transition-all duration-700 ease-out" 
-                style={{ width: `${(step / (steps.length - 1)) * 100}%` }}
-              />
-              
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#014d46] z-0 rounded-full transition-all duration-700 ease-out" style={{ width: `${(step / (steps.length - 1)) * 100}%` }} />
               {steps.map((s, i) => (
-                <div key={s.id} className="relative z-10">
-                  <div 
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                      i <= step 
-                        ? 'bg-[#014d46] text-white shadow-xl shadow-[#014d46]/20 scale-110' 
-                        : 'bg-white border-2 border-gray-100 text-gray-300'
-                    }`}
-                  >
-                    <s.icon size={18} />
-                  </div>
-                  <span className={`absolute -bottom-7 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
-                    i <= step ? 'text-[#014d46]' : 'text-gray-300'
-                  }`}>
-                    {s.title}
-                  </span>
+                <div key={s.id} className="relative z-10 flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${i <= step ? 'bg-[#014d46] text-white shadow-xl shadow-[#014d46]/20 scale-110' : 'bg-white border-2 border-gray-100 text-gray-300'}`}><s.icon size={18} /></div>
+                  <span className={`absolute -bottom-7 text-[8px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${i <= step ? 'text-[#014d46]' : 'text-gray-300'}`}>{s.title}</span>
                 </div>
               ))}
             </div>
           </div>
-
           <div className="w-20 hidden sm:block" />
         </div>
 
-        {/* Main Card */}
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
           <div className="gradient-primary h-2" />
           <div className="p-8 sm:p-12 min-h-[500px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={steps[step].id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {renderStepContent()}
-              </motion.div>
-            </AnimatePresence>
+            <AnimatePresence mode="wait"><motion.div key={steps[step].id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>{renderStepContent()}</motion.div></AnimatePresence>
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="mt-12 flex justify-between items-center px-4">
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Step {step + 1} of {steps.length}</span>
@@ -834,22 +638,9 @@ const CreateEscrow = () => {
           
           <div className="flex gap-4">
             {step < steps.length - 1 ? (
-              <button
-                onClick={nextStep}
-                className="px-10 py-4 rounded-2xl bg-[#014d46] text-white font-black hover:bg-[#02665c] shadow-2xl shadow-[#014d46]/30 transition-all flex items-center gap-2 group"
-              >
-                Continue
-                <ChevronRight size={22} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+              <button onClick={nextStep} className="px-10 py-4 rounded-2xl bg-[#014d46] text-white font-black hover:bg-[#02665c] shadow-2xl shadow-[#014d46]/30 transition-all flex items-center gap-2 group">Continue <ChevronRight size={22} className="group-hover:translate-x-1 transition-transform" /></button>
             ) : (
-              <button
-                onClick={handleSubmit(onSubmit)}
-                disabled={isSubmitting || !isValid}
-                className="px-10 py-4 rounded-2xl bg-[#014d46] text-white font-black hover:bg-[#02665c] shadow-2xl shadow-[#014d46]/30 disabled:opacity-50 transition-all flex items-center gap-2"
-              >
-                {isSubmitting ? 'Finalizing...' : 'Create Escrow Now'}
-                <Check size={22} />
-              </button>
+              <button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || !isValid} className="px-10 py-4 rounded-2xl bg-[#014d46] text-white font-black hover:bg-[#02665c] shadow-2xl shadow-[#014d46]/30 disabled:opacity-50 transition-all flex items-center gap-2">{isSubmitting ? 'Launching...' : 'Start Secure Escrow'}<Check size={22} /></button>
             )}
           </div>
         </div>
