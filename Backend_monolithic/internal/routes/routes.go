@@ -86,7 +86,11 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Get("/escrows/:id", sc.EscrowHandler.GetEscrowByID)
 	protected.Get("/escrows", sc.EscrowHandler.GetMyEscrows)
 	protected.Put("/escrows/:id/accept", sc.EscrowHandler.AcceptEscrow)
-	protected.Put("/escrows/:id/cancel", sc.EscrowHandler.CancelEscrow)
+	protected.Post("/escrows/:id/lock", sc.EscrowHandler.LockEscrow)
+	protected.Put("/escrows/:id", sc.EscrowHandler.UpdateEscrow)
+	protected.Post("/escrows/:id/verify", sc.EscrowHandler.VerifyPayment)
+	protected.Post("/escrows/:id/cancel", sc.EscrowHandler.CancelEscrow)
+
 	protected.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
 	protected.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
 	protected.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)

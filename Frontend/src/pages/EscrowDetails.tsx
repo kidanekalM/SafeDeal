@@ -31,6 +31,7 @@ import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RealTimeChat from "../components/RealTimeChat";
 import PaymentModal from "../components/PaymentModal";
+import VerifiedBadge from "../components/VerifiedBadge";
 import { motion, AnimatePresence } from "framer-motion";
 
 const formatDateSafe = (date: string | number | Date | null | undefined) => {
@@ -69,13 +70,47 @@ const EscrowDetails = () => {
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editConditions, setEditConditions] = useState("");
+  const [editAmount, setEditAmount] = useState<number>(0);
   const [receiptUrl, setReceiptUrl] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
-const [isBackendBusy, setIsBackendBusy] = useState(false);
+  const [isBackendBusy, setIsBackendBusy] = useState(false);
 
-const handleUploadReceipt = async () => {
+  const handleEditSubmit = async () => {
+    if (!editConditions || editConditions.trim().length < 10) {
+      toast.error("Terms must be at least 10 characters");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await escrowApi.update(escrow!.id, { amount: editAmount, conditions: editConditions });
+      toast.success("Terms updated!");
+      setShowEditModal(false);
+      fetchEscrowDetails();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to update terms");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleLock = async () => {
+    setIsProcessing(true);
+    try {
+      await escrowApi.lock(escrow!.id);
+      toast.success("Terms locked! No further changes can be made.");
+      fetchEscrowDetails();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to lock terms");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUploadReceipt = async () => {
     if (!receiptUrl) return;
     setIsProcessing(true);
     try {
@@ -529,6 +564,8 @@ const isSeller = user?.id === escrow?.seller_id;
     switch (status) {
       case "Pending":
         return <Clock className="h-5 w-5" />;
+      case "Verifying":
+        return <Clock className="h-5 w-5" />;
       case "Funded":
         return <Shield className="h-5 w-5" />;
       case "Released":
@@ -689,7 +726,23 @@ const isSeller = user?.id === escrow?.seller_id;
                     <p className="text-lg font-semibold text-gray-900">
                       {formatCurrency(escrow.amount)}
                     </p>
+                    {escrow.platform_fee > 0 && (
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                        + {formatCurrency(escrow.platform_fee)} Platform Fee
+                      </p>
+                    )}
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">
+                      Total
+                    </label>
+                    <p className="text-lg font-black text-[#014d46]">
+                      {formatCurrency(escrow.amount + (escrow.platform_fee || 0))}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
                   <div>
                     <label className="text-sm font-medium text-gray-600">
                       Status
@@ -699,9 +752,6 @@ const isSeller = user?.id === escrow?.seller_id;
                       <span className="font-medium">{escrow.status}</span>
                     </div>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
                   <div>
                     <label className="text-sm font-medium text-gray-600">
                       Escrow ID
@@ -843,6 +893,23 @@ const isSeller = user?.id === escrow?.seller_id;
               </div>
             </div>
 
+            {/* Payment Verification Banner */}
+            {escrow.status === "Verifying" && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 p-6 bg-blue-50 border-2 border-blue-100 rounded-[2rem] text-blue-900 flex items-center gap-6 shadow-xl"
+              >
+                <div className="p-4 bg-blue-100 rounded-2xl">
+                  <Clock className="h-8 w-8 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-black uppercase tracking-tight">Payment Verifying</h4>
+                  <p className="text-blue-700 text-sm opacity-80">We are currently verifying your bank transfer. This usually takes 1-2 hours.</p>
+                </div>
+              </motion.div>
+            )}
+
             {/* Funds Secured Indicator */}
             {escrow.status === "Funded" && (
               <motion.div 
@@ -863,9 +930,31 @@ const isSeller = user?.id === escrow?.seller_id;
 
             {/* Actions */}
             <div className="card p-6 rounded-[2rem]">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">
-                Deal Actions
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+                  Deal Actions
+                </h3>
+                {!escrow.is_locked && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditConditions(escrow.conditions || "");
+                        setEditAmount(escrow.amount);
+                        setShowEditModal(true);
+                      }}
+                      className="btn btn-outline btn-sm rounded-xl gap-1"
+                    >
+                      <Edit3 size={14} /> Edit Terms
+                    </button>
+                    <button
+                      onClick={handleLock}
+                      className="btn btn-primary btn-sm rounded-xl gap-1"
+                    >
+                      <Lock size={14} /> Lock & Agree
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="space-y-4">
                 {isBuyer && escrow.status === "Pending" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1023,7 +1112,10 @@ const isSeller = user?.id === escrow?.seller_id;
                     <User className="h-5 w-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Buyer</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">Buyer</p>
+                      <VerifiedBadge isVerified={!!escrow.buyer?.activated} />
+                    </div>
                     <p className="text-sm text-gray-600">You</p>
                   </div>
                 </div>
@@ -1032,9 +1124,12 @@ const isSeller = user?.id === escrow?.seller_id;
                     <User className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Seller</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">Seller</p>
+                      <VerifiedBadge isVerified={!!escrow.seller?.activated} />
+                    </div>
                     <p className="text-sm text-gray-600">
-                      {isSeller ? "You" : `User #${escrow.seller_id}`}
+                      {isSeller ? "You" : (escrow.seller?.first_name ? `${escrow.seller.first_name} ${escrow.seller.last_name}` : `User #${escrow.seller_id}`)}
                     </p>
                   </div>
                 </div>
@@ -1044,7 +1139,11 @@ const isSeller = user?.id === escrow?.seller_id;
                       <Shield className="h-5 w-5 text-indigo-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">Mediator</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900">Mediator</p>
+                        <span className="text-[8px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md font-black uppercase">Resolver</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 italic mt-0.5">Neutral third-party to help resolve conflicts.</p>
                       <p className="text-sm text-gray-600">
                         {user?.id === escrow.mediator_id ? "You" : `User #${escrow.mediator_id}`}
                       </p>
@@ -1342,6 +1441,52 @@ const isSeller = user?.id === escrow?.seller_id;
                   >
                     Create Dispute
                   </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Edit Terms Modal */}
+          {showEditModal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border-2 border-[#014d46]/10">
+                <div className="p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">Edit Agreement Terms</h3>
+                    <button onClick={() => setShowEditModal(false)} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 transition-all"><X size={20} /></button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Total Amount (ETB)</label>
+                      <input 
+                        type="number" 
+                        className="input h-14 rounded-2xl bg-gray-50"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(Number(e.target.value))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Terms & Conditions</label>
+                      <textarea 
+                        rows={10}
+                        className="w-full p-5 border-2 border-gray-100 rounded-2xl focus:border-[#014d46] outline-none transition-all"
+                        value={editConditions}
+                        onChange={(e) => setEditConditions(e.target.value)}
+                      />
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 flex gap-3">
+                      <AlertCircle className="text-yellow-600 shrink-0" size={18} />
+                      <p className="text-[10px] text-yellow-800">Note: Changing terms will notify the counterparty. Terms become immutable once both parties lock the deal.</p>
+                    </div>
+                    <button 
+                      onClick={handleEditSubmit}
+                      disabled={isProcessing || !editConditions}
+                      className="btn btn-primary w-full h-14 rounded-2xl font-black uppercase tracking-widest"
+                    >
+                      {isProcessing ? 'Updating...' : 'Update Terms'}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>

@@ -9,7 +9,8 @@ type Escrow struct {
 	SellerID           uint        `json:"seller_id" gorm:"not null"`
 	MediatorID         *uint       `json:"mediator_id,omitempty"`
 	Amount             uint        `json:"amount" validate:"required,gt=0"`
-	Status             string      `json:"status" gorm:"default:'Pending'" validate:"oneof=Pending Funded Active Released Disputed Canceled Refunded"`
+	PlatformFee        uint        `json:"platform_fee"`
+	Status             string      `json:"status" gorm:"default:'Pending'" validate:"oneof=Pending Verifying Funded Active Released Disputed Canceled Refunded"`
 	Conditions         string      `json:"conditions,omitempty"`
 	BlockchainTxHash   string      `json:"blockchain_tx_hash,omitempty"`
 	BlockchainEscrowID uint        `json:"blockchain_escrow_id,omitempty"`
@@ -18,6 +19,7 @@ type Escrow struct {
 	GoverningLaw       string      `json:"governing_law,omitempty"`
 	DisputeResolution  string      `json:"dispute_resolution,omitempty"`
 	ReceiptURL         string      `json:"receipt_url,omitempty"`
+	IsLocked           bool        `json:"is_locked" gorm:"default:false"`
 	Buyer              *User       `json:"buyer,omitempty" gorm:"foreignKey:BuyerID"`
 	Seller             *User       `json:"seller,omitempty" gorm:"foreignKey:SellerID"`
 	Mediator           *User       `json:"mediator,omitempty" gorm:"foreignKey:MediatorID"`

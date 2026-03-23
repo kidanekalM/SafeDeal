@@ -15,12 +15,14 @@ import Layout from "../components/Layout";
 import { useAuthStore } from "../store/authStore";
 import { userApi } from "../lib/api";
 import { toast } from "react-hot-toast";
+import { useLocation } from "react-router-dom";
 import { BankDetails, UpdateProfileRequest } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { BANKS, getBankByCode } from "../lib/banks";
 
 const Profile = () => {
   const { user, setUser } = useAuthStore();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoading, setIsLoading] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
@@ -176,6 +178,23 @@ const Profile = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
+        {/* Onboarding Banner */}
+        {(location.state as any)?.needsOnboarding && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-[2rem] flex items-center gap-6 shadow-xl"
+          >
+            <div className="p-4 bg-yellow-100 rounded-2xl text-yellow-600">
+              <AlertCircle className="h-8 w-8" />
+            </div>
+            <div>
+              <h4 className="text-xl font-black uppercase tracking-tight text-yellow-900">Complete Your Profile</h4>
+              <p className="text-yellow-700 text-sm opacity-80">You need to provide your profession and bank details before you can create or accept escrows.</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>

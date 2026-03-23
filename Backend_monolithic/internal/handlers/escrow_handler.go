@@ -97,11 +97,13 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	}
 
 	// Create escrow record
+	fee := uint(float64(req.Amount) * 0.02)
 	escrow := &models.Escrow{
 		BuyerID:           finalBuyerID,
 		SellerID:          finalSellerID,
 		MediatorID:        req.MediatorID,
 		Amount:            req.Amount,
+		PlatformFee:       fee,
 		Conditions:        req.Conditions,
 		Jurisdiction:      req.Jurisdiction,
 		GoverningLaw:      req.GoverningLaw,
@@ -109,8 +111,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		Status:            "Pending",
 	}
 
-	result = h.DB.Create(escrow)
-	if result.Error != nil {
+	if err := h.DB.Create(escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow"})
 	}
 
@@ -136,8 +137,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			}
 			
 			// Create milestone
-			result = h.DB.Create(&req.Milestones[i])
-			if result.Error != nil {
+			if err := h.DB.Create(&req.Milestones[i]).Error; err != nil {
 				return c.Status(500).JSON(fiber.Map{"error": "Could not create milestone"})
 			}
 		}
@@ -156,16 +156,17 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	// Interact with blockchain to create the escrow
 	if h.BlockchainClient != nil {
-		buyerAddr := common.HexToAddress(seller.WalletAddress) // Buyer is the user creating the escrow
-		sellerAddr := common.HexToAddress(seller.WalletAddress) // Seller is the fetched user
+		buyerAddr := common.HexToAddress(buyerUser.WalletAddress) // Buyer is the user creating the escrow
+		sellerAddr := common.HexToAddress(sellerUser.WalletAddress) // Seller is the fetched user
 		amount := big.NewInt(int64(req.Amount))
 
 		tx, err := h.BlockchainClient.CreateEscrow(buyerAddr, sellerAddr, amount)
 		if err != nil {
 			log.Printf("Failed to create escrow on blockchain: %v", err)
-			// Note: We don't rollback the database transaction as that was successful
 		} else {
 			log.Printf("Successfully created escrow on blockchain with TX: %v", tx.Hash().Hex())
+			escrow.BlockchainTxHash = tx.Hash().Hex()
+			h.DB.Save(escrow)
 		}
 	}
 
@@ -362,6 +363,8 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 			log.Printf("Failed to confirm payment on blockchain for escrow %d: %v", escrow.ID, err)
 		} else {
 			log.Printf("Successfully confirmed payment on blockchain for escrow %d with TX: %v", escrow.ID, tx.Hash().Hex())
+			escrow.BlockchainTxHash = tx.Hash().Hex()
+			h.DB.Save(&escrow)
 		}
 	}
 
@@ -423,6 +426,8 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 			log.Printf("Failed to finalize escrow on blockchain for escrow %d: %v", escrow.ID, err)
 		} else {
 			log.Printf("Successfully finalized escrow on blockchain for escrow %d with TX: %v", escrow.ID, tx.Hash().Hex())
+			escrow.BlockchainTxHash = tx.Hash().Hex()
+			h.DB.Save(&escrow)
 		}
 	}
 
@@ -565,9 +570,8 @@ func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
 	}
 
 	escrow.ReceiptURL = req.ReceiptURL
-	// When receipt is uploaded, we mark as Funded (pending verification if we had an admin)
-	// For now, we auto-verify to move flow forward
-	escrow.Status = "Funded" 
+	// When receipt is uploaded, we mark as Verifying (pending verification)
+	escrow.Status = "Verifying" 
 	
 	if err := h.DB.Save(&escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
@@ -577,6 +581,118 @@ func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
 		"message": "Receipt uploaded successfully. Funds marked as secured.",
 		"data":    escrow,
 	})
+}
+
+func (h *EscrowHandler) UpdateEscrow(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req struct {
+		Amount     uint   `json:"amount"`
+		Conditions string `json:"conditions"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	var escrow models.Escrow
+	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	if escrow.BuyerID != userID && escrow.SellerID != userID {
+		return c.Status(403).JSON(fiber.Map{"error": "Only participants can update escrow"})
+	}
+
+	if escrow.IsLocked {
+		return c.Status(400).JSON(fiber.Map{"error": "Cannot update locked escrow"})
+	}
+
+	if req.Amount > 0 {
+		escrow.Amount = req.Amount
+	}
+	if req.Conditions != "" {
+		escrow.Conditions = req.Conditions
+	}
+
+	if err := h.DB.Save(&escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+	}
+
+	return c.JSON(escrow)
+}
+
+func (h *EscrowHandler) LockEscrow(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var escrow models.Escrow
+	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	if escrow.BuyerID != userID && escrow.SellerID != userID {
+		return c.Status(403).JSON(fiber.Map{"error": "Only participants can lock escrow"})
+	}
+
+	escrow.IsLocked = true
+	if err := h.DB.Save(&escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not lock escrow"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Escrow locked successfully", "data": escrow})
+}
+
+func (h *EscrowHandler) VerifyPayment(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	userID, ok := c.Locals("userID").(uint)
+	if !ok || userID != 2 {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized. Admin only."})
+	}
+
+	var req struct {
+		Action string `json:"action" validate:"required,oneof=approve reject"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	var escrow models.Escrow
+	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	if req.Action == "approve" {
+		escrow.Status = "Funded"
+	} else {
+		escrow.Status = "Pending"
+		escrow.ReceiptURL = "" // Clear invalid receipt
+	}
+
+	if err := h.DB.Save(&escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Payment verification complete", "status": escrow.Status})
 }
 
 // CancelEscrow continues...

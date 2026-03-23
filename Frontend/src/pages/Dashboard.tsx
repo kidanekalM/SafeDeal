@@ -27,6 +27,8 @@ import {
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import AdminDashboard from "./AdminDashboard";
+import GuidedTour from "../components/GuidedTour";
+import VerifiedBadge from "../components/VerifiedBadge";
 
 const Dashboard = () => {
   const { user } = useAuthStore();
@@ -93,8 +95,8 @@ const Dashboard = () => {
     return false;
   });
 
-  // Calculate Trust Score (Mock logic for now)
-  const trustScore = Math.min(100, (stats?.completed_escrows || 0) * 10 + 65);
+  // Calculate Trust Score (Use value from backend if available)
+  const trustScore = user?.trust_score ?? Math.min(100, (stats?.completed_escrows || 0) * 10 + 65);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -108,6 +110,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
+      <GuidedTour />
       <div className="space-y-8 max-w-7xl mx-auto">
         {/* Welcome & Trust Banner */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -117,7 +120,10 @@ const Dashboard = () => {
             className="lg:col-span-2 gradient-primary rounded-[2rem] p-8 text-white shadow-2xl shadow-[#014d46]/20 relative overflow-hidden"
           >
             <div className="relative z-10">
-              <h2 className="text-3xl font-bold mb-2 text-white">Welcome, {user?.first_name}!</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-3xl font-bold text-white">Welcome, {user?.first_name}!</h2>
+                <VerifiedBadge isVerified={!!user?.activated} className="bg-white/20 px-2 py-1 rounded-lg text-white" />
+              </div>
               <p className="text-teal-50 opacity-90 max-w-md">Your secure gateway to trust-based transactions is active and protected.</p>
               <div className="mt-8 flex gap-4">
                 <Link to="/create-escrow" className="bg-white text-[#014d46] px-6 py-3 rounded-2xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">

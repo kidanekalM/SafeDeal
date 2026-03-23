@@ -10,6 +10,7 @@ export interface User {
     account_name?: string;
     account_number?: string;
     bank_code?: number;
+    trust_score: number;
     created_at: string;
     updated_at: string;
 }
@@ -56,6 +57,7 @@ export interface Escrow {
     seller_id: number;
     mediator_id?: number;
     amount: number;
+    platform_fee: number;
     status: EscrowStatus;
     conditions?: string;
     jurisdiction?: string;
@@ -65,6 +67,7 @@ export interface Escrow {
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
     active: boolean;
+    is_locked: boolean;
     created_at: string;
     updated_at: string;
     buyer?: User;

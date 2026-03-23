@@ -154,6 +154,12 @@ export const escrowApi = {
     // POST Upload-receipt
     uploadReceipt: (id: number, receiptUrl: string): Promise<AxiosResponse<Escrow>> =>
         api.post(`/api/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
+
+    update: (id: number, data: { amount?: number; conditions?: string }): Promise<AxiosResponse<Escrow>> => 
+        api.put(`/api/escrows/${id}`, data),
+    
+    lock: (id: number): Promise<AxiosResponse<Escrow>> => 
+        api.post(`/api/escrows/${id}/lock`),
     };
     // GET Dispute (if available)
     getDispute: (id: number): Promise<AxiosResponse<any>> =>

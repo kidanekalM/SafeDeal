@@ -20,13 +20,14 @@ type User struct {
 	BankCode            int    `json:"bank_code,omitempty"`
 	BankName            string `json:"bank_name,omitempty"`
 	ActivationCode      string `json:"-"`
+	TrustScore          float64 `json:"trust_score" gorm:"default:65.0"`
 }
 
 type BankDetails struct {
 	gorm.Model
-	UserID        uint   `json:"user_id" gorm:"not null"`
-	AccountName   string `json:"account_name" validate:"required"`
-	AccountNumber string `json:"account_number" validate:"required"`
-	BankCode      int    `json:"bank_code" validate:"required"`
-	BankName      string `json:"bank_name" validate:"required"`
+	UserID        uint    `json:"user_id" gorm:"not null"`
+	AccountName   string  `json:"account_name" validate:"required"`
+	AccountNumber string  `json:"account_number" validate:"required"`
+	BankCode      int     `json:"bank_code" validate:"required"`
+	BankName      string  `json:"bank_name" validate:"required"`
 }

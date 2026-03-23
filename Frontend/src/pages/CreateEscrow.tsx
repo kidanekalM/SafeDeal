@@ -485,6 +485,16 @@ const CreateEscrow = () => {
                     <h4 className="text-xs font-black text-teal-800 uppercase mb-2">SafeDeal Guarantee</h4>
                     <p className="text-[10px] text-teal-700 leading-relaxed">Funds are held in a secure vault and only released when terms are met. Our AI Arbitrator stands by to resolve any disputes.</p>
                 </div>
+
+                {amount > 10000 && (
+                  <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex gap-3">
+                    <AlertCircle className="text-orange-600 shrink-0" size={18} />
+                    <div>
+                      <h4 className="text-xs font-black text-orange-800 uppercase mb-1">AI Risk Warning</h4>
+                      <p className="text-[10px] text-orange-700 leading-relaxed">This amount is high for a new transaction. We recommend using <strong>Ultra Comprehensive</strong> mode with milestones for better protection.</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
