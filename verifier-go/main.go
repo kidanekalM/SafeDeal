@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/ledongthuc/pdf"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/egomiddleware"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // UniversalVerifyRequest represents the request body for the universal verification endpoint
@@ -45,8 +45,8 @@ type TransactionDetails struct {
 
 func main() {
 	e := echo.New()
-	e.Use(egomiddleware.Logger())
-	e.Use(egomiddleware.Recover())
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
 	// Define routes
 	e.POST("/verify/universal", verifyUniversal)
@@ -102,11 +102,7 @@ func verifyUniversal(c echo.Context) error {
 			})
 		}
 		result, err = verifyDashen(trimmedRef)
-	}
-
-	// --- CBE & ABYSSINIA ---
-	// 12 characters, starts with 'FT'
-	else if lenRef == 12 && strings.HasPrefix(strings.ToUpper(trimmedRef), "FT") {
+	} else if lenRef == 12 && strings.HasPrefix(strings.ToUpper(trimmedRef), "FT") {
 		if req.Suffix == "" {
 			return c.JSON(http.StatusBadRequest, VerifyResponse{
 				Success: false,
@@ -128,11 +124,7 @@ func verifyUniversal(c echo.Context) error {
 				Error:   "Suffix must be exactly 8 digits (CBE) or 5 digits (Abyssinia).",
 			})
 		}
-	}
-
-	// --- CBE BIRR & TELEBIRR ---
-	// 10 alphanumeric characters
-	else if lenRef == 10 {
+	} else if lenRef == 10 { // --- CBE BIRR & TELEBIRR --- (10 alphanumeric characters)
 		// Must be strictly alphanumeric
 		if !regexp.MustCompile(`^[A-Za-z0-9]{10}$`).MatchString(trimmedRef) {
 			return c.JSON(http.StatusBadRequest, VerifyResponse{
@@ -283,24 +275,16 @@ func extractTextFromPDF(path string) (string, error) {
 	}
 	defer f.Close()
 
-	var fullText string
-	totalPages := r.NumPage()
-
-	for i := 0; i < totalPages; i++ {
-		page := r.Page(i + 1)
-		if page.V.IsNull() {
-			continue
-		}
-		
-		text, err := page.GetAllContent()
-		if err != nil {
-			continue
-		}
-		
-		fullText += text.ToText()
+	plainTextReader, err := r.GetPlainText()
+	if err != nil {
+		return "", err
 	}
-
-	return fullText, nil
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(plainTextReader)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 // extractTransactionDetails tries to extract transaction details from text

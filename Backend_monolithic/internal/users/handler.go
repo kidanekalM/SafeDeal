@@ -12,7 +12,7 @@ type UserHandler struct {
 }
 
 func NewUserHandler(db *gorm.DB) *UserHandler {
-	return &amp;UserHandler{DB: db}
+	return &UserHandler{DB: db}
 }
 
 type RegisterRequest struct {
@@ -25,13 +25,13 @@ type RegisterRequest struct {
 
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req RegisterRequest
-	if err := c.BodyParser(&amp;req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
 	// Check existing user
 	var existingUser models.User
-	if err := h.DB.Where("email = ?", req.Email).First(&amp;existingUser).Error; err == nil {
+	if err := h.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 			"error": "Email already in use",
 		})
@@ -46,14 +46,13 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	}
 
 	// Create user
-	user := &amp;models.User{
+	user := &models.User{
 		Email:      req.Email,
 		FirstName:  req.FirstName,
 		LastName:   req.LastName,
 		Password:   string(hashedPassword),
 		Profession: req.Profession,
 		Activated:  true,
-		Version:    1,
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
