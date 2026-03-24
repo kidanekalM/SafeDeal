@@ -97,7 +97,28 @@ The frontend uses a centralized API client (`lib/api.ts`) with:
 
 ## Development
 
-### Available Scripts
+### Testing
+
+### End-to-End Tests (Playwright)
+
+SafeDeal uses Playwright for end-to-end testing of core user flows.
+
+1.  **Install Playwright Browsers**:
+    ```bash
+    npx playwright install
+    ```
+
+2.  **Run Tests**:
+    ```bash
+    npm run test:e2e
+    ```
+
+3.  **Core Test Flows**:
+    - `auth.spec.ts`: Registration, Login, and Logout.
+    - `dashboard.spec.ts`: Statistics, Navigation, and UI components.
+    - `escrow.spec.ts`: Quick Escrow creation and AI risk warnings.
+
+Tests are located in the `e2e/` directory and are configured to automatically start the Vite development server.
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
