@@ -6,6 +6,7 @@ import { authApi, userApi } from "../lib/api";
 import { toast } from "react-hot-toast";
 import { LoginRequest, RegisterRequest } from "../types";
 import { useNavigate } from "react-router-dom";
+import { BANKS } from "../lib/banks";
 
 interface AuthFormProps {
   initialMode?: "login" | "register";
@@ -35,23 +36,45 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
 
     try {
       if (isLogin) {
-        // ... (existing login logic)
-        const response = await authApi.login(data as LoginRequest);
-        // ... rest of login
+        const response = await authApi.login({
+          email: data.email,
+          password: data.password
+        });
+        
+        const { access_token, user: userData } = response.data;
+        
+        // Save token
+        localStorage.setItem("access_token", access_token);
+        
+        // Update store
+        setUser(userData);
+        
+        toast.success(`Welcome back, ${userData.first_name}!`);
+        navigate("/dashboard");
       } else {
-        // Registration flow with all fields
+        const selectedBank = BANKS.find(b => b.code === parseInt(data.bank_code));
         const regData = {
           ...data,
-          bank_code: parseInt(data.bank_code)
+          bank_code: parseInt(data.bank_code),
+          bank_name: selectedBank ? selectedBank.name : "Unknown"
         };
         await authApi.register(regData as RegisterRequest);
-        toast("Account created with profile.", {
-          icon: "✉️",
-        });
-        navigate("/login");
+        toast.success("Account created successfully! Please sign in.");
+        setIsLogin(true);
+        setRegStep(1);
+        reset();
       }
     } catch (error: any) {
-      // ...
+      console.error("Auth error:", error);
+      const errorMessage = error.response?.data?.error || "Authentication failed. Please try again.";
+      toast.error(errorMessage);
+      
+      if (errorMessage.toLowerCase().includes("activate")) {
+        setLastAttemptedEmail(data.email);
+        setShowResendActivation(true);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -147,18 +170,18 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
               <input {...register("account_name", { required: "Account name is required" })} className="input w-full" />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-                <select {...register("bank_name", { required: "Required" })} className="input w-full">
-                  <option value="Commercial Bank of Ethiopia">CBE</option>
-                  <option value="Dashen Bank">Dashen</option>
-                  <option value="Abyssinia Bank">Abyssinia</option>
+                <select {...register("bank_code", { required: "Bank is required" })} className="input w-full">
+                  <option value="">Select a bank</option>
+                  {BANKS.map((bank) => (
+                    <option key={bank.code} value={bank.code}>
+                      {bank.name}
+                    </option>
+                  ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bank Code</label>
-                <input {...register("bank_code", { required: "Required" })} className="input w-full" type="number" placeholder="001" />
+                {errors.bank_code && <p className="text-red-500 text-xs mt-1">{errors.bank_code.message}</p>}
               </div>
             </div>
 

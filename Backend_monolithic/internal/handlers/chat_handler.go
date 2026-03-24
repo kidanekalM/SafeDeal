@@ -7,7 +7,6 @@ import (
 
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/models"
-	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	"gorm.io/gorm"
 )
@@ -52,15 +51,15 @@ func (h *ChatHandler) runHub() {
 		case conn := <-h.unregister:
 			h.mutex.Lock()
 			delete(h.clients, conn)
-			conn.Close()
 			h.mutex.Unlock()
 
 		case msg := <-h.broadcast:
 			h.mutex.RLock()
 			for conn := range h.clients {
-				if err := conn.WriteJSON(msg); err != nil {
-					conn.Close()
-					delete(h.clients, conn)
+				if conn != nil {
+					if err := conn.WriteJSON(msg); err != nil {
+						delete(h.clients, conn)
+					}
 				}
 			}
 			h.mutex.RUnlock()
@@ -73,21 +72,16 @@ func (h *ChatHandler) HandleWebSocket(c *websocket.Conn) {
 }
 
 func (h *ChatHandler) ChatWebSocket(c *websocket.Conn) {
-
-	// Get HTTP context
-	ctx := c.Locals("fiberCtx").(*fiber.Ctx)
-
-	// Extract token from header or query parameter
-	var token string
-	authHeader := ctx.Get("Authorization")
-	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-		token = authHeader[7:]
-	} else {
-		token = ctx.Query("token")
+	// Extract token and escrow_id from locals
+	token, ok := c.Locals("token").(string)
+	if !ok || token == "" {
+		log.Println("missing auth token in websocket locals")
+		return
 	}
 
-	if token == "" {
-		log.Println("missing auth token")
+	escrowIDStr, ok := c.Locals("escrow_id").(string)
+	if !ok || escrowIDStr == "" {
+		log.Println("missing escrow id in websocket locals")
 		return
 	}
 
@@ -99,7 +93,7 @@ func (h *ChatHandler) ChatWebSocket(c *websocket.Conn) {
 	userID := claims.UserID
 
 	// escrow id
-	escrowID, err := h.getEscrowIDFromPath(ctx.Params("id"))
+	escrowID, err := h.getEscrowIDFromPath(escrowIDStr)
 	if err != nil {
 		log.Println("invalid escrow id:", err)
 		return

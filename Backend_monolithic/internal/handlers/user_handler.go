@@ -311,7 +311,12 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update profile"})
 	}
 
-	return c.JSON(fiber.Map{"message": "Profile updated successfully"})
+	// Fetch updated user
+	var updatedUser models.User
+	h.DB.First(&updatedUser, userID)
+	updatedUser.Password = ""
+
+	return c.JSON(updatedUser)
 }
 
 func (h *UserHandler) UpdateBankDetails(c *fiber.Ctx) error {
@@ -348,7 +353,40 @@ func (h *UserHandler) UpdateBankDetails(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.JSON(fiber.Map{"message": "Bank details updated successfully"})
+	// Update User table as well for easier retrieval
+	h.DB.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+		"account_name":   bankDetails.AccountName,
+		"account_number": bankDetails.AccountNumber,
+		"bank_code":      bankDetails.BankCode,
+		"bank_name":      bankDetails.BankName,
+	})
+
+	// Fetch updated user
+	var updatedUser models.User
+	h.DB.First(&updatedUser, userID)
+	updatedUser.Password = ""
+
+	return c.JSON(updatedUser)
+}
+
+func (h *UserHandler) GetBankDetails(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var bankDetails models.BankDetails
+	result := h.DB.Where("user_id = ?", userID).First(&bankDetails)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return c.Status(404).JSON(fiber.Map{"error": "Bank details not found"})
+		}
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	return c.JSON(bankDetails)
 }
 
 func (h *UserHandler) Search(c *fiber.Ctx) error {
@@ -463,10 +501,12 @@ func (h *UserHandler) CreateWallet(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update user with wallet info"})
 	}
 
-	return c.JSON(fiber.Map{
-		"message":       "Wallet created successfully",
-		"walletAddress": wallet.Address,
-	})
+	// Fetch updated user
+	var updatedUser models.User
+	h.DB.First(&updatedUser, userID)
+	updatedUser.Password = ""
+
+	return c.JSON(updatedUser)
 }
 
 // Wallet represents a cryptocurrency wallet

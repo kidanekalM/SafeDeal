@@ -41,6 +41,10 @@ export interface RegisterRequest {
     profession: string;
     email: string;
     password: string;
+    account_name: string;
+    account_number: string;
+    bank_code: number;
+    bank_name: string;
 }
 
 export interface UpdateProfileRequest {

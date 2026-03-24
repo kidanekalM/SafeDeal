@@ -160,7 +160,7 @@ export const escrowApi = {
     
     lock: (id: number): Promise<AxiosResponse<Escrow>> => 
         api.post(`/api/escrows/${id}/lock`),
-    };
+
     // GET Dispute (if available)
     getDispute: (id: number): Promise<AxiosResponse<any>> =>
         api.get(`/api/escrows/dispute/${id}`),

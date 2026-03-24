@@ -57,7 +57,16 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	// WebSocket routes moved to public group for better auth handling
 	public.Get("/api/chat/ws/:id", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("fiberCtx", c)
+			// Extract token from header or query parameter
+			authHeader := c.Get("Authorization")
+			token := ""
+			if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+				token = authHeader[7:]
+			} else {
+				token = c.Query("token")
+			}
+			c.Locals("token", token)
+			c.Locals("escrow_id", c.Params("id"))
 			return c.Next()
 		}
 		return fiber.ErrUpgradeRequired
@@ -65,7 +74,15 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 
 	public.Get("/api/notifications/ws", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("fiberCtx", c)
+			// Extract token from header or query parameter
+			authHeader := c.Get("Authorization")
+			token := ""
+			if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+				token = authHeader[7:]
+			} else {
+				token = c.Query("token")
+			}
+			c.Locals("token", token)
 			return c.Next()
 		}
 		return fiber.ErrUpgradeRequired
@@ -77,6 +94,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	// User routes
 	protected.Get("/profile", sc.UserHandler.GetProfile)            // GET request to fetch profile
 	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
+	protected.Get("/profile/bank-details", sc.UserHandler.GetBankDetails)
 	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
 	protected.Post("/wallet", sc.UserHandler.CreateWallet) // Endpoint for creating Ethereum wallet
 	protected.Post("/logout", sc.UserHandler.Logout)

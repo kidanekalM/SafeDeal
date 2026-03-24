@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"backend_monolithic/internal/auth"
-	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	"gorm.io/gorm"
 )
@@ -61,7 +60,6 @@ func (h *NotificationHandler) runHub() {
 			for uid, conns := range h.clients {
 				if _, ok := conns[conn]; ok {
 					delete(conns, conn)
-					conn.Close()
 					if len(conns) == 0 {
 						delete(h.clients, uid)
 					}
@@ -73,9 +71,10 @@ func (h *NotificationHandler) runHub() {
 			h.mutex.RLock()
 			if conns, ok := h.clients[n.UserID]; ok {
 				for conn := range conns {
-					if err := conn.WriteJSON(n); err != nil {
-						conn.Close()
-						delete(conns, conn)
+					if conn != nil {
+						if err := conn.WriteJSON(n); err != nil {
+							delete(conns, conn)
+						}
 					}
 				}
 			}
@@ -89,20 +88,10 @@ func (h *NotificationHandler) HandleWebSocket(c *websocket.Conn) {
 }
 
 func (h *NotificationHandler) NotificationWebSocket(c *websocket.Conn) {
-
-	ctx := c.Locals("fiberCtx").(*fiber.Ctx)
-
-	// Extract token from header or query parameter
-	var token string
-	authHeader := ctx.Get("Authorization")
-	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-		token = authHeader[7:]
-	} else {
-		token = ctx.Query("token")
-	}
-
-	if token == "" {
-		log.Println("missing auth token")
+	// Extract token from locals
+	token, ok := c.Locals("token").(string)
+	if !ok || token == "" {
+		log.Println("missing auth token in websocket locals")
 		return
 	}
 
