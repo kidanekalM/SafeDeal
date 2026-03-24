@@ -1,0 +1,56 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - img [ref=e10]
+        - generic [ref=e12]: SafeDeal
+      - heading "Transfer with confidence" [level=1] [ref=e13]
+    - generic [ref=e15]:
+      - button "Back to Home" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e20]: Back to Home
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - button "Sign In" [ref=e23] [cursor=pointer]
+          - button "Sign Up" [ref=e24] [cursor=pointer]
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - heading "Payout Details" [level=3] [ref=e27]
+            - paragraph [ref=e28]: We need these to secure your payments.
+            - generic [ref=e29]:
+              - generic [ref=e30]: Account Holder Name
+              - textbox [ref=e31]: John Doe
+            - generic [ref=e33]:
+              - generic [ref=e34]: Bank Name
+              - combobox [ref=e35]:
+                - option "Select a bank"
+                - option "Abay Bank"
+                - option "Addis International Bank"
+                - option "Ahadu Bank"
+                - option "Awash Bank"
+                - option "Bank of Abyssinia"
+                - option "Berhan Bank"
+                - option "CBEBirr (Mobile Money)"
+                - option "Commercial Bank of Ethiopia (CBE)" [selected]
+                - option "Coopay-Ebirr (Mobile Money)"
+                - option "Dashen Bank"
+                - option "Global Bank Ethiopia"
+                - option "Hibret Bank"
+                - option "Lion International Bank"
+                - option "M-Pesa (Mobile Money)"
+                - option "Nib International Bank"
+                - option "Oromia International Bank"
+                - option "telebirr (Mobile Money)"
+                - option "Wegagen Bank"
+                - option "Zemen Bank"
+            - generic [ref=e36]:
+              - generic [ref=e37]: Account Number
+              - textbox [ref=e38]: "1000123456789"
+          - generic [ref=e39]:
+            - button "Back" [ref=e40] [cursor=pointer]
+            - button "Complete Registration" [ref=e41] [cursor=pointer]
+  - status [ref=e47]: Authentication failed. Please try again.
+```

@@ -5,6 +5,12 @@ test.describe('Escrow Creation', () => {
   const password = 'Password123!';
 
   test.beforeEach(async ({ page }) => {
+    // Bypass language modal and guided tour
+    await page.addInitScript(() => {
+      window.localStorage.setItem('lang', 'en');
+      window.localStorage.setItem('has_seen_tour', 'true');
+    });
+
     await page.goto('/login');
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', password);

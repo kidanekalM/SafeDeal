@@ -4,6 +4,14 @@ test.describe('Authentication', () => {
   const randomEmail = `test-${Math.random().toString(36).substring(7)}@example.com`;
   const password = 'Password123!';
 
+  test.beforeEach(async ({ page }) => {
+    // Bypass language modal and guided tour
+    await page.addInitScript(() => {
+      window.localStorage.setItem('lang', 'en');
+      window.localStorage.setItem('has_seen_tour', 'true');
+    });
+  });
+
   test('should register a new user', async ({ page }) => {
     await page.goto('/login?mode=register');
 
