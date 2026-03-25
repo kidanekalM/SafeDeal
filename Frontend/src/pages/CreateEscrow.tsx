@@ -5,7 +5,7 @@ import {
   Plus, Shield, Mail, DollarSign, ArrowLeft, 
   Search, Check, UserPlus, FileText, Scale, 
   ChevronRight, ChevronLeft, Trash2, Calendar,
-  Settings, Zap, ListChecks, Gavel, LayoutTemplate
+  Settings, Zap, ListChecks, Gavel, LayoutTemplate, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -119,6 +119,7 @@ const CreateEscrow = () => {
     : [
         { id: 'role', title: 'Role', icon: Shield },
         { id: 'parties', title: 'Parties', icon: Search },
+        { id: 'details', title: 'Terms', icon: FileText },
         { id: 'final', title: 'Finalize', icon: Check },
       ];
 
@@ -189,32 +190,50 @@ const CreateEscrow = () => {
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
-    if (step === 0) fieldsToValidate = ['creator_role', 'isDetailed'];
-    if (step === 1) {
+    const currentStepId = steps[step].id;
+
+    if (currentStepId === 'role') {
+      fieldsToValidate = ['creator_role', 'isDetailed'];
+    } else if (currentStepId === 'parties') {
       if (creatorRole === 'mediator') {
         if (!selectedBuyer || !selectedSeller) {
           toast.error('Please select both buyer and seller');
           return;
         }
+        fieldsToValidate = ['buyer_id', 'seller_id'];
       } else {
         if (!selectedCounterparty) {
           toast.error('Please select a counterparty');
           return;
         }
+        fieldsToValidate = ['counterparty_id'];
+      }
+    } else if (currentStepId === 'details') {
+      fieldsToValidate = ['amount', 'conditions'];
+      if (isDetailed) {
+        fieldsToValidate.push('jurisdiction', 'governing_law', 'dispute_resolution');
+      }
+    } else if (currentStepId === 'milestones') {
+      fieldsToValidate = ['milestones'];
+      const totalMilestonesAmount = milestones.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+      if (totalMilestonesAmount <= 0) {
+        toast.error('Total milestones amount must be greater than 0');
+        return;
       }
     }
     
-    if (!isDetailed && step === 1) {
-        // Skip details/milestones in simple mode
-        fieldsToValidate = ['amount', 'conditions'];
-    } else if (isDetailed) {
-        if (step === 2) fieldsToValidate = ['amount', 'conditions'];
-        if (step === 3) fieldsToValidate = ['milestones'];
-    }
-
     const isStepValid = await trigger(fieldsToValidate as any);
     if (isStepValid) {
       setStep(s => Math.min(s + 1, steps.length - 1));
+    } else {
+      // Provide feedback for validation errors
+      if (errors.conditions) {
+        toast.error(errors.conditions.message || 'Conditions are required (min 10 characters)');
+      } else if (errors.amount) {
+        toast.error(errors.amount.message || 'Valid amount is required');
+      } else {
+        toast.error('Please fix the errors before continuing');
+      }
     }
   };
 
