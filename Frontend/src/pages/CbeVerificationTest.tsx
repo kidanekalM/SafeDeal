@@ -51,7 +51,7 @@ const CbeVerificationTest = () => {
         toast.success('Transaction verified successfully!');
       } else {
         setVerificationResult({ error: result.extract(), isError: true });
-        toast.error(`Verification failed: ${result.extract().type}`);
+        toast.error(`Verification failed: ${(result.extract() as any).type || 'Unknown error'}`);
       }
     } catch (error: any) {
       console.error('Verification error:', error);
@@ -77,15 +77,9 @@ const CbeVerificationTest = () => {
       // Dynamically import the cbe-verifier package to handle the Node.js globals issue
       const { detectTransactionId } = await import('@jvhaile/cbe-verifier');
       
-      // Read the file as ArrayBuffer
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      
-      // Create a Buffer polyfill if needed
-      const buffer = typeof Buffer !== 'undefined' 
-        ? Buffer.from(arrayBuffer) 
-        : new Uint8Array(arrayBuffer);
-
-      const result = await detectTransactionId(buffer, {
+      const buffer = await selectedFile.arrayBuffer();
+      const uint8Array = new Uint8Array(buffer);
+      const result = await detectTransactionId(uint8Array as any, {
         googleVisionAPIKey: googleApiKey,
       });
 

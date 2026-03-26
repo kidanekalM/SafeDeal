@@ -59,8 +59,9 @@ export const useEscrowStore = create<EscrowState>((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await escrowApi.getMyEscrows();
-            const escrows = response.data.escrows.slice(0, limit);
-            set({ escrows, isLoading: false });
+            const payload = response.data as any;
+            const escrows: Escrow[] = Array.isArray(payload) ? payload : (payload.escrows || []);
+            set({ escrows: escrows.slice(0, limit), isLoading: false });
         } catch (error: any) {
             set({
                 error: error.response?.data?.message || 'Failed to fetch escrows',
@@ -72,15 +73,16 @@ export const useEscrowStore = create<EscrowState>((set) => ({
         set({ statsLoading: true, error: null });
         try {
             const response = await escrowApi.getMyEscrows();
-            const escrows = response.data.escrows;
+            const payload = response.data as any;
+            const escrows: Escrow[] = Array.isArray(payload) ? payload : (payload.escrows || []);
 
             // Calculate stats from escrows
             const stats = {
                 total_escrows: escrows.length,
-                active_escrows: escrows.filter(e => e.status === 'Pending' || e.status === 'Funded').length,
-                completed_escrows: escrows.filter(e => e.status === 'Released').length,
-                disputed_escrows: escrows.filter(e => e.status === 'Disputed').length,
-                total_amount: escrows.reduce((sum, e) => sum + e.amount, 0)
+                active_escrows: escrows.filter((e: Escrow) => e.status === 'Pending' || e.status === 'Funded').length,
+                completed_escrows: escrows.filter((e: Escrow) => e.status === 'Released').length,
+                disputed_escrows: escrows.filter((e: Escrow) => e.status === 'Disputed').length,
+                total_amount: escrows.reduce((sum: number, e: Escrow) => sum + e.amount, 0)
             };
 
             set({ stats, statsLoading: false });
@@ -110,13 +112,14 @@ export const useEscrowStore = create<EscrowState>((set) => ({
                 escrowApi.getMyEscrows()
             ]);
 
-            const escrows = escrowsResponse.data.escrows;
+            const payload = escrowsResponse.data as any;
+            const escrows: Escrow[] = Array.isArray(payload) ? payload : (payload.escrows || []);
             const stats = {
                 total_escrows: escrows.length,
-                active_escrows: escrows.filter(e => e.status === 'Pending' || e.status === 'Funded').length,
-                completed_escrows: escrows.filter(e => e.status === 'Released').length,
-                disputed_escrows: escrows.filter(e => e.status === 'Disputed').length,
-                total_amount: escrows.reduce((sum, e) => sum + e.amount, 0)
+                active_escrows: escrows.filter((e: Escrow) => e.status === 'Pending' || e.status === 'Funded').length,
+                completed_escrows: escrows.filter((e: Escrow) => e.status === 'Released').length,
+                disputed_escrows: escrows.filter((e: Escrow) => e.status === 'Disputed').length,
+                total_amount: escrows.reduce((sum: number, e: Escrow) => sum + e.amount, 0)
             };
 
             set({

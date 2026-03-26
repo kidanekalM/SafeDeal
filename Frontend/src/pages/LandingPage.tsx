@@ -4,9 +4,7 @@ import { useContext } from 'react';
 import { LanguageContext } from '../App';
 import { 
   Send, 
-  Wifi, 
   User, 
-  ArrowRight, 
   Lock,
   Shield,
   Users,

@@ -2,14 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Plus,
   TrendingUp,
   Shield,
   Clock,
   CheckCircle,
   AlertCircle,
   ArrowRight,
-  Wallet,
   CreditCard,
   Loader2,
   RefreshCw,
@@ -46,14 +44,12 @@ const Dashboard = () => {
   } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statsLoading, setStatsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const loadData = async (silent = false) => {
     if (!silent) {
       setIsLoading(true);
       setStatsLoading(true);
     }
-    setError(null);
     try {
       const response = await escrowApi.getMyEscrows();
       const payload: any = response.data;
@@ -77,7 +73,6 @@ const Dashboard = () => {
         total_amount: Number(summary?.total_amount ?? computed.total_amount),
       });
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to load dashboard data');
       toast.error("Connection failed. Showing last known data.");
     } finally {
       setIsLoading(false);

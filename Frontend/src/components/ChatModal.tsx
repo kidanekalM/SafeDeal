@@ -5,7 +5,7 @@ import { useAuthStore } from "../store/authStore";
 import { formatRelativeTime } from "../lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Message } from "../types";
+import { Message, User } from "../types";
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -38,8 +38,9 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
             activated: true,
             created_at: "",
             updated_at: "",
-            profession: ""
-          },
+            profession: "",
+            trust_score: user?.trust_score || 0
+          } as User,
         },
         {
           id: 2,
@@ -56,8 +57,9 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
             activated: true,
             created_at: "",
             updated_at: "",
-            profession: ""
-          },
+            profession: "",
+            trust_score: 4.7
+          } as User,
         },
         {
           id: 3,
@@ -74,9 +76,10 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
             activated: true,
             created_at: "",
             updated_at: "",
-            profession: ""
-          },
-        },
+            profession: "",
+            trust_score: user?.trust_score || 0
+          } as User,
+        }
       ];
       setMessages(mockMessages);
     }
@@ -108,8 +111,9 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
         activated: true,
         created_at: "",
         updated_at: "",
-        profession: ""
-      },
+        profession: "",
+        trust_score: user?.trust_score || 0
+      } as User,
     };
 
     setMessages((prev) => [...prev, message]);

@@ -8,17 +8,17 @@ import {
   AlertCircle,
   User,
   MessageCircle,
-  CreditCard,
   Phone,
   X,
   FileText,
   ExternalLink,
   RotateCcw,
-  Plus,
   Edit3,
   Check,
   XCircle,
   Scale,
+  Lock,
+  Zap,
 } from "lucide-react";
 import { milestoneApi } from "../lib/api";
 import type { Milestone } from "../types";
@@ -128,7 +128,6 @@ const EscrowDetails = () => {
 // NEW: Milestones state
 const [milestones, setMilestones] = useState<Milestone[]>([]);
 const [loadingMilestones, setLoadingMilestones] = useState(false);
-const [showCreateMilestone, setShowCreateMilestone] = useState(false);
 
 // Calculate user roles early so they can be used in useEffects
 const isBuyer = user?.id === escrow?.buyer_id;
@@ -646,11 +645,6 @@ const isSeller = user?.id === escrow?.seller_id;
               <div className="card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Milestones ({milestones.length})</h3>
-                  {isBuyer && (
-                    <button onClick={() => setShowCreateMilestone(true)} className="btn btn-primary btn-sm">
-                      <Plus className="h-4 w-4 mr-1" /> Add Milestone
-                    </button>
-                  )}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -682,16 +676,16 @@ const isSeller = user?.id === escrow?.seller_id;
                           </td>
                           <td className="py-3 px-4">
                             {isSeller && m.status === 'Funded' && (
-                              <button onClick={() => milestoneApi.submit(m.id).then(fetchEscrowDetails)} className="btn btn-sm btn-outline mr-1">
+                              <button onClick={() => milestoneApi.submit(m.id).then(() => fetchEscrowDetails())} className="btn btn-sm btn-outline mr-1">
                                 Submit
                               </button>
                             )}
                             {m.approver_id === user?.id && m.status === 'Submitted' && (
                               <>
-                                <button onClick={() => milestoneApi.approve(m.id).then(fetchEscrowDetails)} className="btn btn-sm btn-success mr-1">
+                                <button onClick={() => milestoneApi.approve(m.id).then(() => fetchEscrowDetails())} className="btn btn-sm btn-success mr-1">
                                   <Check className="h-3 w-3" />
                                 </button>
-                                <button onClick={() => milestoneApi.reject(m.id).then(fetchEscrowDetails)} className="btn btn-sm btn-error">
+                                <button onClick={() => milestoneApi.reject(m.id).then(() => fetchEscrowDetails())} className="btn btn-sm btn-error">
                                   <XCircle className="h-3 w-3" />
                                 </button>
                               </>
@@ -706,7 +700,7 @@ const isSeller = user?.id === escrow?.seller_id;
                 {milestones.length === 0 && !loadingMilestones && (
                   <div className="text-center py-8">
                     <Shield className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">No milestones yet. {isBuyer && <button onClick={() => setShowCreateMilestone(true)} className="text-primary-600 hover:underline font-medium">Add first milestone →</button>}</p>
+                    <p className="text-gray-500">No milestones yet.</p>
                   </div>
                 )}
               </div>

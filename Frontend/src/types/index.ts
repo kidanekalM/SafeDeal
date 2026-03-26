@@ -53,7 +53,7 @@ export interface UpdateProfileRequest {
     profession?: string;
 }
 
-export type EscrowStatus = 'Pending' | 'Funded' | 'Released' | 'Disputed';
+export type EscrowStatus = 'Pending' | 'Verifying' | 'Funded' | 'Released' | 'Disputed';
 
 export interface Escrow {
     id: number;
