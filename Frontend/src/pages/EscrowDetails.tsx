@@ -70,14 +70,35 @@ const EscrowDetails = () => {
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [showCBEModal, setShowCBEModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editConditions, setEditConditions] = useState("");
   const [editAmount, setEditAmount] = useState<number>(0);
   const [receiptUrl, setReceiptUrl] = useState("");
+  const [cbeTransactionId, setCbeTransactionId] = useState("");
+  const [cbeAccountSuffix, setCbeAccountSuffix] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
   const [isBackendBusy, setIsBackendBusy] = useState(false);
+
+  const handleCBEVerify = async () => {
+    if (!cbeTransactionId || !cbeAccountSuffix) {
+      toast.error("Please fill in both Transaction ID and Account Suffix");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await escrowApi.verifyCBE(escrow!.id, cbeTransactionId, cbeAccountSuffix);
+      toast.success("Payment verified successfully! Escrow is now funded.");
+      setShowCBEModal(false);
+      fetchEscrowDetails();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Verification failed. Please check your details.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleEditSubmit = async () => {
     if (!editConditions || editConditions.trim().length < 10) {
@@ -951,28 +972,38 @@ const isSeller = user?.id === escrow?.seller_id;
               </div>
               <div className="space-y-4">
                 {isBuyer && escrow.status === "Pending" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
-                      onClick={handleInitiatePayment}
-                      disabled={isProcessing}
-                      className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2"
-                    >
-                      <Zap className="h-6 w-6" />
-                      <div className="text-center">
-                        <p className="font-black">Pay with Chapa</p>
-                        <p className="text-[10px] opacity-60">Instant Automated Verification</p>
-                      </div>
-                    </button>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <button
+                        onClick={handleInitiatePayment}
+                        disabled={isProcessing}
+                        className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2"
+                      >
+                        <Zap className="h-6 w-6" />
+                        <div className="text-center">
+                          <p className="font-black">Pay with Chapa</p>
+                          <p className="text-[10px] opacity-60">Instant Automated Verification</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setShowCBEModal(true)}
+                        disabled={isProcessing}
+                        className="btn btn-outline btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2 border-[#014d46] text-[#014d46]"
+                      >
+                        <Check className="h-6 w-6" />
+                        <div className="text-center">
+                          <p className="font-black">CBE Direct Verify</p>
+                          <p className="text-[10px] opacity-60">Verify with Transaction ID</p>
+                        </div>
+                      </button>
+                    </div>
                     <button
                       onClick={() => setShowReceiptModal(true)}
                       disabled={isProcessing}
-                      className="btn btn-outline btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2 border-dashed"
+                      className="btn btn-outline btn-md w-full rounded-2xl flex items-center justify-center gap-2 border-dashed"
                     >
-                      <FileText className="h-6 w-6" />
-                      <div className="text-center">
-                        <p className="font-black">Bank Transfer</p>
-                        <p className="text-[10px] opacity-60">Manual Receipt Upload</p>
-                      </div>
+                      <FileText className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Manual Receipt Upload</span>
                     </button>
                   </div>
                 )}
@@ -1526,6 +1557,85 @@ const isSeller = user?.id === escrow?.seller_id;
                     >
                       {isProcessing ? 'Verifying...' : 'Submit Evidence'}
                     </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* CBE Verification Modal */}
+          {showCBEModal && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+              onClick={() => setShowCBEModal(false)}
+            >
+              <motion.div 
+                initial={{ scale: 0.95, y: 20 }} 
+                animate={{ scale: 1, y: 0 }} 
+                exit={{ scale: 0.95, y: 20 }}
+                className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border-2 border-[#014d46]/10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#e6f7f4] rounded-xl text-[#014d46]">
+                        <Shield size={24} />
+                      </div>
+                      <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">CBE Direct Verify</h3>
+                    </div>
+                    <button onClick={() => setShowCBEModal(false)} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 transition-all"><X size={20} /></button>
+                  </div>
+
+                  <div className="p-5 bg-blue-50 rounded-2xl border-2 border-blue-100">
+                    <p className="text-[11px] font-bold text-blue-900 leading-relaxed">
+                      Enter the Transaction ID and the last 9 digits of your account number (or the receiver's) from your CBE receipt.
+                    </p>
+                    <div className="mt-3 p-3 bg-white/50 rounded-xl font-mono text-[10px] text-blue-800 border border-blue-100">
+                      Example: <br/>
+                      ID: FT26072JFV9 <br/>
+                      Suffix: 262856058
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Transaction ID (Reference)</label>
+                      <input 
+                        type="text" 
+                        placeholder="FT..." 
+                        className="input h-14 rounded-2xl bg-gray-50 uppercase"
+                        value={cbeTransactionId}
+                        onChange={(e) => setCbeTransactionId(e.target.value.toUpperCase())}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 block">Account Number Suffix (9 digits)</label>
+                      <input 
+                        type="text" 
+                        placeholder="262..." 
+                        className="input h-14 rounded-2xl bg-gray-50"
+                        maxLength={9}
+                        value={cbeAccountSuffix}
+                        onChange={(e) => setCbeAccountSuffix(e.target.value)}
+                      />
+                    </div>
+                    <button 
+                      onClick={handleCBEVerify}
+                      disabled={isProcessing || !cbeTransactionId || !cbeAccountSuffix}
+                      className="btn btn-primary w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-[#014d46]/20"
+                    >
+                      {isProcessing ? (
+                        <div className="flex items-center gap-2">
+                          <RotateCcw className="animate-spin" size={18} />
+                          Verifying...
+                        </div>
+                      ) : 'Verify & Fund'}
+                    </button>
+                    <p className="text-center text-[9px] text-gray-400 italic">Verified via CBE Direct API Infrastructure</p>
                   </div>
                 </div>
               </motion.div>

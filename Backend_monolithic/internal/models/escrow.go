@@ -19,6 +19,7 @@ type Escrow struct {
 	GoverningLaw       string      `json:"governing_law,omitempty"`
 	DisputeResolution  string      `json:"dispute_resolution,omitempty"`
 	ReceiptURL         string      `json:"receipt_url,omitempty"`
+	TransactionRef     string      `json:"transaction_ref,omitempty" gorm:"uniqueIndex"`
 	IsLocked           bool        `json:"is_locked" gorm:"default:false"`
 	Buyer              *User       `json:"buyer,omitempty" gorm:"foreignKey:BuyerID"`
 	Seller             *User       `json:"seller,omitempty" gorm:"foreignKey:SellerID"`

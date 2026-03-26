@@ -1,16 +1,23 @@
 package handlers
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"math/big"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/blockchain"
 	"backend_monolithic/internal/models"
 	"backend_monolithic/internal/rabbitmq"
+
+	"github.com/dslipak/pdf"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -579,6 +586,144 @@ func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Receipt uploaded successfully. Funds marked as secured.",
+		"data":    escrow,
+	})
+}
+
+func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req struct {
+		TransactionID string `json:"transaction_id" validate:"required"`
+		AccountSuffix string `json:"account_suffix" validate:"required"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	var escrow models.Escrow
+	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	if escrow.BuyerID != userID {
+		return c.Status(403).JSON(fiber.Map{"error": "Only buyer can verify payment"})
+	}
+
+	// 1. Check if this transaction ID has already been used
+	var existingEscrow models.Escrow
+	if err := h.DB.Where("transaction_ref = ?", req.TransactionID).First(&existingEscrow).Error; err == nil {
+		return c.Status(400).JSON(fiber.Map{"error": "This transaction ID has already been used"})
+	}
+
+	// 2. Fetch and Parse CBE Receipt
+	fullId := req.TransactionID + req.AccountSuffix
+	url := fmt.Sprintf("https://apps.cbe.com.et:100/?id=%s", fullId)
+
+	client := resty.New()
+	resp, err := client.R().
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36").
+		SetHeader("Accept", "application/pdf").
+		Get(url)
+
+	if err != nil {
+		log.Printf("Failed to fetch CBE receipt: %v", err)
+		return c.Status(502).JSON(fiber.Map{"error": "Failed to connect to CBE verification service"})
+	}
+
+	if resp.StatusCode() != 200 {
+		return c.Status(502).JSON(fiber.Map{"error": "CBE service returned an error"})
+	}
+
+	// Parse PDF content
+	pdfContent := resp.Body()
+	pdfReader, err := pdf.NewReader(bytes.NewReader(pdfContent), int64(len(pdfContent)))
+	if err != nil {
+		log.Printf("Failed to parse PDF: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to process CBE receipt"})
+	}
+
+	var buf bytes.Buffer
+	b, err := pdfReader.GetPlainText()
+	if err != nil {
+		log.Printf("Failed to extract text from PDF: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to read CBE receipt content"})
+	}
+	_, _ = buf.ReadFrom(b)
+	plainText := buf.String()
+
+	// Normalize text
+	plainText = strings.ReplaceAll(plainText, "\n", " ")
+	plainText = strings.ReplaceAll(plainText, "\r", " ")
+
+	// 3. Extract and Verify Details
+	// Extract Reference No.
+	refRegex := regexp.MustCompile(`Reference No\.?\s*\(VAT Invoice No\)\s*:?\s*([A-Z0-9]+)`)
+	refMatches := refRegex.FindStringSubmatch(plainText)
+	if len(refMatches) < 2 {
+		return c.Status(400).JSON(fiber.Map{"error": "Could not find transaction reference in CBE receipt"})
+	}
+	extractedRef := strings.TrimSpace(refMatches[1])
+
+	if extractedRef != req.TransactionID {
+		return c.Status(400).JSON(fiber.Map{"error": fmt.Sprintf("Transaction ID mismatch. Found %s but expected %s", extractedRef, req.TransactionID)})
+	}
+
+	// Extract Amount
+	amountRegex := regexp.MustCompile(`Transferred Amount\s*:?\s*([\d,]+\.\d{2})\s*ETB`)
+	amountMatches := amountRegex.FindStringSubmatch(plainText)
+	if len(amountMatches) < 2 {
+		return c.Status(400).JSON(fiber.Map{"error": "Could not find amount in CBE receipt"})
+	}
+	amountStr := strings.ReplaceAll(amountMatches[1], ",", "")
+	extractedAmount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to parse amount from receipt"})
+	}
+
+	// Verify amount (allow for small differences if any)
+	expectedAmount := float64(escrow.Amount + escrow.PlatformFee)
+	if extractedAmount < expectedAmount {
+		return c.Status(400).JSON(fiber.Map{"error": fmt.Sprintf("Insufficient payment. Found %.2f but expected %.2f", extractedAmount, expectedAmount)})
+	}
+
+	// 4. Update escrow status
+	escrow.Status = "Funded"
+	escrow.TransactionRef = req.TransactionID
+	escrow.Active = true // Mark as active when funded
+
+	if err := h.DB.Save(&escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow status"})
+	}
+
+	// Update milestones
+	var milestones []models.Milestone
+	h.DB.Where("escrow_id = ?", escrow.ID).Find(&milestones)
+	for i := range milestones {
+		milestones[i].Status = models.MilestoneFunded
+		h.DB.Save(&milestones[i])
+	}
+
+	// Publish event
+	eventData := map[string]interface{}{
+		"escrow_id":       escrow.ID,
+		"status":          escrow.Status,
+		"transaction_ref": escrow.TransactionRef,
+		"amount_verified": extractedAmount,
+	}
+	h.RabbitMQ.Publish("escrow.funded", eventData)
+
+	return c.JSON(fiber.Map{
+		"message": "Payment verified and escrow funded!",
 		"data":    escrow,
 	})
 }

@@ -155,6 +155,10 @@ export const escrowApi = {
     uploadReceipt: (id: number, receiptUrl: string): Promise<AxiosResponse<Escrow>> =>
         api.post(`/api/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
 
+    // POST Verify-CBE
+    verifyCBE: (id: number, transactionId: string, accountSuffix: string): Promise<AxiosResponse<Escrow>> =>
+        api.post(`/api/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
+
     update: (id: number, data: { amount?: number; conditions?: string }): Promise<AxiosResponse<Escrow>> => 
         api.put(`/api/escrows/${id}`, data),
     

@@ -107,6 +107,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Post("/escrows/:id/lock", sc.EscrowHandler.LockEscrow)
 	protected.Put("/escrows/:id", sc.EscrowHandler.UpdateEscrow)
 	protected.Post("/escrows/:id/verify", sc.EscrowHandler.VerifyPayment)
+	protected.Post("/escrows/:id/verify-cbe", sc.EscrowHandler.VerifyCBEPayment)
 	protected.Post("/escrows/:id/cancel", sc.EscrowHandler.CancelEscrow)
 
 	protected.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
