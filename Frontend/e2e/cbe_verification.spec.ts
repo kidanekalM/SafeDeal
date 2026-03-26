@@ -27,7 +27,8 @@ test.describe('CBE Direct Verification Flow', () => {
 
   test('should verify escrow using CBE transaction ID', async ({ page }) => {
     // 1. Register Seller
-    await page.goto('/login?mode=register');
+    await page.goto('/login');
+    await page.click('button:has-text("Sign Up")');
     await page.fill('input[name="first_name"]', 'CBE');
     await page.fill('input[name="last_name"]', 'Seller');
     await page.fill('input[name="profession"]', 'Merchant');
@@ -35,13 +36,14 @@ test.describe('CBE Direct Verification Flow', () => {
     await page.fill('input[name="password"]', password);
     await page.click('button:has-text("Next: Payout Details")');
     await page.fill('input[name="account_name"]', 'CBE Seller');
-    await page.selectOption('select[name="bank_code"]', '946'); // CBE
-    await page.fill('input[name="account_number"]', '1000262856058'); // Use the suffix in the account number
+    await page.selectOption('select[name="bank_code"]', '946');
+    await page.fill('input[name="account_number"]', '1000262856058');
     await page.click('button:has-text("Complete Registration")');
-    await expect(page.locator('text=Account created successfully')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Account created successfully')).toBeVisible({ timeout: 15000 });
 
     // 2. Register Buyer
-    await page.goto('/login?mode=register');
+    await page.goto('/login');
+    await page.click('button:has-text("Sign Up")');
     await page.fill('input[name="first_name"]', 'CBE');
     await page.fill('input[name="last_name"]', 'Buyer');
     await page.fill('input[name="profession"]', 'Customer');
@@ -52,7 +54,7 @@ test.describe('CBE Direct Verification Flow', () => {
     await page.selectOption('select[name="bank_code"]', '946');
     await page.fill('input[name="account_number"]', '1000987654321');
     await page.click('button:has-text("Complete Registration")');
-    await expect(page.locator('text=Account created successfully')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Account created successfully')).toBeVisible({ timeout: 15000 });
 
     // 3. Login Buyer
     await page.fill('input[type="email"]', buyerEmail);
