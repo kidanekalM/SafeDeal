@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Loader2, Users, PieChart as PieIcon, BarChart2, AlertCircle, RefreshCw } from 'lucide-react';
 import Layout from '../components/Layout';
@@ -18,6 +19,7 @@ const STATUS_COLORS: Record<StatusKey, string> = {
 
 // Simple SVG Donut Pie Chart
 const DonutChart = ({ data, total, size = 180, stroke = 22 }: { data: { label: string; value: number; color: string }[]; total: number; size?: number; stroke?: number; }) => {
+  const { t } = useTranslation();
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   let offset = 0;

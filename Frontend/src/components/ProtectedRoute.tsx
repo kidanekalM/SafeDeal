@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { isProfileComplete } from '../utils/profileUtils';
 
@@ -7,6 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuthStore();
   const location = useLocation();
 

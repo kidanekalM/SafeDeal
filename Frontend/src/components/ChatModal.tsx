@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
@@ -14,6 +15,7 @@ interface ChatModalProps {
 }
 
 const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");

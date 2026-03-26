@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -6,6 +7,7 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner = ({ size = 'md', className = '' }: LoadingSpinnerProps) => {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-8 w-8',

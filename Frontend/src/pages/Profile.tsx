@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import {
@@ -21,6 +22,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { BANKS, getBankByCode } from "../lib/banks";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const { user, setUser } = useAuthStore();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");

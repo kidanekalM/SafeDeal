@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState, createContext, useMemo } from "react";
 import { useAuthStore } from "./store/authStore";
 import { useNotificationStore } from "./store/notificationStore";
@@ -36,6 +37,7 @@ function App() {
   const [langState, setLangState] = useState<Lang>(() => (localStorage.getItem('lang') as Lang) === 'am' ? 'am' : 'en');
   const [showLangModal, setShowLangModal] = useState<boolean>(() => !localStorage.getItem('lang'));
   const setLang = (l: Lang) => {
+  const { t } = useTranslation();
     setLangState(l);
     localStorage.setItem('lang', l);
     document.documentElement.lang = l;

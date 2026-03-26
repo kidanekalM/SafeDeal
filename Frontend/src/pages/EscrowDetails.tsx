@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -35,6 +36,7 @@ import VerifiedBadge from "../components/VerifiedBadge";
 import { motion, AnimatePresence } from "framer-motion";
 
 const formatDateSafe = (date: string | number | Date | null | undefined) => {
+  const { t } = useTranslation();
   if (!date) return "Unknown date";
 
   let d: Date;

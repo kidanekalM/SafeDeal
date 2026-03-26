@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
@@ -13,6 +14,7 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

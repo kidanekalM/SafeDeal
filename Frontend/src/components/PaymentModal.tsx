@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CreditCard, Shield, CheckCircle } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
@@ -12,6 +13,7 @@ interface PaymentModalProps {
 }
 
 const PaymentModal = ({ isOpen, onClose, amount, paymentUrl, onPaymentComplete }: PaymentModalProps) => {
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
 

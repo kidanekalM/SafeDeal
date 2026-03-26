@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, Shield, Zap, Award, CheckCircle } from "lucide-react";
 
@@ -27,6 +28,7 @@ const steps: Step[] = [
 ];
 
 const GuidedTour = () => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 

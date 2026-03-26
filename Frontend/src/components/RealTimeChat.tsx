@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle, Wifi, WifiOff } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
@@ -16,6 +17,7 @@ interface RealTimeChatProps {
 }
 
 const RealTimeChat = ({ isOpen, onClose, escrowId }: RealTimeChatProps) => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");

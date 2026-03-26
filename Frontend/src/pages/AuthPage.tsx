@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Shield, ArrowLeft } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GreenGirl from '../assets/GreenGirl.png';
 
 const AuthPage = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);

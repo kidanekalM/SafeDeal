@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Upload, Shield, CheckCircle, XCircle, RotateCcw, FileText } from 'lucide-react';
 import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
 
 const CbeVerificationTest = () => {
+  const { t } = useTranslation();
   // States for transaction verification
   const [transactionId, setTransactionId] = useState('');
   const [accountNumber, setAccountNumber] = useState('');

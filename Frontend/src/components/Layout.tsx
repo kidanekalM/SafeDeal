@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Package, Settings, User, Bell, Search, Users, Lock, X, LogOut, Menu, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -13,6 +14,7 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationStore();

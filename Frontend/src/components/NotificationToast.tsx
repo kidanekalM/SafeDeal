@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -11,6 +12,7 @@ interface NotificationToastProps {
 }
 
 const NotificationToast = ({ isEnabled = true }: NotificationToastProps) => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);

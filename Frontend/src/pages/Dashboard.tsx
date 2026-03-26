@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -29,6 +30,7 @@ import GuidedTour from "../components/GuidedTour";
 import VerifiedBadge from "../components/VerifiedBadge";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   if (user?.id === 2) {
     return <AdminDashboard />;

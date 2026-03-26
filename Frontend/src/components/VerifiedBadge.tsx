@@ -1,4 +1,5 @@
 import { ShieldCheck } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface VerifiedBadgeProps {
   isVerified: boolean;
@@ -6,6 +7,7 @@ interface VerifiedBadgeProps {
 }
 
 const VerifiedBadge = ({ isVerified, className = "" }: VerifiedBadgeProps) => {
+  const { t } = useTranslation();
   if (!isVerified) return null;
 
   return (

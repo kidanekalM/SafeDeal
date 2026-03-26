@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -63,6 +64,7 @@ const TEMPLATES = [
 ];
 
 const CreateEscrow = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const [step, setStep] = useState(0);

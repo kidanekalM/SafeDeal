@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useContext } from 'react';
 import { LanguageContext } from '../App';
@@ -38,6 +39,7 @@ import GeminiLogo1 from "../assets/gemini.svg";
 
 
 const LandingPage = () => {
+  const { t } = useTranslation();
   const { lang, setLang } = useContext(LanguageContext);
 
   const dict: Record<string, Record<string, string>> = {
