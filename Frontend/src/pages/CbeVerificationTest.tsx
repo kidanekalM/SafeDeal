@@ -6,7 +6,7 @@ import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
 
 const CbeVerificationTest = () => {
-  const { t } = useTranslation();
+  useTranslation();
   // States for transaction verification
   const [transactionId, setTransactionId] = useState('');
   const [accountNumber, setAccountNumber] = useState('');

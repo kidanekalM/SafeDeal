@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 type Contact = SearchUser & { created_at?: string };
 
 const Contacts = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

@@ -13,7 +13,7 @@ interface PaymentModalProps {
 }
 
 const PaymentModal = ({ isOpen, onClose, amount, paymentUrl, onPaymentComplete }: PaymentModalProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
 

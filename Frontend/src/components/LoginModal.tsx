@@ -13,7 +13,7 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ onClose }: LoginModalProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

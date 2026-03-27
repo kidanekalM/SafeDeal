@@ -5,7 +5,7 @@ import { userApi } from '../lib/api';
 import { getTokenInfo, decodeJWT } from '../lib/tokenUtils';
 
 const DebugAuth = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user, isAuthenticated } = useAuthStore();
   const [token, setToken] = useState<string | null>(null);
   const [tokenHistory, setTokenHistory] = useState<Array<{timestamp: string, token: string, reason: string}>>([]);

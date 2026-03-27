@@ -17,7 +17,7 @@ interface RealTimeChatProps {
 }
 
 const RealTimeChat = ({ isOpen, onClose, escrowId }: RealTimeChatProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");

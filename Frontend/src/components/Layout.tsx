@@ -14,7 +14,7 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationStore();

@@ -30,7 +30,7 @@ import GuidedTour from "../components/GuidedTour";
 import VerifiedBadge from "../components/VerifiedBadge";
 
 const Dashboard = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user } = useAuthStore();
   if (user?.id === 2) {
     return <AdminDashboard />;

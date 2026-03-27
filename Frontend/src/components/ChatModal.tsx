@@ -15,7 +15,7 @@ interface ChatModalProps {
 }
 
 const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");

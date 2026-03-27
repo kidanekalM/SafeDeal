@@ -23,7 +23,7 @@ import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const AllEscrows = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const {  } = useAuthStore();
   const [escrows, setEscrows] = useState<Escrow[]>([]);
   const [isLoading, setIsLoading] = useState(true);

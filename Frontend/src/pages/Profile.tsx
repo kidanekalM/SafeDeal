@@ -22,7 +22,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { BANKS, getBankByCode } from "../lib/banks";
 
 const Profile = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user, setUser } = useAuthStore();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");

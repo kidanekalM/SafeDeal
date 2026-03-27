@@ -1,11 +1,12 @@
 import React from 'react'
-import { useTranslation } from 'react-i18next';
+
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { Toaster } from 'react-hot-toast'
 import App from './App.tsx'
 import './index.css'
+import './i18n'
 import { registerSW } from 'virtual:pwa-register'
 
 registerSW({

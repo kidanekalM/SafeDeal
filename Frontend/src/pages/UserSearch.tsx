@@ -13,7 +13,7 @@ import { userApi } from '../lib/api';
 import { SearchUser } from '../types';
 
 const UserSearch = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);

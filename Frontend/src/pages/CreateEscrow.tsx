@@ -64,7 +64,7 @@ const TEMPLATES = [
 ];
 
 const CreateEscrow = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const [step, setStep] = useState(0);

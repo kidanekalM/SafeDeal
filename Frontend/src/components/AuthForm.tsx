@@ -14,7 +14,7 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

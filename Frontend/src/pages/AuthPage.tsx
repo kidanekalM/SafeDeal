@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import GreenGirl from '../assets/GreenGirl.png';
 
 const AuthPage = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);

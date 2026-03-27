@@ -28,7 +28,7 @@ const steps: Step[] = [
 ];
 
 const GuidedTour = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 

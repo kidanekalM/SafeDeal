@@ -21,7 +21,7 @@ import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TransactionHistory = () => {
-  const { t } = useTranslation();
+  useTranslation();
   const [transactions, setTransactions] = useState<TransactionHistoryType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

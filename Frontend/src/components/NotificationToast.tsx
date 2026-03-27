@@ -12,7 +12,7 @@ interface NotificationToastProps {
 }
 
 const NotificationToast = ({ isEnabled = true }: NotificationToastProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);

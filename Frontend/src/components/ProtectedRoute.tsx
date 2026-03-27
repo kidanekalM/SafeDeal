@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user, isAuthenticated } = useAuthStore();
   const location = useLocation();
 

@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useTranslation } from 'react-i18next';
-import { useEffect, useRef, useState, createContext, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "./store/authStore";
 import { useNotificationStore } from "./store/notificationStore";
 import { authApi, userApi, wsApi } from "./lib/api";
@@ -25,25 +25,29 @@ import NotificationToast from "./components/NotificationToast";
 import Contacts from "./pages/Contacts";
 import CbeVerificationTest from "./pages/CbeVerificationTest";
 
-export type Lang = 'en' | 'am';
-export const LanguageContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'en', setLang: () => {} });
-
 function App() {
   const { user, setUser, setLoading, isAuthenticated } = useAuthStore();
   const { setNotifications, addNotification } = useNotificationStore();
+  const { t, i18n } = useTranslation();
   const refreshTimeoutRef = useRef<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  const [langState, setLangState] = useState<Lang>(() => (localStorage.getItem('lang') as Lang) === 'am' ? 'am' : 'en');
   const [showLangModal, setShowLangModal] = useState<boolean>(() => !localStorage.getItem('lang'));
-  const setLang = (l: Lang) => {
-  const { t } = useTranslation();
-    setLangState(l);
+  
+  const setLang = (l: 'en' | 'am') => {
+    i18n.changeLanguage(l);
     localStorage.setItem('lang', l);
     document.documentElement.lang = l;
     setShowLangModal(false);
   };
-  const langContextValue = useMemo(() => ({ lang: langState, setLang }), [langState]);
+
+  // #region agent log
+  useEffect(() => {
+    const hasResourceBundleFn = typeof (i18n as any)?.hasResourceBundle === 'function';
+    fetch('http://127.0.0.1:7242/ingest/aa4edf5c-6321-4b39-ba94-76f38cd1122e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix-init',hypothesisId:'H1',location:'src/App.tsx:45',message:'i18n runtime state on app mount',data:{isInitialized:(i18n as any)?.isInitialized,language:(i18n as any)?.language,resolvedLanguage:(i18n as any)?.resolvedLanguage,hasResourceBundleFn,hasEnTranslation:hasResourceBundleFn?(i18n as any).hasResourceBundle('en','translation'):null,hasAmTranslation:hasResourceBundleFn?(i18n as any).hasResourceBundle('am','translation'):null,sampleWhySafedeal:t('pages.why_safedeal'),sampleSignIn:t('components.sign_in')},timestamp:Date.now()})}).catch(()=>{});
+  }, [i18n, t]);
+  // #endregion
+
 
   // 🧩 Initialize auth on page load
   useEffect(() => {
@@ -214,27 +218,26 @@ function App() {
   }, [user, isAuthenticated]);
 
   return (
-    <LanguageContext.Provider value={langContextValue}>
       <div className="min-h-screen bg-gray-50 relative">
         {showLangModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
             <div className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-md p-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">Choose your language</h2>
-              <p className="text-sm text-gray-600 mb-6 text-center">እባክዎ ቋንቋ ይምረጡ</p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">{t("common.choose_your_language")}</h2>
+              <p className="text-sm text-gray-600 mb-6 text-center">{t("common.select_language_prompt")}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setLang('en')}
                   className="w-full py-3 rounded-xl border border-gray-200 hover:border-[#005356] hover:bg-gray-50 transition-colors font-medium"
                 >
-                  English
+                  {t("common.english")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setLang('am')}
                   className="w-full py-3 rounded-xl border border-gray-200 hover:border-[#005356] hover:bg-gray-50 transition-colors font-medium"
                 >
-                  አማርኛ
+                  {t("common.amharic")}
                 </button>
               </div>
               <button
@@ -242,7 +245,7 @@ function App() {
                 onClick={() => setShowLangModal(false)}
                 className="mt-6 w-full py-2 text-sm text-gray-500 hover:text-gray-700"
               >
-                Continue without choosing
+                {t("common.continue_without_choosing")}
               </button>
             </div>
           </div>
@@ -347,7 +350,6 @@ function App() {
 
         <NotificationToast isEnabled={isAuthenticated} />
       </div>
-    </LanguageContext.Provider>
   );
 }
 

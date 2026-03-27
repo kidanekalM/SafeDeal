@@ -22,7 +22,7 @@ interface NotificationCenterProps {
 }
 
 const NotificationCenter = ({ isOpen, onClose }: NotificationCenterProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   const { user } = useAuthStore();
   const { 
     notifications, 

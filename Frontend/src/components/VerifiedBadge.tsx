@@ -7,7 +7,7 @@ interface VerifiedBadgeProps {
 }
 
 const VerifiedBadge = ({ isVerified, className = "" }: VerifiedBadgeProps) => {
-  const { t } = useTranslation();
+  useTranslation();
   if (!isVerified) return null;
 
   return (
