@@ -37,7 +37,7 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		DB:                  db,
 		AuthService:         authService,
 		UserHandler:         handlers.NewUserHandler(db, authService, notificationHandler),
-		EscrowHandler:       handlers.NewEscrowHandler(db, authService, rabbitMQ, blockchainClient),
+		EscrowHandler:       handlers.NewEscrowHandler(db, authService, rabbitMQ, blockchainClient, notificationHandler),
 		PaymentHandler:      handlers.NewPaymentHandler(db, authService, rabbitMQ),
 		ChatHandler:         handlers.NewChatHandler(db, authService),
 		NotificationHandler: notificationHandler,

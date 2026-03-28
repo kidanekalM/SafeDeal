@@ -1,7 +1,22 @@
 import { ReactNode, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Package, Settings, User, Bell, Search, Users, Lock, X, LogOut, Menu, ChevronRight, ChevronLeft } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Plus, 
+  User, 
+  LogOut, 
+  Lock,
+  Bell,
+  Settings,
+  Shield,
+  CreditCard,
+  Search,
+  Phone,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { authApi } from '../lib/api';
@@ -14,7 +29,6 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  useTranslation();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationStore();
@@ -33,22 +47,22 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   const normalNavigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Start Deal', href: '/create-escrow', icon: Package },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Start Deal', href: '/create-escrow', icon: Plus },
     { name: 'Directory', href: '/search', icon: Search },
-    { name: 'Payments', href: '/transactions', icon: Package },
+    { name: 'Payments', href: '/transactions', icon: CreditCard },
     { name: 'Profile', href: '/profile', icon: User },
   ];
   
   // Only add CBE test page in development mode
   const devNavigation = (import.meta as any).env.DEV 
-    ? [{ name: 'CBE Test', href: '/cbe-test', icon: Users }] 
+    ? [{ name: 'CBE Test', href: '/cbe-test', icon: Shield }] 
     : [];
     
   const navigationWithDev = [...normalNavigation, ...devNavigation];
   
   const adminNavigation = [
-    { name: 'Admin Dashboard', href: '/admin', icon: Home },
+    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
   ];
  const navigation = user?.id === 2 ? adminNavigation : navigationWithDev;
   const isActive = (path: string) => location.pathname === path;

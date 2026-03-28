@@ -24,6 +24,8 @@ type Escrow struct {
 	ResolutionNote     string      `json:"resolution_note,omitempty"`
 	ReceiptURL         string      `json:"receipt_url,omitempty"`
 	TransactionRef     string      `json:"transaction_ref,omitempty" gorm:"uniqueIndex"`
+	EscrowHash         string      `json:"escrow_hash,omitempty" gorm:"uniqueIndex;size:66"`
+	InviteSent         bool        `json:"invite_sent" gorm:"default:false"`
 	IsLocked           bool        `json:"is_locked" gorm:"default:false"`
 	Buyer              *User       `json:"buyer,omitempty" gorm:"foreignKey:BuyerID"`
 	Seller             *User       `json:"seller,omitempty" gorm:"foreignKey:SellerID"`

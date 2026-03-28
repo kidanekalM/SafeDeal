@@ -5,7 +5,10 @@ import (
 	"sync"
 
 	"backend_monolithic/internal/auth"
+	"backend_monolithic/pkg/mailer"
+
 	"github.com/gofiber/websocket/v2"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -116,8 +119,52 @@ func (h *NotificationHandler) NotificationWebSocket(c *websocket.Conn) {
 	}
 }
 
-// InviteUser simulates sending an invitation to a non-existent user
+// InviteUser sends real email invitation to non-existent user
 func (h *NotificationHandler) InviteUser(email string) {
-	log.Printf("INVITATION SENT: User with email %s has been invited to join SafeDeal", email)
-	// In a real implementation, this would trigger an email via a mailer service
+	mailer := mailer.NewMailer()
+	subject := "Join SafeDeal - You've been invited to an escrow deal"
+	html := `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SafeDeal Invitation</title>
+</head>
+<body>
+    <h1>You've been invited to SafeDeal!</h1>
+    <p>A SafeDeal escrow has been created for you.</p>
+    <p><a href="http://localhost:8080/login?mode=register">Create Account & Accept</a></p>
+    <p>Reply to this email if you have questions.</p>
+</body>
+</html>
+`
+	if err := mailer.SendEmail([]string{email}, subject, html); err != nil {
+		log.Printf("Failed to send invite to %s: %v", email, err)
+	} else {
+		log.Printf("Invitation email sent to %s", email)
+	}
 }
+
+func (h *NotificationHandler) SendEscrowUpdate(escrowID uint, status string, buyerEmail, sellerEmail string, amount uint) {
+	mailer := mailer.NewMailer()
+	subject := fmt.Sprintf("SafeDeal Escrow #%d Update: %s", escrowID, status)
+	html := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+		    <title>SafeDeal Escrow Update</title>
+		</head>
+		<body>
+		    <h1>Escrow #%d Status Update</h1>
+		    <p>Status changed to: <strong>%s</strong></p>
+		    <p>Amount: %d ETB</p>
+		    <p><a href="http://localhost:8080/escrow/%d">View Escrow Details</a></p>
+		</body>
+		</html>
+	`, escrowID, status, amount, escrowID)
+	
+	if err := mailer.SendEmail([]string{buyerEmail, sellerEmail}, subject, html); err != nil {
+		log.Printf("Failed to send escrow update: %v", err)
+	}
+}
+
+

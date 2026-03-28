@@ -5,10 +5,6 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
-  timeout: 60000,
-  expect: {
-    timeout: 10000,
-  },
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -30,10 +26,20 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // Chromium has compatibility issues with macOS 11 (Big Sur)
+    // {
+    //   name: 'chromium',
+    //   use: { ...devices['Desktop Chrome'] },
+    // },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
+    // WebKit not supported on macOS 11 (Big Sur)
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
   ],
 
   /* Run your local dev server before starting the tests */

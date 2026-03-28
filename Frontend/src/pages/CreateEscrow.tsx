@@ -1,21 +1,20 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Plus, Shield, DollarSign, 
+  Plus, Shield, Mail, DollarSign, ArrowLeft, 
   Search, Check, UserPlus, FileText, Scale, 
-  ChevronRight, ChevronLeft, Trash2,
+  ChevronRight, ChevronLeft, Trash2, Calendar,
   Settings, Zap, ListChecks, Gavel, LayoutTemplate, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
-import api, { userApi } from '../lib/api';
+import api, { escrowApi, userApi } from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { SearchUser } from '../types';
+import { SearchUser, CreateEscrowRequest } from '../types';
 
 const MilestoneSchema = z.object({
   title: z.string().min(3, 'Title is required'),
@@ -64,17 +63,18 @@ const TEMPLATES = [
 ];
 
 const CreateEscrow = () => {
-  useTranslation();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const [step, setStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'buyer' | 'seller' | 'counterparty' | 'mediator'>('counterparty');
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState<SearchUser | null>(null);
   const [selectedSeller, setSelectedSeller] = useState<SearchUser | null>(null);
   const [selectedMediator, setSelectedMediator] = useState<SearchUser | null>(null);
   const [selectedCounterparty, setSelectedCounterparty] = useState<SearchUser | null>(null);
+  const [invitationSent, setInvitationSent] = useState<string | null>(null);
 
   const {
     register,
@@ -141,14 +141,20 @@ const CreateEscrow = () => {
       return;
     }
 
+    setIsSearching(true);
     try {
       const response = await userApi.searchUsers(term);
       const users = response.data.data.users || [];
       setSearchResults(users);
+      if (response.data.data.invited) {
+        setInvitationSent(term);
+      } else {
+        setInvitationSent(null);
+      }
     } catch (error) {
       console.error('Search failed', error);
     } finally {
-      // Done
+      setIsSearching(false);
     }
   };
 

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTranslation } from 'react-i18next';
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
@@ -14,7 +13,6 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
-  useTranslation();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +29,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
     formState: { errors },
     reset,
     trigger,
-  } = useForm<LoginRequest & RegisterRequest & { account_name: string; account_number: string; bank_code: string | number; bank_name: string }>();
+  } = useForm<LoginRequest & RegisterRequest & { account_name: string; account_number: string; bank_code: string; bank_name: string }>();
 
   const onSubmit = async (data: any) => {
     setIsLoading(true);

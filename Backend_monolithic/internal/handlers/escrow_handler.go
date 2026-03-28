@@ -18,16 +18,18 @@ import (
 
 	"github.com/dslipak/pdf"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type EscrowHandler struct {
-	DB             *gorm.DB
-	AuthService    *auth.Service
-	RabbitMQ       *rabbitmq.Producer
-	BlockchainClient *blockchain.Client
+	DB                  *gorm.DB
+	AuthService         *auth.Service
+	RabbitMQ            *rabbitmq.Producer
+	BlockchainClient    *blockchain.Client
+	NotificationHandler *NotificationHandler
 }
 
 func (h *EscrowHandler) recordStatusEvent(escrowID uint, actorID uint, fromStatus string, toStatus string, reason string, txHash string, metadata string) {
@@ -70,12 +72,13 @@ func (h *EscrowHandler) adjustTrustScore(userID uint, delta float64) {
 	_ = h.DB.Model(&user).Update("trust_score", next).Error
 }
 
-func NewEscrowHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer, blockchainClient *blockchain.Client) *EscrowHandler {
+func NewEscrowHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer, blockchainClient *blockchain.Client, notificationHandler *NotificationHandler) *EscrowHandler {
 	return &EscrowHandler{
-		DB:             db,
-		AuthService:    authService,
-		RabbitMQ:       rabbitMQ,
-		BlockchainClient: blockchainClient,
+		DB:                  db,
+		AuthService:         authService,
+		RabbitMQ:            rabbitMQ,
+		BlockchainClient:    blockchainClient,
+		NotificationHandler: notificationHandler,
 	}
 }
 
@@ -129,20 +132,30 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		}
 	}
 
-	// Verify all parties exist
-	var buyerUser, sellerUser models.User
+	// Verify buyer exists
+	var buyerUser models.User
 	if err := h.DB.First(&buyerUser, finalBuyerID).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Buyer not found"})
 	}
-	if err := h.DB.First(&sellerUser, finalSellerID).Error; err != nil {
-		return c.Status(404).JSON(fiber.Map{"error": "Seller not found"})
+
+	var sellerUser models.User
+	var sellerEmail string
+	sellerErr := h.DB.First(&sellerUser, finalSellerID).Error
+	if sellerErr != nil && !errors.Is(sellerErr, gorm.ErrRecordNotFound) {
+		return c.Status(500).JSON(fiber.Map{"error": "Database error fetching seller"})
 	}
+
 	if req.MediatorID != nil {
 		var mediatorUser models.User
 		if err := h.DB.First(&mediatorUser, *req.MediatorID).Error; err != nil {
 			return c.Status(404).JSON(fiber.Map{"error": "Mediator not found"})
 		}
 	}
+
+	// Compute immutable EscrowHash
+	hashData := fmt.Sprintf("%d|%d|%d|%s", finalBuyerID, finalSellerID, req.Amount, req.Conditions)
+	hashBytes := crypto.Keccak256([]byte(hashData))
+	escrowHash := "0x" + common.Bytes2Hex(hashBytes)
 
 	// Create escrow record
 	fee := uint(float64(req.Amount) * 0.02)
@@ -157,12 +170,31 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		GoverningLaw:      req.GoverningLaw,
 		DisputeResolution: req.DisputeResolution,
 		Status:            "Pending",
+		EscrowHash:        escrowHash,
 	}
 
 	if err := h.DB.Create(escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow"})
 	}
 	h.recordStatusEvent(escrow.ID, userID, "", escrow.Status, "Escrow created", escrow.BlockchainTxHash, "")
+
+	// Handle seller invitation if seller doesn't exist
+	if errors.Is(sellerErr, gorm.ErrRecordNotFound) {
+		// In a real implementation, we would need to get the seller's email from somewhere
+		// For now, we'll use a placeholder email
+		placeholderEmail := fmt.Sprintf("invited_seller_%d@example.com", finalSellerID)
+		h.NotificationHandler.InviteUser(placeholderEmail)
+
+		// Update the escrow to reflect that an invite was sent
+		escrow.InviteSent = true
+		h.DB.Save(escrow)
+		sellerEmail = placeholderEmail
+	} else {
+		sellerEmail = sellerUser.Email
+	}
+
+	// Send notification about the new escrow
+	h.NotificationHandler.SendEscrowUpdate(escrow.ID, "Pending", buyerUser.Email, sellerEmail, req.Amount)
 
 	// Conditionally create milestones if provided
 	if req.Milestones != nil && len(req.Milestones) > 0 {
@@ -171,20 +203,20 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			if req.Milestones[i].ApproverID == nil {
 				req.Milestones[i].ApproverID = &userID
 			}
-			
+
 			// Associate milestone with escrow
 			req.Milestones[i].EscrowID = escrow.ID
 			req.Milestones[i].Status = models.MilestonePending // Default status
-			
+
 			// Ensure proper validation
 			if req.Milestones[i].Title == "" {
 				return c.Status(400).JSON(fiber.Map{"error": "Milestone title is required"})
 			}
-			
+
 			if req.Milestones[i].Amount == 0 {
 				return c.Status(400).JSON(fiber.Map{"error": "Milestone amount is required"})
 			}
-			
+
 			// Create milestone
 			if err := h.DB.Create(&req.Milestones[i]).Error; err != nil {
 				return c.Status(500).JSON(fiber.Map{"error": "Could not create milestone"})
@@ -205,7 +237,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	// Interact with blockchain to create the escrow
 	if h.BlockchainClient != nil {
-		buyerAddr := common.HexToAddress(buyerUser.WalletAddress) // Buyer is the user creating the escrow
+		buyerAddr := common.HexToAddress(buyerUser.WalletAddress)   // Buyer is the user creating the escrow
 		sellerAddr := common.HexToAddress(sellerUser.WalletAddress) // Seller is the fetched user
 		amount := big.NewInt(int64(req.Amount))
 
@@ -402,7 +434,7 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 	// Interact with blockchain to fund the escrow
 	if h.BlockchainClient != nil {
 		escrowID := big.NewInt(int64(escrow.ID))
-		
+
 		tx, err := h.BlockchainClient.ConfirmPayment(escrowID)
 		if err != nil {
 			log.Printf("Failed to confirm payment on blockchain for escrow %d: %v", escrow.ID, err)
@@ -465,14 +497,14 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 	// Interact with blockchain to finalize escrow
 	if h.BlockchainClient != nil {
 		escrowID := big.NewInt(int64(escrow.ID))
-		
+
 		tx, err := h.BlockchainClient.FinalizeEscrow(escrowID)
 		if err != nil {
 			log.Printf("Failed to finalize escrow on blockchain for escrow %d: %v", escrow.ID, err)
 		} else {
 			log.Printf("Successfully finalized escrow on blockchain for escrow %d with TX: %v", escrow.ID, tx.Hash().Hex())
 			escrow.BlockchainTxHash = tx.Hash().Hex()
-			h.DB.Save(&escrow)
+			h.DB.Save(escrow)
 		}
 	}
 

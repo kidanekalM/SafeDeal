@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { formatRelativeTime } from "../lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Message, User } from "../types";
+import { Message } from "../types";
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -15,7 +14,6 @@ interface ChatModalProps {
 }
 
 const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
-  useTranslation();
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -40,9 +38,8 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
             activated: true,
             created_at: "",
             updated_at: "",
-            profession: "",
-            trust_score: user?.trust_score || 0
-          } as User,
+            profession: ""
+          },
         },
         {
           id: 2,
@@ -59,9 +56,8 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
             activated: true,
             created_at: "",
             updated_at: "",
-            profession: "",
-            trust_score: 4.7
-          } as User,
+            profession: ""
+          },
         },
         {
           id: 3,
@@ -78,10 +74,9 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
             activated: true,
             created_at: "",
             updated_at: "",
-            profession: "",
-            trust_score: user?.trust_score || 0
-          } as User,
-        }
+            profession: ""
+          },
+        },
       ];
       setMessages(mockMessages);
     }
@@ -113,9 +108,8 @@ const ChatModal = ({ isOpen, onClose, escrowId }: ChatModalProps) => {
         activated: true,
         created_at: "",
         updated_at: "",
-        profession: "",
-        trust_score: user?.trust_score || 0
-      } as User,
+        profession: ""
+      },
     };
 
     setMessages((prev) => [...prev, message]);
