@@ -1,0 +1,7 @@
+
+2026/03/29 00:33:15 [32m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/configs/db.go:30 [33mSLOW SQL >= 200ms
+[0m[31;1m[254.794ms] [33m[rows:-][35m SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description, c.identity_increment FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = 'safedeal_db' AND table_schema = CURRENT_SCHEMA() AND table_name = 'users'[0m
+Successfully connected to PostgreSQL database
+Server starting on port 8081
+2026/03/29 00:33:17 failed to listen: listen tcp4 :8081: bind: address already in use
+exit status 1

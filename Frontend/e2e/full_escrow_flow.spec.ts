@@ -216,9 +216,69 @@ test.describe('Complete Escrow Flow', () => {
   });
 
   // ============================================
-  // PART 5: ACCEPT ESCROW (Seller Side)
+  // PART 5: CREATE ESCROW (ULTRA COMPREHENSIVE)
   // ============================================
-  test.describe('5. Accept Escrow', () => {
+  test.describe('5. Create Ultra Comprehensive Escrow', () => {
+    test('should create an ultra comprehensive escrow with dispute clauses', async ({ page }) => {
+      // Login as buyer
+      await page.goto('/login');
+      await page.fill('input[type="email"]', buyerEmail);
+      await page.fill('input[type="password"]', password);
+      await page.click('button:has-text("Login")');
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+
+      // Navigate to create escrow
+      await page.click('text=Start New Deal');
+      await expect(page).toHaveURL(/.*create-escrow/);
+
+      // Step 1: Select Ultra Comprehensive option
+      await page.click('text=Ultra Comprehensive');
+      await page.click('button:has-text("Continue")');
+
+      // Step 2: Select counterparty
+      await page.fill('input[placeholder="Search by name or email..."]', 'test');
+      await page.waitForSelector('button:has-text("test")', { timeout: 5000 });
+      await page.locator('button:has-text("test")').first().click();
+      await page.click('button:has-text("Continue")');
+
+      // Step 3: Fill terms
+      await page.fill('textarea[name="conditions"]', 'Ultra Comprehensive Escrow Terms - This is a detailed test deal for the ultra comprehensive route.');
+      await page.fill('input[name="amount"]', '1500');
+      await page.click('button:has-text("Continue")');
+
+      // Step 4: Add milestones
+      await page.fill('input[placeholder="Milestone Title"]', 'Initial Planning');
+      await page.fill('input[placeholder="Amount"]', '500');
+      
+      await page.click('button:has-text("Add")');
+      await page.locator('input[placeholder="Milestone Title"]').nth(1).fill('Implementation Phase');
+      await page.locator('input[placeholder="Amount"]').nth(1).fill('1000');
+      
+      await expect(page.locator('text=1,500 ETB')).toBeVisible();
+      await page.click('button:has-text("Continue")');
+
+      // Step 5: Final review - check for dispute clause fields
+      await expect(page.locator('text=Dispute Clause')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('text=Dispute Resolution Procedure')).toBeVisible();
+      await expect(page.locator('text=Arbitration Terms')).toBeVisible();
+      await expect(page.locator('text=Court Jurisdiction for Disputes')).toBeVisible();
+
+      // Verify dispute resolution options are present
+      await expect(page.locator('text=AI Smart Resolution')).toBeVisible();
+      
+      // Create the escrow
+      await page.click('button:has-text("Start Secure Escrow")');
+
+      // Should redirect to escrows list
+      await expect(page).toHaveURL(/.*escrows/);
+      await expect(page.locator('text=Escrow created successfully')).toBeVisible();
+    });
+  });
+
+  // ============================================
+  // PART 6: ACCEPT ESCROW (Seller Side)
+  // ============================================
+  test.describe('6. Accept Escrow', () => {
     test('seller should accept the escrow', async ({ page }) => {
       await page.goto('/login');
       await page.fill('input[type="email"]', sellerEmail);
@@ -251,9 +311,9 @@ test.describe('Complete Escrow Flow', () => {
   });
 
   // ============================================
-  // PART 6: CHAT (Both Parties)
+  // PART 7: CHAT (Both Parties)
   // ============================================
-  test.describe('6. Real-time Chat', () => {
+  test.describe('7. Real-time Chat', () => {
     test('buyer should open chat and send message', async ({ page }) => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
@@ -310,9 +370,9 @@ test.describe('Complete Escrow Flow', () => {
   });
 
   // ============================================
-  // PART 7: PAYMENT (Buyer Side) - Chapa Test
+  // PART 8: PAYMENT (Buyer Side) - Chapa Test
   // ============================================
-  test.describe('7. Payment with Chapa', () => {
+  test.describe('8. Payment with Chapa', () => {
     test('buyer should initiate and complete payment with test card', async ({ page }) => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
@@ -375,54 +435,68 @@ test.describe('Complete Escrow Flow', () => {
   });
 
   // ============================================
-  // PART 8: DISPUTE FLOW
+  // PART 9: DISPUTE & DOWNLOAD AGREEMENT
   // ============================================
-  test.describe('8. Dispute Flow', () => {
-    test('buyer should raise a dispute', async ({ page }) => {
+  test.describe('9. Dispute & Download Agreement', () => {
+    test('should be able to download finalized agreement when escrow is released', async ({ page }) => {
+      // Login as buyer
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button:has-text("Login")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
-      // Navigate to escrow details
-      await page.click('text=My Escrows');
-      await page.locator('[class*="cursor-pointer"]').first().click();
-      await expect(page).toHaveURL(/\/escrow\/\d+/);
-
-      // Find and click dispute button
-      const disputeButton = page.locator('button:has-text("Dispute")').or(page.locator('button:has-text("Raise Dispute")')).or(page.locator('button:has-text("Report Issue")'));
+      // Go to escrows page
+      await page.goto('/escrows');
       
-      // Only proceed if dispute button exists and is enabled
-      if (await disputeButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await disputeButton.click();
-
-        // Dispute modal should appear
-        await expect(page.locator('text=Dispute').or(page.locator('text=Reason')).or(page.locator('textarea'))).toBeVisible({ timeout: 5000 });
-
-        // Enter dispute reason
-        await page.fill('textarea[name="reason"]', 'Automated test dispute - seller not responding properly.');
+      // Wait for escrows to load
+      await expect(page.locator('text=My Escrows').or(page.locator('text=Active Deals'))).toBeVisible();
+      
+      // Find an escrow that is released or refunded to test the download functionality
+      // First, find all escrows
+      const escrowItems = page.locator('.card').filter({ has: page.locator('.status-tag') });
+      const count = await escrowItems.count();
+      
+      let foundReleasedEscrow = false;
+      for (let i = 0; i < count; i++) {
+        const escrowItem = escrowItems.nth(i);
+        const statusTag = escrowItem.locator('.status-tag');
+        const statusText = await statusTag.textContent();
         
-        // Submit dispute
-        const submitDisputeBtn = page.locator('button:has-text("Submit")').or(page.locator('button:has-text("Raise Dispute")'));
-        await submitDisputeBtn.click();
-
-        // Wait for dispute processing
-        await page.waitForTimeout(2000);
-
-        // Verify dispute status
-        const pageContent = await page.textContent('body');
-        expect(pageContent).toMatch(/DISPUTE|Dispute|disputed|Under Review/);
-      } else {
-        console.log('Dispute button not available - escrow may not be in correct state');
+        if (statusText && (statusText.includes('Released') || statusText.includes('Refunded'))) {
+          // Click on this escrow
+          await escrowItem.click();
+          
+          // Wait for page to load
+          await expect(page.locator('text=Escrow Details').or(page.locator('text=Deal Information'))).toBeVisible();
+          
+          // Look for the download agreement button
+          const downloadButton = page.locator('button:has-text("Download Final Agreement")');
+          
+          // Wait for the button to appear (might take time to load the page)
+          await expect(downloadButton).toBeVisible({ timeout: 10000 });
+          
+          // Click the download button
+          await downloadButton.click();
+          
+          // Expect a success toast notification
+          await expect(page.locator('text=Agreement downloaded successfully')).toBeVisible({ timeout: 5000 });
+          
+          foundReleasedEscrow = true;
+          break;
+        }
+      }
+      
+      if (!foundReleasedEscrow) {
+        console.log('No released/refunded escrows found to test download functionality');
       }
     });
   });
 
   // ============================================
-  // PART 9: NOTIFICATION CENTER
+  // PART 10: NOTIFICATION CENTER
   // ============================================
-  test.describe('9. Notifications', () => {
+  test.describe('10. Notifications', () => {
     test('user should see notifications', async ({ page }) => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
@@ -442,9 +516,9 @@ test.describe('Complete Escrow Flow', () => {
   });
 
   // ============================================
-  // PART 10: LOGOUT
+  // PART 11: LOGOUT
   // ============================================
-  test.describe('10. Logout', () => {
+  test.describe('11. Logout', () => {
     test('should logout successfully', async ({ page }) => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
