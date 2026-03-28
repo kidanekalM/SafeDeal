@@ -36,6 +36,7 @@ func InitDB() *gorm.DB {
 		&models.BankDetails{}, 
 		&models.Contact{},
 		&models.Milestone{}, // Adding the new Milestone model
+		&models.EscrowStatusEvent{},
 	)
 
 	fmt.Println("Successfully connected to PostgreSQL database")

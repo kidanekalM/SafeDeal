@@ -93,6 +93,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 
 	// User routes
 	protected.Get("/profile", sc.UserHandler.GetProfile)            // GET request to fetch profile
+	protected.Get("/profile/trust-insights", sc.UserHandler.GetTrustInsights)
 	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
 	protected.Get("/profile/bank-details", sc.UserHandler.GetBankDetails)
 	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
@@ -113,8 +114,11 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
 	protected.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
 	protected.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)
+	protected.Post("/escrows/dispute/:id/resolve", sc.EscrowHandler.ResolveDispute)
 	protected.Post("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow) // Changed to POST to match standard REST practices
 	protected.Post("/escrows/:id/receipt", sc.EscrowHandler.UploadReceipt)
+	protected.Get("/escrows/:id/status-history", sc.EscrowHandler.GetStatusHistory)
+	protected.Get("/escrows/:id/final-agreement", sc.EscrowHandler.DownloadFinalizedAgreement)
 	protected.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
 
 	// Search routes - for finding users

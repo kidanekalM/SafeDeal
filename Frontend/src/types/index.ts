@@ -53,7 +53,7 @@ export interface UpdateProfileRequest {
     profession?: string;
 }
 
-export type EscrowStatus = 'Pending' | 'Verifying' | 'Funded' | 'Released' | 'Disputed';
+export type EscrowStatus = 'Pending' | 'Verifying' | 'Funded' | 'Active' | 'Released' | 'Disputed' | 'Canceled' | 'Refunded';
 
 export interface Escrow {
     id: number;
@@ -67,6 +67,9 @@ export interface Escrow {
     jurisdiction?: string;
     governing_law?: string;
     dispute_resolution?: string;
+    dispute_reason?: string;
+    dispute_status?: string;
+    resolution_note?: string;
     receipt_url?: string;
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
@@ -97,7 +100,7 @@ export interface CreateEscrowRequest {
     milestones?: Partial<Milestone>[];
 }
 
-export type TransactionStatus = 'Pending' | 'Completed' | 'Failed' | 'Refunded';
+export type TransactionStatus = 'Pending' | 'Verifying' | 'Completed' | 'Failed' | 'Refunded';
 
 export interface EscrowPayment {
     id: number;
@@ -107,6 +110,7 @@ export interface EscrowPayment {
     amount: number;
     currency: string;
     status: TransactionStatus;
+    payment_method?: 'Chapa' | 'Transfer';
     payment_url?: string;
     created_at: string;
     updated_at: string;

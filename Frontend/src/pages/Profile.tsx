@@ -33,6 +33,7 @@ const Profile = () => {
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const [selectedBankCode, setSelectedBankCode] = useState<number | null>(null);
   const [showBankForm, setShowBankForm] = useState(false);
+  const [trustInsights, setTrustInsights] = useState<{completed:number; disputed:number; refunded:number} | null>(null);
 
   const {
     register,
@@ -54,6 +55,12 @@ const Profile = () => {
     try {
       const response = await userApi.getProfile();
       setUser(response.data);
+      try {
+        const trustRes = await userApi.getTrustInsights();
+        setTrustInsights(trustRes.data?.factors || null);
+      } catch {
+        setTrustInsights(null);
+      }
     } catch (error: any) {
       toast.error('Failed to load profile data');
     } finally {
@@ -203,6 +210,14 @@ const Profile = () => {
           <p className="text-gray-600 mt-2">
             Manage your account information, wallet, and security settings
           </p>
+          <div className="mt-4 p-3 rounded-lg bg-teal-50 border border-teal-100 text-sm text-teal-900">
+            Trust Score: <span className="font-bold">{user.trust_score ?? 0}</span>
+            {trustInsights && (
+              <span className="ml-3 text-xs text-teal-800">
+                Completed: {trustInsights.completed} | Disputed: {trustInsights.disputed} | Refunded: {trustInsights.refunded}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

@@ -35,8 +35,9 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		EscrowID uint `json:"escrow_id" validate:"required"`
-		Amount   uint `json:"amount" validate:"required,gt=0"`
+		EscrowID      uint   `json:"escrow_id" validate:"required"`
+		Amount        uint   `json:"amount" validate:"required,gt=0"`
+		PaymentMethod string `json:"payment_method"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -69,6 +70,10 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 		Currency:       "ETB",
 		Status:         "Pending",
 		TransactionRef: fmt.Sprintf("TXN_%d_%d", req.EscrowID, time.Now().Unix()),
+		PaymentMethod:  req.PaymentMethod,
+	}
+	if transaction.PaymentMethod == "" {
+		transaction.PaymentMethod = "Chapa"
 	}
 
 	result = h.DB.Create(transaction)

@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/blockchain"
@@ -27,6 +28,46 @@ type EscrowHandler struct {
 	AuthService    *auth.Service
 	RabbitMQ       *rabbitmq.Producer
 	BlockchainClient *blockchain.Client
+}
+
+func (h *EscrowHandler) recordStatusEvent(escrowID uint, actorID uint, fromStatus string, toStatus string, reason string, txHash string, metadata string) {
+	_ = h.DB.Create(&models.EscrowStatusEvent{
+		EscrowID:   escrowID,
+		ActorID:    actorID,
+		FromStatus: fromStatus,
+		ToStatus:   toStatus,
+		Reason:     reason,
+		TxHash:     txHash,
+		Metadata:   metadata,
+	}).Error
+}
+
+func (h *EscrowHandler) setEscrowStatus(escrow *models.Escrow, actorID uint, nextStatus string, reason string, txHash string, metadata string) error {
+	prev := escrow.Status
+	escrow.Status = nextStatus
+	if err := h.DB.Save(escrow).Error; err != nil {
+		return err
+	}
+	h.recordStatusEvent(escrow.ID, actorID, prev, nextStatus, reason, txHash, metadata)
+	return nil
+}
+
+func (h *EscrowHandler) adjustTrustScore(userID uint, delta float64) {
+	if userID == 0 || delta == 0 {
+		return
+	}
+	var user models.User
+	if err := h.DB.First(&user, userID).Error; err != nil {
+		return
+	}
+	next := user.TrustScore + delta
+	if next < 0 {
+		next = 0
+	}
+	if next > 100 {
+		next = 100
+	}
+	_ = h.DB.Model(&user).Update("trust_score", next).Error
 }
 
 func NewEscrowHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer, blockchainClient *blockchain.Client) *EscrowHandler {
@@ -121,6 +162,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	if err := h.DB.Create(escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow"})
 	}
+	h.recordStatusEvent(escrow.ID, userID, "", escrow.Status, "Escrow created", escrow.BlockchainTxHash, "")
 
 	// Conditionally create milestones if provided
 	if req.Milestones != nil && len(req.Milestones) > 0 {
@@ -291,9 +333,7 @@ func (h *EscrowHandler) CancelEscrow(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only the buyer can cancel pending escrow"})
 	}
 
-	escrow.Status = "Canceled"
-	result = h.DB.Save(&escrow)
-	if result.Error != nil {
+	if err := h.setEscrowStatus(&escrow, userID, "Canceled", "Canceled by buyer", "", ""); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
 
@@ -338,9 +378,7 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in pending state"})
 	}
 
-	escrow.Status = "Funded"
-	result = h.DB.Save(&escrow)
-	if result.Error != nil {
+	if err := h.setEscrowStatus(&escrow, userID, "Funded", "Accepted by seller", "", ""); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
 
@@ -409,11 +447,11 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in funded state"})
 	}
 
-	escrow.Status = "Released"
-	result = h.DB.Save(&escrow)
-	if result.Error != nil {
+	if err := h.setEscrowStatus(&escrow, userID, "Released", "Buyer confirmed receipt", "", ""); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
+	h.adjustTrustScore(escrow.BuyerID, 2)
+	h.adjustTrustScore(escrow.SellerID, 5)
 
 	// Publish event to RabbitMQ
 	eventData := map[string]interface{}{
@@ -470,9 +508,14 @@ func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Only funded or active escrows can be disputed"})
 	}
 
-	escrow.Status = "Disputed"
-	result = h.DB.Save(&escrow)
-	if result.Error != nil {
+	var req struct {
+		Reason   string `json:"reason"`
+		Evidence string `json:"evidence"`
+	}
+	_ = c.BodyParser(&req)
+	escrow.DisputeReason = req.Reason
+	escrow.DisputeStatus = "Open"
+	if err := h.setEscrowStatus(&escrow, userID, "Disputed", "Dispute created", "", req.Evidence); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
 
@@ -485,7 +528,7 @@ func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 		log.Printf("Failed to publish escrow.disputed event: %v", err)
 	}
 
-	return c.JSON(fiber.Map{"message": "Dispute created successfully"})
+	return c.JSON(fiber.Map{"message": "Dispute created successfully", "data": escrow})
 }
 
 func (h *EscrowHandler) GetDispute(c *fiber.Ctx) error {
@@ -507,7 +550,13 @@ func (h *EscrowHandler) GetDispute(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in dispute"})
 	}
 
-	return c.JSON(escrow)
+	return c.JSON(fiber.Map{
+		"id":              escrow.ID,
+		"status":          escrow.Status,
+		"dispute_status":  escrow.DisputeStatus,
+		"dispute_reason":  escrow.DisputeReason,
+		"resolution_note": escrow.ResolutionNote,
+	})
 }
 
 func (h *EscrowHandler) RefundEscrow(c *fiber.Ctx) error {
@@ -529,11 +578,12 @@ func (h *EscrowHandler) RefundEscrow(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Only disputed escrows can be refunded"})
 	}
 
-	escrow.Status = "Refunded"
-	result = h.DB.Save(&escrow)
-	if result.Error != nil {
+	escrow.DisputeStatus = "ResolvedRefunded"
+	if err := h.setEscrowStatus(&escrow, 0, "Refunded", "Dispute refunded", "", ""); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
+	h.adjustTrustScore(escrow.BuyerID, 1)
+	h.adjustTrustScore(escrow.SellerID, -7)
 
 	// Publish event to RabbitMQ
 	eventData := map[string]interface{}{
@@ -578,9 +628,7 @@ func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
 
 	escrow.ReceiptURL = req.ReceiptURL
 	// When receipt is uploaded, we mark as Verifying (pending verification)
-	escrow.Status = "Verifying" 
-	
-	if err := h.DB.Save(&escrow).Error; err != nil {
+	if err := h.setEscrowStatus(&escrow, userID, "Verifying", "Receipt uploaded", "", req.ReceiptURL); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
 
@@ -697,6 +745,7 @@ func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
 	}
 
 	// 4. Update escrow status
+	prevStatus := escrow.Status
 	escrow.Status = "Funded"
 	escrow.TransactionRef = req.TransactionID
 	escrow.Active = true // Mark as active when funded
@@ -704,6 +753,7 @@ func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
 	if err := h.DB.Save(&escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow status"})
 	}
+	h.recordStatusEvent(escrow.ID, userID, prevStatus, "Funded", "CBE payment verified", "", req.TransactionID)
 
 	// Update milestones
 	var milestones []models.Milestone
@@ -827,17 +877,109 @@ func (h *EscrowHandler) VerifyPayment(c *fiber.Ctx) error {
 	}
 
 	if req.Action == "approve" {
-		escrow.Status = "Funded"
+		if err := h.setEscrowStatus(&escrow, userID, "Funded", "Admin approved payment", "", ""); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+		}
 	} else {
-		escrow.Status = "Pending"
+		if err := h.setEscrowStatus(&escrow, userID, "Pending", "Admin rejected payment", "", ""); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+		}
 		escrow.ReceiptURL = "" // Clear invalid receipt
-	}
-
-	if err := h.DB.Save(&escrow).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+		if err := h.DB.Save(&escrow).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
+		}
 	}
 
 	return c.JSON(fiber.Map{"message": "Payment verification complete", "status": escrow.Status})
+}
+
+func (h *EscrowHandler) GetStatusHistory(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+	var events []models.EscrowStatusEvent
+	if err := h.DB.Where("escrow_id = ?", uint(id)).Order("created_at asc").Find(&events).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+	return c.JSON(events)
+}
+
+func (h *EscrowHandler) ResolveDispute(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+	var req struct {
+		Action string `json:"action"`
+		Note   string `json:"note"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+	var escrow models.Escrow
+	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+	if escrow.Status != "Disputed" {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not disputed"})
+	}
+	escrow.ResolvedByID = &userID
+	escrow.ResolutionNote = req.Note
+	escrow.DisputeStatus = "Resolved"
+	if req.Action == "refund" {
+		if err := h.setEscrowStatus(&escrow, userID, "Refunded", "Dispute resolved with refund", "", req.Note); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Could not resolve dispute"})
+		}
+		h.adjustTrustScore(escrow.SellerID, -5)
+	} else {
+		if err := h.setEscrowStatus(&escrow, userID, "Released", "Dispute resolved with release", "", req.Note); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Could not resolve dispute"})
+		}
+		h.adjustTrustScore(escrow.SellerID, 3)
+	}
+	if err := h.DB.Save(&escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not save resolution"})
+	}
+	return c.JSON(fiber.Map{"message": "Dispute resolved", "data": escrow})
+}
+
+func (h *EscrowHandler) DownloadFinalizedAgreement(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+	var escrow models.Escrow
+	if err := h.DB.Preload("Buyer").Preload("Seller").Preload("Milestones").First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+	if escrow.Status != "Released" && escrow.Status != "Refunded" {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow must be finalized before export"})
+	}
+	var b strings.Builder
+	b.WriteString("SAFEDEAL FORMAL ESCROW AGREEMENT\n")
+	b.WriteString(fmt.Sprintf("Escrow ID: %d\n", escrow.ID))
+	b.WriteString(fmt.Sprintf("Status: %s\n", escrow.Status))
+	b.WriteString(fmt.Sprintf("Buyer ID: %d\nSeller ID: %d\n", escrow.BuyerID, escrow.SellerID))
+	b.WriteString(fmt.Sprintf("Amount: %d ETB\nPlatform Fee: %d ETB\n", escrow.Amount, escrow.PlatformFee))
+	b.WriteString(fmt.Sprintf("Conditions: %s\n", escrow.Conditions))
+	b.WriteString(fmt.Sprintf("Jurisdiction: %s\nGoverning Law: %s\n", escrow.Jurisdiction, escrow.GoverningLaw))
+	b.WriteString(fmt.Sprintf("Dispute Resolution: %s\n", escrow.DisputeResolution))
+	b.WriteString(fmt.Sprintf("Blockchain Tx: %s\n", escrow.BlockchainTxHash))
+	b.WriteString(fmt.Sprintf("Generated At: %s\n", time.Now().UTC().Format(time.RFC3339)))
+	if len(escrow.Milestones) > 0 {
+		b.WriteString("\nMilestones:\n")
+		for _, m := range escrow.Milestones {
+			b.WriteString(fmt.Sprintf("- %s (%d ETB) status=%s\n", m.Title, m.Amount, m.Status))
+		}
+	}
+	c.Set("Content-Type", "text/plain; charset=utf-8")
+	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=escrow-%d-agreement.txt", escrow.ID))
+	return c.SendString(b.String())
 }
 
 // CancelEscrow continues...

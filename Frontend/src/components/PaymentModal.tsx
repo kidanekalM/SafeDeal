@@ -15,7 +15,7 @@ interface PaymentModalProps {
 const PaymentModal = ({ isOpen, onClose, amount, paymentUrl, onPaymentComplete }: PaymentModalProps) => {
   useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'awaiting_verification' | 'completed' | 'failed'>('pending');
 
   const handlePayment = async () => {
     if (!paymentUrl) return;
@@ -26,15 +26,12 @@ const PaymentModal = ({ isOpen, onClose, amount, paymentUrl, onPaymentComplete }
     // Open payment URL in new tab
     const paymentWindow = window.open(paymentUrl, '_blank', 'width=800,height=600');
     
-    // Listen for payment completion via polling (in a real app, use webhooks)
+    // Do not assume success on window close: backend verification must confirm completion.
     const checkPaymentStatus = setInterval(() => {
       if (paymentWindow?.closed) {
         clearInterval(checkPaymentStatus);
-        // When the payment window is closed, assume payment is complete
-        // In a real implementation, you would verify the payment status with your backend
-        setPaymentStatus('completed');
+        setPaymentStatus('awaiting_verification');
         setIsProcessing(false);
-        onPaymentComplete?.();
       }
     }, 1000);
     
@@ -144,6 +141,30 @@ const PaymentModal = ({ isOpen, onClose, amount, paymentUrl, onPaymentComplete }
                     Please complete the payment in the new window...
                   </p>
                 </div>
+              </div>
+            )}
+
+            {paymentStatus === 'awaiting_verification' && (
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="p-3 bg-yellow-100 rounded-full">
+                    <Shield className="h-8 w-8 text-yellow-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Awaiting Verification
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Payment window closed. Your escrow status will update after backend verification.
+                  </p>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="btn btn-primary w-full"
+                >
+                  Continue
+                </button>
               </div>
             )}
 

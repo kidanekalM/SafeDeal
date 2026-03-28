@@ -27,6 +27,9 @@ const api = axios.create({
   withCredentials: true, // ✅ Enables sending HTTP-only cookies automatically
 });
 
+let refreshPromise: Promise<string> | null = null;
+const MAX_AUTH_RETRIES = 1;
+
 // Add access token to all requests
 api.interceptors.request.use(
   (config) => {
@@ -41,22 +44,38 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
+    const requestUrl = String(originalRequest.url || '');
+    const isRefreshRequest = requestUrl.includes('/refresh-token');
 
-    // Handle 401 errors with automatic token refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    // Never recursively refresh the refresh call itself.
+    if (isRefreshRequest) {
+      return Promise.reject(error);
+    }
+
+    // Handle 401 errors with automatic token refresh and single-flight control.
+    if (error.response?.status === 401 && (originalRequest._retryCount || 0) < MAX_AUTH_RETRIES) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
 
       try {
         console.log("🔄 401 detected - attempting automatic token refresh...");
-        const refreshResponse = await api.post('/refresh-token');
-        const newToken = refreshResponse.data.access_token;
+        if (!refreshPromise) {
+          refreshPromise = api.post('/refresh-token')
+            .then((refreshResponse) => {
+              const newToken = refreshResponse.data.access_token;
+              localStorage.setItem('access_token', newToken);
+              return newToken;
+            })
+            .finally(() => {
+              refreshPromise = null;
+            });
+        }
+        const newToken = await refreshPromise;
         
-        // Store new token
-        localStorage.setItem('access_token', newToken);
         console.log("✅ Automatic token refresh successful!");
         
         // Update authorization header for the failed request
+        originalRequest.headers = originalRequest.headers || {};
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         
         // Retry the original request
@@ -98,6 +117,8 @@ export const authApi = {
 
 export const userApi = {
   getProfile: (): Promise<AxiosResponse<User>> => api.get('/api/profile'),
+  getTrustInsights: (): Promise<AxiosResponse<{trust_score:number; factors:{completed:number; disputed:number; refunded:number}}>> =>
+    api.get('/api/profile/trust-insights'),
   updateProfile: (data: UpdateProfileRequest, userId: number): Promise<AxiosResponse<User>> =>
     api.patch('/api/updateprofile', data, {
       headers: {
@@ -149,7 +170,7 @@ export const escrowApi = {
 
     // POST Cancel
     cancel: (id: number): Promise<AxiosResponse<void>> =>
-        api.put(`/api/escrows/${id}/cancel`),
+        api.post(`/api/escrows/${id}/cancel`),
 
     // POST Upload-receipt
     uploadReceipt: (id: number, receiptUrl: string): Promise<AxiosResponse<Escrow>> =>
@@ -168,6 +189,12 @@ export const escrowApi = {
     // GET Dispute (if available)
     getDispute: (id: number): Promise<AxiosResponse<any>> =>
         api.get(`/api/escrows/dispute/${id}`),
+    resolveDispute: (id: number, action: 'release' | 'refund', note: string): Promise<AxiosResponse<any>> =>
+        api.post(`/api/escrows/dispute/${id}/resolve`, { action, note }),
+    getStatusHistory: (id: number): Promise<AxiosResponse<any[]>> =>
+        api.get(`/api/escrows/${id}/status-history`),
+    downloadFinalAgreement: (id: number): Promise<AxiosResponse<Blob>> =>
+        api.get(`/api/escrows/${id}/final-agreement`, { responseType: 'blob' }),
 
 
     // POST Refund
@@ -212,7 +239,7 @@ export const milestoneApi = {
 // Payment API - Based on backend endpoints
 export const paymentApi = {
     // POST Payment
-    initiateEscrowPayment: async (escrowId: number): Promise<AxiosResponse<EscrowPayment>> => {
+    initiateEscrowPayment: async (escrowId: number, paymentMethod: 'Chapa' | 'Transfer' = 'Chapa'): Promise<AxiosResponse<EscrowPayment>> => {
         // Fetch escrow to get amount if needed
         const escrowResp = await api.get(`/api/escrows/${escrowId}`);
         const amount = escrowResp?.data?.amount;
@@ -234,6 +261,7 @@ export const paymentApi = {
         return api.post('/api/payments/initiate', {
             escrow_id: escrowId,
             amount,
+            payment_method: paymentMethod,
             currency: 'ETB',
             email,
             first_name,

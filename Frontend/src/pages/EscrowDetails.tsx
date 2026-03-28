@@ -81,6 +81,9 @@ const EscrowDetails = () => {
   const [cbeAccountSuffix, setCbeAccountSuffix] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"Chapa" | "Transfer">("Chapa");
+  const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [resolutionNote, setResolutionNote] = useState("");
   const [errorCount, setErrorCount] = useState(0);
   const [isBackendBusy, setIsBackendBusy] = useState(false);
 
@@ -263,6 +266,12 @@ const isSeller = user?.id === escrow?.seller_id;
       };
 
       setEscrow(normalizedEscrowData);
+      try {
+        const historyRes = await escrowApi.getStatusHistory(normalizedEscrowData.id);
+        setStatusHistory(historyRes.data || []);
+      } catch {
+        setStatusHistory([]);
+      }
 
       // If it succeeds on a retry, clear any potential error messages and reset error count
       if (retryCount > 0) {
@@ -417,7 +426,7 @@ const isSeller = user?.id === escrow?.seller_id;
     }
   };
 
-  const handleInitiatePayment = async () => {
+  const handleInitiatePayment = async (method: "Chapa" | "Transfer" = "Chapa") => {
     const escrowId = Number(id);
     if (!Number.isFinite(escrowId) || escrowId <= 0) {
       toast.error("Invalid escrow ID");
@@ -436,9 +445,10 @@ const isSeller = user?.id === escrow?.seller_id;
       return;
     }
 
+    setPaymentMethod(method);
     setIsProcessing(true);
     try {
-      const response = await paymentApi.initiateEscrowPayment(escrowId);
+      const response = await paymentApi.initiateEscrowPayment(escrowId, method);
       setPayment(response.data);
       setShowPayment(true);
       toast.success("Payment initiated! Please complete the payment.");
@@ -455,7 +465,7 @@ const isSeller = user?.id === escrow?.seller_id;
 
   const handlePaymentComplete = () => {
     setShowPayment(false);
-    toast.success("Payment completed successfully!");
+    toast.success("Payment submitted. Waiting for backend verification.");
 
     // Immediate refresh for better UX, then delayed refresh for safety
     fetchEscrowDetails();
@@ -487,7 +497,7 @@ const isSeller = user?.id === escrow?.seller_id;
     setIsProcessing(true);
 
     try {
-      const response = await paymentApi.initiateEscrowPayment(escrowId);
+      const response = await paymentApi.initiateEscrowPayment(escrowId, paymentMethod);
       setPayment(response.data);
       setShowPayment(true);
       toast.success("Payment initiated! Please complete the payment.");
@@ -577,6 +587,36 @@ const isSeller = user?.id === escrow?.seller_id;
       );
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleResolveDispute = async (action: "release" | "refund") => {
+    if (!escrow) return;
+    setIsProcessing(true);
+    try {
+      await escrowApi.resolveDispute(escrow.id, action, resolutionNote.trim());
+      toast.success("Dispute resolved");
+      fetchEscrowDetails();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to resolve dispute");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDownloadFinalAgreement = async () => {
+    if (!escrow) return;
+    try {
+      const res = await escrowApi.downloadFinalAgreement(escrow.id);
+      const blob = new Blob([res.data], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `escrow-${escrow.id}-agreement.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to download final agreement");
     }
   };
 
@@ -977,7 +1017,7 @@ const isSeller = user?.id === escrow?.seller_id;
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <button
-                        onClick={handleInitiatePayment}
+                        onClick={() => handleInitiatePayment("Chapa")}
                         disabled={isProcessing}
                         className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-8 h-auto gap-2"
                       >
@@ -1251,6 +1291,47 @@ const isSeller = user?.id === escrow?.seller_id;
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Blockchain/Status audit trail */}
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Timeline (Audit)</h3>
+              <div className="space-y-2 max-h-64 overflow-auto">
+                {statusHistory.length === 0 && (
+                  <p className="text-sm text-gray-500">No status history available yet.</p>
+                )}
+                {statusHistory.map((ev) => (
+                  <div key={ev.id} className="text-sm p-2 rounded bg-gray-50 border border-gray-100">
+                    <span className="font-semibold">{ev.from_status || "Start"} {"->"} {ev.to_status}</span>
+                    {ev.reason ? <span className="text-gray-600"> - {ev.reason}</span> : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {escrow.status === "Disputed" && (
+              <div className="card p-6 border-amber-200 bg-amber-50/50">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Dispute Resolution</h3>
+                <textarea
+                  value={resolutionNote}
+                  onChange={(e) => setResolutionNote(e.target.value)}
+                  placeholder="Resolution note"
+                  className="textarea textarea-bordered w-full mb-3"
+                />
+                <div className="flex gap-3">
+                  <button className="btn btn-success" onClick={() => handleResolveDispute("release")} disabled={isProcessing}>Resolve: Release</button>
+                  <button className="btn btn-warning" onClick={() => handleResolveDispute("refund")} disabled={isProcessing}>Resolve: Refund</button>
+                </div>
+              </div>
+            )}
+
+            {(escrow.status === "Released" || escrow.status === "Refunded") && (
+              <div className="card p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Formal Agreement</h3>
+                <button className="btn btn-outline" onClick={handleDownloadFinalAgreement}>
+                  Download Finalized Agreement
+                </button>
               </div>
             )}
         </div>

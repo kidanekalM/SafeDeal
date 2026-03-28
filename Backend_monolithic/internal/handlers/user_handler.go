@@ -289,6 +289,32 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+func (h *UserHandler) GetTrustInsights(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+	var user models.User
+	if err := h.DB.First(&user, userID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+	}
+	var completedCount int64
+	var disputedCount int64
+	var refundedCount int64
+	h.DB.Model(&models.Escrow{}).Where("(buyer_id = ? OR seller_id = ?) AND status = ?", userID, userID, "Released").Count(&completedCount)
+	h.DB.Model(&models.Escrow{}).Where("(buyer_id = ? OR seller_id = ?) AND status = ?", userID, userID, "Disputed").Count(&disputedCount)
+	h.DB.Model(&models.Escrow{}).Where("(buyer_id = ? OR seller_id = ?) AND status = ?", userID, userID, "Refunded").Count(&refundedCount)
+
+	return c.JSON(fiber.Map{
+		"trust_score": user.TrustScore,
+		"factors": fiber.Map{
+			"completed": completedCount,
+			"disputed":  disputedCount,
+			"refunded":  refundedCount,
+		},
+	})
+}
+
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	userID, ok := c.Locals("userID").(uint)
 	if !ok {
