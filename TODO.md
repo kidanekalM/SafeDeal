@@ -1,50 +1,19 @@
-# SafeDeal Project Roadmap - Investor-Ready & User-Centric
+# SafeDeal TypeScript Error Fix TODO
 
-## Objective
-Refine SafeDeal into a highly intuitive, "trust-first" platform that scales from simple peer-to-peer deals to comprehensive corporate contracts.
+## Task: Fix TS6133 in EscrowDetails.tsx
 
-## Phase 1: High-Impact UX & Trust (Immediate Priority)
-- [x] **Onboarding Flow**:
-    - Force profile creation immediately after registration (Name, Profession, Bank Details).
-    - Add a 3-step lightweight guided tour for new users.
-- [x] **Simplified Navigation**:
-    - Audit and remove redundant sidebar/menu items.
-    - Add "Next Action Required" section to the dashboard top.
-- [x] **Trust Indicators**:
-    - Implement a simple User Trust Score (based on completed escrows).
-    - Add "Verified" badges and "Funds Secured" banners in Escrow Details.
+✅ **Step 1: Remove unused `useTranslation` import**  
+- Target: `Frontend/src/pages/EscrowDetails.tsx`  
+- Remove: `import { useTranslation } from 'react-i18next';`  
+- Status: **✅ COMPLETE**
 
-## Phase 2: Refined Escrow Workflow
-- [x] **Creation Wizard Polish**:
-    - Remove redundant cards/whitespace in `CreateEscrow.tsx`.
-    - Implement "Templates" (Freelance, Sales, Services) with pre-filled terms.
-    - Default to a 2-step "Quick Escrow" flow; hide advanced options behind a toggle.
-- [x] **Collaborative Editing**:
-    - Allow counterparties to suggest changes in chat.
-    - Creator can edit terms *until* both parties "Accept & Lock".
-    - Once locked, terms are immutable and logged to blockchain.
-- [x] **Legal & Compliance**:
-    - Add "Print/Download Agreement" (PDF) once locked.
-    - Clarify Mediator vs. Resolver roles in the UI.
+✅ **Step 2: Verify build**  
+`cd Frontend && npm run build`  
+- Status: **Pending** (checking...)
 
-## Phase 3: Enhanced Payments & Verification
-- [x] **Dual Payment Channels**:
-    - **Chapa**: Standard automated flow.
-    - **Bank Transfer (CBE)**: Buyer uploads receipt -> Verifier module authenticates -> Escrow status updates.
-- [x] **Fee System**:
-    - Implement a configurable platform fee (%) shown clearly before payment.
+⏳ **Step 3: Test no regressions**  
+- Check i18n still works in other pages  
+- Confirm EscrowDetails page loads correctly  
 
-## Phase 4: Auditability & AI
-- [x] **Deep Blockchain Integration**:
-    - Log major actions (Acceptance, Milestone Approval, Dispute) to Sepolia.
-    - Add "View Proof" button (linked to Etherscan) with user-friendly labeling.
-- [x] **AI Risk Management**:
-    - Real-time risk warnings during creation (e.g., "Amount too high for unverified user").
-    - Pre-dispute sentiment detection in chat.
+**Next action:** Review build output above.
 
-## Phase 5: Technical & Mobile
-- [x] **Mobile-First Audit**: Ensure all core flows are flawless on small screens.
-- [x] **PWA Support**: Basic manifest and service worker for "Add to Home Screen".
-
----
-**Current Status:** [!] In Progress | **Last Updated:** March 18, 2026

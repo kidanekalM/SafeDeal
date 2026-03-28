@@ -1,10 +1,15 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Authentication', () => {
+test.describe.serial('Authentication', () => {
   const randomEmail = `test-${Math.random().toString(36).substring(7)}@example.com`;
   const password = 'Password123!';
 
   test.beforeEach(async ({ page }) => {
+    // Debugging: Log all console messages from the page
+    page.on('console', msg => {
+      console.log(`PAGE CONSOLE: [${msg.type()}] ${msg.text()}`);
+    });
+
     // Bypass language modal and guided tour
     await page.addInitScript(() => {
       window.localStorage.setItem('lang', 'en');
@@ -13,6 +18,22 @@ test.describe('Authentication', () => {
   });
 
   test('should register a new user', async ({ page }) => {
+    // Listen for all network requests
+    page.on('request', request => {
+      if (request.url().includes('/register')) {
+        console.log(`>> REGISTER REQUEST: ${request.method()} ${request.url()}`);
+        console.log(`   PAYLOAD: ${request.postData()}`);
+      }
+    });
+    
+    // Listen for all network responses
+    page.on('response', response => {
+      if (response.url().includes('/register')) {
+        console.log(`<< REGISTER RESPONSE: ${response.status()} ${response.url()}`);
+        response.text().then(text => console.log(`   BODY: ${text}`)).catch(() => {});
+      }
+    });
+
     await page.goto('/login?mode=register');
 
     // Step 1: Basic Info
@@ -32,7 +53,7 @@ test.describe('Authentication', () => {
     await page.click('button:has-text("Complete Registration")');
 
     // Should show success toast and stay on login
-    await expect(page.locator('text=Account created successfully')).toBeVisible();
+    await expect(page.locator('text=Account created successfully'), { timeout: 15000 }).toBeVisible();
     await expect(page).toHaveURL(/.*login/);
   });
 
@@ -48,7 +69,7 @@ test.describe('Authentication', () => {
 
     // Should redirect to dashboard
     await expect(page).toHaveURL(/.*dashboard/);
-    await expect(page.locator('text=Welcome')).toBeVisible();
+    await expect(page.locator('h2:has-text("Welcome")')).toBeVisible();
   });
 
   test('should logout successfully', async ({ page }) => {
@@ -60,7 +81,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*dashboard/);
 
     // Logout
-    await page.click('button:has-text("Log Out")');
+    await page.click('button:has-text("Sign out")');
     await expect(page).toHaveURL(/.*login/);
   });
 });

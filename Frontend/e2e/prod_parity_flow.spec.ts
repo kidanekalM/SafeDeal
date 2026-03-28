@@ -4,19 +4,31 @@ test.describe('Production parity escrow flow', () => {
   test.beforeEach(async ({ page }) => {
     let currentStatus: 'Disputed' | 'Released' = 'Disputed';
     await page.addInitScript(() => {
+      const userProfile = {
+        id: 1,
+        first_name: 'Buyer',
+        last_name: 'Tester',
+        email: 'buyer@test.local',
+        activated: true,
+        profession: 'QA',
+        account_name: 'Buyer Tester',
+        account_number: '1000123456789',
+        bank_code: 946,
+        trust_score: 70,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
       localStorage.setItem('lang', 'en');
       localStorage.setItem('has_seen_tour', 'true');
-      localStorage.setItem('access_token', 'test-token');
-      localStorage.setItem(
-        'user_profile',
-        JSON.stringify({
-          id: 1,
-          first_name: 'Buyer',
-          last_name: 'Tester',
-          email: 'buyer@test.local',
-          trust_score: 70,
-        }),
-      );
+      localStorage.setItem('access_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQxMDI0NDQ4MDAsInN1YiI6IjEifQ.mock_signature');
+      localStorage.setItem('user_profile', JSON.stringify(userProfile));
+      localStorage.setItem('auth-storage', JSON.stringify({
+        state: {
+          user: userProfile,
+          isAuthenticated: true,
+        },
+        version: 0
+      }));
     });
 
     await page.route('**/api/profile', async (route) => {
@@ -31,6 +43,9 @@ test.describe('Production parity escrow flow', () => {
           profession: 'QA',
           activated: true,
           trust_score: 70,
+          account_name: 'Buyer Tester',
+          account_number: '1000123456789',
+          bank_code: 946,
         }),
       });
     });
@@ -100,7 +115,7 @@ test.describe('Production parity escrow flow', () => {
     await page.goto('/escrow/1');
 
     await expect(page.getByText('Status Timeline (Audit)')).toBeVisible();
-    await expect(page.getByText('Start')).toBeVisible();
+    await expect(page.getByText('Start -> Pending')).toBeVisible();
     await expect(page.getByText('Dispute Resolution')).toBeVisible();
 
     await page.getByPlaceholder('Resolution note').fill('Resolved by admin after evidence review');

@@ -45,26 +45,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      '/login': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/register': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/activate': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/refresh-token': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-        secure: false,
-      },
     },
   },
 
