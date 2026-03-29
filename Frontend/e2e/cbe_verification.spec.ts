@@ -1,10 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('CBE Verification E2E Flow', () => {
-  const buyerEmail = 'jtime5115@gmail.com'; // Use existing test user
+  const buyerEmail = 'test-account@safedeal.com'; // Use existing test user
   const password = 'Password123!';
 
   test.beforeEach(async ({ page }) => {
+    // Debugging: Log all console messages from the page
+    page.on('console', msg => {
+      console.log(`PAGE CONSOLE: [${msg.type()}] ${msg.text()}`);
+    });
+
     // Bypass language modal and guided tour
     await page.addInitScript(() => {
       window.localStorage.setItem('lang', 'en');
@@ -26,9 +31,10 @@ test.describe('CBE Verification E2E Flow', () => {
     await page.click('button:has-text("Continue")'); // Role & Type
     
     // Select counterparty
-    await page.fill('input[placeholder="Search by name or email..."]', 'test');
-    await page.waitForTimeout(1000);
-    await page.locator('button:has-text("test")').first().click();
+    await page.fill('input[placeholder="Search by name or email..."]', 'ai@gmail.com');
+    await page.waitForTimeout(2000);
+    await page.locator('button:has-text("AI")').first().click();
+    await expect(page.locator('button >> .lucide-trash2').first()).toBeVisible({ timeout: 5000 });
     await page.click('button:has-text("Continue")');
 
     // Terms

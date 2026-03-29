@@ -116,7 +116,7 @@ test.describe('Complete Escrow Flow', () => {
 
       // Should redirect to dashboard
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-      await expect(page.locator('text=Welcome')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 10000 });
     });
 
     test('should login seller', async ({ page }) => {
@@ -127,7 +127,7 @@ test.describe('Complete Escrow Flow', () => {
 
       // Should redirect to dashboard
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-      await expect(page.locator('text=Welcome')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 10000 });
     });
   });
 
@@ -573,14 +573,14 @@ test.describe('Single-User Escrow Flow', () => {
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
     // 3. View Dashboard
-    await expect(page.locator('text=Welcome').or(page.locator('text=Dashboard'))).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 15000 });
 
     // 4. Navigate to Profile
     await page.click('text=Profile');
     await expect(page).toHaveURL(/.*profile/);
 
     // 5. View Transaction History
-    await page.click('text=Transactions');
+    await page.click('text=Payments');
     await expect(page).toHaveURL(/.*transactions/);
 
     // 6. Search for users

@@ -20,7 +20,6 @@ test.describe('Production parity escrow flow', () => {
       };
       localStorage.setItem('lang', 'en');
       localStorage.setItem('has_seen_tour', 'true');
-      localStorage.setItem('access_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQxMDI0NDQ4MDAsInN1YiI6IjEifQ.mock_signature');
       localStorage.setItem('user_profile', JSON.stringify(userProfile));
       localStorage.setItem('auth-storage', JSON.stringify({
         state: {

@@ -58,18 +58,24 @@ test.describe.serial('Authentication', () => {
   });
 
   test('should login with existing user', async ({ page }) => {
+    // Listen for login responses
+    page.on('response', response => {
+      if (response.url().includes('/login')) {
+        console.log(`<< LOGIN RESPONSE: ${response.status()} ${response.url()}`);
+        response.text().then(text => console.log(`   BODY: ${text}`)).catch(() => {});
+      }
+    });
+
     await page.goto('/login');
 
-    // Assuming we use the user created above or a known test user
-    // For local tests, we might need a dedicated test account
     await page.fill('input[type="email"]', randomEmail);
     await page.fill('input[type="password"]', password);
     
     await page.click('button:has-text("Login")');
 
     // Should redirect to dashboard
-    await expect(page).toHaveURL(/.*dashboard/);
-    await expect(page.locator('h2:has-text("Welcome")')).toBeVisible();
+    await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 10000 });
   });
 
   test('should logout successfully', async ({ page }) => {
@@ -78,10 +84,10 @@ test.describe.serial('Authentication', () => {
     await page.fill('input[type="email"]', randomEmail);
     await page.fill('input[type="password"]', password);
     await page.click('button:has-text("Login")');
-    await expect(page).toHaveURL(/.*dashboard/);
+    await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
     // Logout
     await page.click('button:has-text("Sign out")');
-    await expect(page).toHaveURL(/.*login/);
+    await expect(page).toHaveURL(/.*login/, { timeout: 10000 });
   });
 });

@@ -1,15 +1,19 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Escrow Creation Flows', () => {
-  const email = 'jtime5115@gmail.com';
+  const email = 'test-account@safedeal.com';
   const password = 'Password123!';
 
   test.beforeEach(async ({ page }) => {
+    // Debugging: Log all console messages from the page
+    page.on('console', msg => {
+      console.log(`PAGE CONSOLE: [${msg.type()}] ${msg.text()}`);
+    });
+
     // Bypass language modal and guided tour
     await page.addInitScript(() => {
       window.localStorage.setItem('lang', 'en');
       window.localStorage.setItem('has_seen_tour', 'true');
-      window.localStorage.setItem('access_token', 'mock_token'); // We might need a real login if the backend is running
     });
 
     await page.goto('/login');

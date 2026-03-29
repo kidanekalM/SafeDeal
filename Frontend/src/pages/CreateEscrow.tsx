@@ -90,12 +90,20 @@ const CreateEscrow = () => {
     defaultValues: {
       creator_role: 'buyer',
       isDetailed: false,
-      milestones: [{ title: '', amount: 0 }],
+      milestones: [],
       jurisdiction: 'Ethiopia',
       governing_law: 'Commercial Code of Ethiopia',
       dispute_resolution: 'AI Arbitration via SafeDeal',
     }
   });
+
+  // Debug logging for form validation
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.log('📝 Form Validation Errors: ' + JSON.stringify(errors));
+    }
+    console.log('📝 Form Status: ' + JSON.stringify({ isValid, isSubmitting }));
+  }, [errors, isValid, isSubmitting]);
 
   const { fields, append, remove } = useFieldArray({
     control,

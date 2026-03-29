@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Dashboard', () => {
   // Use admin user for dashboard checks
-  const email = 'jtime5115@gmail.com';
+  const email = 'test-account@safedeal.com';
   const password = 'Password123!';
 
   test.beforeEach(async ({ page }) => {

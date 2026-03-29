@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('New Features Testing', () => {
-  const email = 'jtime5115@gmail.com';
+  const email = 'test-account@safedeal.com';
   const password = 'Password123!';
 
   test.beforeEach(async ({ page }) => {

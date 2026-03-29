@@ -1,0 +1,117 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e6]:
+    - link "SafeDeal" [ref=e8] [cursor=pointer]:
+      - /url: /dashboard
+      - img [ref=e10]
+      - generic [ref=e13]: SafeDeal
+    - navigation [ref=e14]:
+      - link "Dashboard" [ref=e15] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e16]
+        - generic [ref=e21]: Dashboard
+      - link "Start Deal" [ref=e22] [cursor=pointer]:
+        - /url: /create-escrow
+        - img [ref=e23]
+        - generic [ref=e26]: Start Deal
+      - link "Directory" [ref=e27] [cursor=pointer]:
+        - /url: /search
+        - img [ref=e28]
+        - generic [ref=e31]: Directory
+      - link "Payments" [ref=e32] [cursor=pointer]:
+        - /url: /transactions
+        - img [ref=e33]
+        - generic [ref=e36]: Payments
+      - link "Profile" [ref=e37] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e38]
+        - generic [ref=e41]: Profile
+      - link "CBE Test" [ref=e42] [cursor=pointer]:
+        - /url: /cbe-test
+        - img [ref=e43]
+        - generic [ref=e45]: CBE Test
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e49]: TA
+        - generic [ref=e50]:
+          - paragraph [ref=e51]: Test Account
+          - paragraph [ref=e52]: test-account@safedeal.com
+      - button "Sign out" [ref=e53] [cursor=pointer]:
+        - img [ref=e54]
+        - generic [ref=e58]: Sign out
+  - generic [ref=e59]:
+    - banner [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - button "Toggle sidebar" [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+          - heading "Start Deal" [level=1] [ref=e66]
+        - generic [ref=e67]:
+          - button [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+          - button [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+    - main [ref=e76]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - button "Back" [ref=e79] [cursor=pointer]:
+            - img [ref=e81]
+            - generic [ref=e83]: Back
+          - generic [ref=e85]:
+            - generic [ref=e88]:
+              - img [ref=e90]
+              - generic [ref=e92]: Role
+            - generic [ref=e93]:
+              - img [ref=e95]
+              - generic [ref=e98]: Parties
+            - generic [ref=e99]:
+              - img [ref=e101]
+              - generic [ref=e107]: Terms
+            - generic [ref=e108]:
+              - img [ref=e110]
+              - generic [ref=e116]: Milestones
+            - generic [ref=e117]:
+              - img [ref=e119]
+              - generic [ref=e121]: Finalize
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - heading "Agreement Terms" [level=2] [ref=e128]
+            - paragraph [ref=e129]: Define the financial and descriptive terms
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - generic [ref=e132]:
+                - generic [ref=e133]: Agreement Conditions
+                - generic [ref=e134]:
+                  - button "Freelance" [ref=e135] [cursor=pointer]:
+                    - img [ref=e136]
+                    - text: Freelance
+                  - button "Product" [ref=e140] [cursor=pointer]:
+                    - img [ref=e141]
+                    - text: Product
+                  - button "Consulting" [ref=e145] [cursor=pointer]:
+                    - img [ref=e146]
+                    - text: Consulting
+              - textbox "Describe the deliverables, timeline, and terms..." [ref=e150]: Comprehensive Escrow Terms - This is a detailed test deal for the ultra comprehensive route.
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - generic [ref=e153]: Total Amount (ETB)
+                - generic [ref=e154]:
+                  - img [ref=e155]
+                  - spinbutton [ref=e158]
+                - paragraph [ref=e159]:
+                  - img [ref=e160]
+                  - text: Auto-synced with milestones
+              - generic [ref=e163]:
+                - heading "SafeDeal Guarantee" [level=4] [ref=e164]
+                - paragraph [ref=e165]: Funds are held in a secure vault and only released when terms are met. Our AI Arbitrator stands by to resolve any disputes.
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - generic [ref=e168]: Step 3 of 5
+            - generic [ref=e169]: Terms
+          - button "Continue" [active] [ref=e171] [cursor=pointer]:
+            - text: Continue
+            - img [ref=e172]
+  - button "🔍 Show Debug" [ref=e175] [cursor=pointer]
+```
