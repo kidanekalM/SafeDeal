@@ -10,6 +10,16 @@ test.describe('Escrow Creation Flows', () => {
       console.log(`PAGE CONSOLE: [${msg.type()}] ${msg.text()}`);
     });
 
+    // Log all network responses
+    page.on('response', response => {
+      if (response.url().includes('/api/') || response.url().includes('localhost:8081')) {
+        console.log(`<< NETWORK RESPONSE: ${response.status()} ${response.url()}`);
+        if (response.status() >= 400) {
+          response.text().then(text => console.log(`   BODY: ${text}`)).catch(() => {});
+        }
+      }
+    });
+
     // Bypass language modal and guided tour
     await page.addInitScript(() => {
       window.localStorage.setItem('lang', 'en');
@@ -32,16 +42,16 @@ test.describe('Escrow Creation Flows', () => {
     await page.click('button:has-text("Continue")');
 
     // Step 2: Parties
-    await page.fill('input[placeholder="Search by name or email..."]', 'test');
-    await page.waitForSelector('button:has-text("test")', { timeout: 5000 });
-    await page.locator('button:has-text("test")').first().click();
+    await page.fill('input[placeholder="Search by name or email..."]', 'ai@gmail.com');
+    await page.waitForSelector('button:has-text("AI")', { timeout: 5000 });
+    await page.locator('button:has-text("AI")').first().click();
     
     // Verify user is selected (selectedCounterparty state)
     await expect(page.locator('button >> .lucide-trash2')).toBeVisible();
     await page.click('button:has-text("Continue")');
 
-    // Step 3: Terms (Added in my previous fix)
-    await page.fill('textarea[name="conditions"]', 'Quick Escrow Terms - This is a test deal with more than ten characters.');
+    // Step 3: Terms
+    await page.fill('textarea[name="conditions"]', `Quick Escrow Terms - This is a test deal with timestamp ${Date.now()}.`);
     await page.fill('input[name="amount"]', '750');
     await page.click('button:has-text("Continue")');
 
@@ -64,13 +74,13 @@ test.describe('Escrow Creation Flows', () => {
     await page.click('button:has-text("Continue")');
 
     // Step 2: Parties
-    await page.fill('input[placeholder="Search by name or email..."]', 'test');
-    await page.waitForSelector('button:has-text("test")', { timeout: 5000 });
-    await page.locator('button:has-text("test")').first().click();
+    await page.fill('input[placeholder="Search by name or email..."]', 'ai@gmail.com');
+    await page.waitForSelector('button:has-text("AI")', { timeout: 5000 });
+    await page.locator('button:has-text("AI")').first().click();
     await page.click('button:has-text("Continue")');
 
     // Step 3: Terms
-    await page.fill('textarea[name="conditions"]', 'Comprehensive Escrow Terms - This is a detailed test deal for the ultra comprehensive route.');
+    await page.fill('textarea[name="conditions"]', `Comprehensive Escrow Terms - Detailed test deal with timestamp ${Date.now()}.`);
     // Amount should be read-only or at least we should see the milestone sync message
     await expect(page.locator('text=Auto-synced with milestones')).toBeVisible();
     await page.click('button:has-text("Continue")');

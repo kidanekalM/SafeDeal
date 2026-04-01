@@ -183,7 +183,7 @@ const Dashboard = () => {
         )}
 
         {/* Dynamic Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {[
             { label: 'Active Deals', val: stats?.active_escrows, icon: Shield, color: 'text-teal-600' },
             { label: 'Completed', val: stats?.completed_escrows, icon: CheckCircle, color: 'text-green-600' },

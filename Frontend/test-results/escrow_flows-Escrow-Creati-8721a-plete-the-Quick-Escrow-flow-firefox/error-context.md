@@ -1,128 +1,92 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e2]:
-  - generic [ref=e4]:
-    - generic [ref=e6]:
-      - link "SafeDeal" [ref=e8] [cursor=pointer]:
+- generic [ref=e4]:
+  - generic [ref=e6]:
+    - link "SafeDeal" [ref=e8] [cursor=pointer]:
+      - /url: /dashboard
+      - img [ref=e10]
+      - generic [ref=e13]: SafeDeal
+    - navigation [ref=e14]:
+      - link "Dashboard" [ref=e15] [cursor=pointer]:
         - /url: /dashboard
-        - img [ref=e10]
-        - generic [ref=e13]: SafeDeal
-      - navigation [ref=e14]:
-        - link "Dashboard" [ref=e15] [cursor=pointer]:
-          - /url: /dashboard
-          - img [ref=e16]
-          - generic [ref=e21]: Dashboard
-        - link "Start Deal" [ref=e22] [cursor=pointer]:
-          - /url: /create-escrow
-          - img [ref=e23]
-          - generic [ref=e26]: Start Deal
-        - link "Directory" [ref=e27] [cursor=pointer]:
-          - /url: /search
-          - img [ref=e28]
-          - generic [ref=e31]: Directory
-        - link "Payments" [ref=e32] [cursor=pointer]:
-          - /url: /transactions
-          - img [ref=e33]
-          - generic [ref=e36]: Payments
-        - link "Profile" [ref=e37] [cursor=pointer]:
-          - /url: /profile
-          - img [ref=e38]
-          - generic [ref=e41]: Profile
-        - link "CBE Test" [ref=e42] [cursor=pointer]:
-          - /url: /cbe-test
-          - img [ref=e43]
-          - generic [ref=e45]: CBE Test
-      - generic [ref=e46]:
-        - generic [ref=e47]:
-          - generic [ref=e49]: TA
-          - generic [ref=e50]:
-            - paragraph [ref=e51]: Test Account
-            - paragraph [ref=e52]: test-account@safedeal.com
-        - button "Sign out" [ref=e53] [cursor=pointer]:
-          - img [ref=e54]
-          - generic [ref=e58]: Sign out
-    - generic [ref=e59]:
-      - banner [ref=e60]:
-        - generic [ref=e61]:
-          - generic [ref=e62]:
-            - button "Toggle sidebar" [ref=e63] [cursor=pointer]:
-              - img [ref=e64]
-            - heading "Start Deal" [level=1] [ref=e66]
-          - generic [ref=e67]:
-            - button [ref=e68] [cursor=pointer]:
-              - img [ref=e69]
-            - button [ref=e72] [cursor=pointer]:
-              - img [ref=e73]
-      - main [ref=e76]:
-        - generic [ref=e77]:
-          - generic [ref=e78]:
-            - button "Back" [ref=e79] [cursor=pointer]:
-              - img [ref=e81]
-              - generic [ref=e83]: Back
-            - generic [ref=e85]:
-              - generic [ref=e88]:
-                - img [ref=e90]
-                - generic [ref=e92]: Role
-              - generic [ref=e93]:
-                - img [ref=e95]
-                - generic [ref=e98]: Parties
-              - generic [ref=e99]:
-                - img [ref=e101]
-                - generic [ref=e107]: Terms
-              - generic [ref=e108]:
-                - img [ref=e110]
-                - generic [ref=e112]: Finalize
-          - generic [ref=e117]:
-            - generic [ref=e118]:
-              - heading "Finalize Deal" [level=2] [ref=e119]
-              - paragraph [ref=e120]: Confirm compliance and launch your secure escrow
-            - generic [ref=e121]:
-              - generic [ref=e122]:
-                - generic [ref=e123]:
-                  - heading "Agreement Preview" [level=3] [ref=e124]
-                  - generic [ref=e125]: Quick Escrow Terms - This is a test deal with more than ten characters.
-                  - generic [ref=e126]:
-                    - generic [ref=e127]: Total Amount
-                    - generic [ref=e128]: 750 ETB
-                - generic [ref=e129]:
-                  - img [ref=e130]
-                  - generic [ref=e136]:
-                    - heading "Legally Enforceable" [level=5] [ref=e137]
-                    - paragraph [ref=e138]: This deal is backed by blockchain evidence and governed by Commercial Code of Ethiopia.
-              - generic [ref=e139]:
-                - generic [ref=e140]:
-                  - generic [ref=e141]:
-                    - generic [ref=e142]: Jurisdiction
-                    - combobox [ref=e143]:
-                      - option "Ethiopia" [selected]
-                      - option "Kenya"
-                      - option "International"
-                  - generic [ref=e144]:
-                    - generic [ref=e145]: Governing Law
-                    - textbox [ref=e146]: Commercial Code of Ethiopia
-                - generic [ref=e147]:
-                  - generic [ref=e148]: Dispute Resolution
-                  - combobox [ref=e149]:
-                    - option "AI Smart Resolution" [selected]
-                    - option "EACC Formal"
-                    - option "Third-party Mediation"
-                - generic [ref=e150]:
-                  - heading "Stakeholders" [level=3] [ref=e151]
-                  - generic [ref=e152]:
-                    - paragraph [ref=e153]:
-                      - generic [ref=e154]: "Buyer:"
-                      - generic [ref=e155]: You
-                    - paragraph [ref=e156]:
-                      - generic [ref=e157]: "Seller:"
-                      - generic [ref=e158]: John
-          - generic [ref=e159]:
-            - generic [ref=e160]:
-              - generic [ref=e161]: Step 4 of 4
-              - generic [ref=e162]: Finalize
-            - button "Start Secure Escrow" [ref=e164] [cursor=pointer]:
-              - text: Start Secure Escrow
-              - img [ref=e165]
-    - button "🔍 Show Debug" [ref=e168] [cursor=pointer]
-  - status [ref=e174]: Could not create escrow
+        - img [ref=e16]
+        - generic [ref=e21]: Dashboard
+      - link "Start Deal" [ref=e22] [cursor=pointer]:
+        - /url: /create-escrow
+        - img [ref=e23]
+        - generic [ref=e26]: Start Deal
+      - link "Directory" [ref=e27] [cursor=pointer]:
+        - /url: /search
+        - img [ref=e28]
+        - generic [ref=e31]: Directory
+      - link "Payments" [ref=e32] [cursor=pointer]:
+        - /url: /transactions
+        - img [ref=e33]
+        - generic [ref=e36]: Payments
+      - link "Profile" [ref=e37] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e38]
+        - generic [ref=e41]: Profile
+      - link "CBE Test" [ref=e42] [cursor=pointer]:
+        - /url: /cbe-test
+        - img [ref=e43]
+        - generic [ref=e45]: CBE Test
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e49]: TA
+        - generic [ref=e50]:
+          - paragraph [ref=e51]: Test Account
+          - paragraph [ref=e52]: test-account@safedeal.com
+      - button "Sign out" [ref=e53] [cursor=pointer]:
+        - img [ref=e54]
+        - generic [ref=e58]: Sign out
+  - generic [ref=e59]:
+    - banner [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - button "Toggle sidebar" [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+          - heading "Start Deal" [level=1] [ref=e66]
+        - generic [ref=e67]:
+          - button [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+          - button [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+    - main [ref=e76]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - button "Back" [ref=e79] [cursor=pointer]:
+            - img [ref=e81]
+            - generic [ref=e83]: Back
+          - generic [ref=e85]:
+            - generic [ref=e88]:
+              - img [ref=e90]
+              - generic [ref=e92]: Role
+            - generic [ref=e93]:
+              - img [ref=e95]
+              - generic [ref=e98]: Parties
+            - generic [ref=e99]:
+              - img [ref=e101]
+              - generic [ref=e107]: Terms
+            - generic [ref=e108]:
+              - img [ref=e110]
+              - generic [ref=e112]: Finalize
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - heading "Counterparties" [level=2] [ref=e119]
+            - paragraph [ref=e120]: Who are you dealing with?
+          - generic [ref=e122]:
+            - generic [ref=e123]: The Seller
+            - generic [ref=e124]:
+              - img [ref=e125]
+              - textbox "Search by name or email..." [active] [ref=e128]: ai@gmail.com
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]: Step 2 of 4
+            - generic [ref=e132]: Parties
+          - button "Continue" [ref=e134] [cursor=pointer]:
+            - text: Continue
+            - img [ref=e135]
+  - button "🔍 Show Debug" [ref=e138] [cursor=pointer]
 ```

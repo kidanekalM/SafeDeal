@@ -133,13 +133,17 @@ const CreateEscrow = () => {
 
   // Sync total amount with milestones if enabled
   useEffect(() => {
-    if (isDetailed && milestones.length > 0) {
+    if (isDetailed) {
+      if (milestones.length === 0) {
+        append({ title: '', amount: 0 });
+      }
+      
       const total = milestones.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
       if (total > 0 && total !== amount) {
         setValue('amount', total);
       }
     }
-  }, [milestones, isDetailed, amount, setValue]);
+  }, [milestones, isDetailed, amount, setValue, append]);
 
   const handleSearch = async (term: string, type: 'buyer' | 'seller' | 'counterparty' | 'mediator') => {
     setSearchTerm(term);
@@ -153,6 +157,7 @@ const CreateEscrow = () => {
     try {
       const response = await userApi.searchUsers(term);
       const users = response.data.data.users || [];
+      console.log('📝 Search Results:', JSON.stringify(users));
       setSearchResults(users);
       if (response.data.data.invited) {
         setInvitationSent(term);
@@ -307,7 +312,7 @@ const CreateEscrow = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">I am the...</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[
                     { id: 'buyer', label: 'Buyer', icon: UserPlus },
                     { id: 'seller', label: 'Seller', icon: DollarSign },
@@ -331,7 +336,7 @@ const CreateEscrow = () => {
 
               <div className="pt-4 border-t">
                 <label className="block text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Transaction Type</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
                     { id: false, label: 'Quick Escrow', icon: Zap, desc: 'Simple 3-step setup' },
                     { id: true, label: 'Ultra Comprehensive', icon: Settings, desc: 'Milestones & legal protection' },
@@ -373,7 +378,7 @@ const CreateEscrow = () => {
               <p className="text-gray-500 mt-2">Who are you dealing with?</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8">
               {creatorRole === 'mediator' ? (
                 <>
                   <div className="space-y-4">
@@ -459,7 +464,7 @@ const CreateEscrow = () => {
 
             <AnimatePresence>
               {searchResults.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-xl mx-auto bg-white border-2 rounded-2xl shadow-xl overflow-hidden z-20">
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="w-full max-w-md sm:max-w-lg mx-auto bg-white border-2 rounded-2xl shadow-xl overflow-hidden z-20 mt-4">
                   {searchResults.map((u) => (
                     <button key={u.id} onClick={() => selectUser(u, searchType)} className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 border-b last:border-0 transition-all text-left">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${searchType === 'mediator' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'}`}>{u.first_name[0]}</div>
@@ -484,8 +489,8 @@ const CreateEscrow = () => {
               <p className="text-gray-500 mt-2">Define the financial and descriptive terms</p>
             </div>
 
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2 space-y-6">
+            <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Agreement Conditions</label>
                   <div className="flex gap-2">
@@ -541,7 +546,7 @@ const CreateEscrow = () => {
                 <button type="button" onClick={() => append({ title: '', amount: 0 })} className="btn btn-primary btn-sm rounded-xl gap-1"><Plus size={14} /> Add</button>
               </div>
 
-              <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+              <div className="space-y-4 max-h-[60vh] sm:max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
                 {fields.map((field, index) => (
                   <motion.div key={field.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="p-5 bg-white border-2 border-gray-100 rounded-2xl shadow-sm flex flex-col gap-4 relative">
                     <div className="flex gap-4">
@@ -662,7 +667,7 @@ const CreateEscrow = () => {
 
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
           <div className="gradient-primary h-2" />
-          <div className="p-8 sm:p-12 min-h-[500px]">
+          <div className="p-6 sm:p-8 lg:p-12 min-h-[70vh]">
             <AnimatePresence mode="wait"><motion.div key={steps[step].id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>{renderStepContent()}</motion.div></AnimatePresence>
           </div>
         </div>
