@@ -103,7 +103,7 @@ const AdminDashboard = () => {
         setUsers(u);
       } catch {
         const fallback = await userApi.searchUsers('');
-        setUsers(fallback?.data?.users || []);
+        setUsers(fallback?.data?.data?.users || []);
       }
     } catch (e: any) {
       setError(e?.response?.data?.message || 'Failed to load admin dashboard data');

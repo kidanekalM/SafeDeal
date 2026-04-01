@@ -11,11 +11,11 @@ import {
   Shield,
   CreditCard,
   Search,
-  Phone,
+
   Menu,
   X,
-  ChevronLeft,
-  ChevronRight
+
+
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';

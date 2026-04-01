@@ -51,7 +51,7 @@ const CbeVerificationTest = () => {
         toast.success('Transaction verified successfully!');
       } else {
         setVerificationResult({ error: result.extract(), isError: true });
-        toast.error(`Verification failed: ${result.extract().type}`);
+        toast.error(`Verification failed: ${(result.extract() as any).type}`);
       }
     } catch (error: any) {
       console.error('Verification error:', error);
@@ -85,7 +85,7 @@ const CbeVerificationTest = () => {
         ? Buffer.from(arrayBuffer) 
         : new Uint8Array(arrayBuffer);
 
-      const result = await detectTransactionId(buffer, {
+      const result = await detectTransactionId(buffer as any, {
         googleVisionAPIKey: googleApiKey,
       });
 

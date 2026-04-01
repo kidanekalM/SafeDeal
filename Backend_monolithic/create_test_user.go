@@ -6,11 +6,11 @@ import (
     "backend_monolithic/internal/models"
     "fmt"
     "log"
-    "os"
+    // "os"
 )
 
 func main() {
-    os.Setenv("DATABASE_URL", "postgres://kidanekal:123456789@localhost:5432/safedeal_db?sslmode=disable")
+    // os.Setenv("DATABASE_URL", "postgres://kidanekal:123456789@localhost:5432/safedeal_db?sslmode=disable")
     db := configs.InitDB()
     authService := auth.NewService(db)
     hashedPassword, _ := authService.HashPassword("Password123!")

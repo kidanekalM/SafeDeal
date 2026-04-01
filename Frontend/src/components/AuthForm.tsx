@@ -29,7 +29,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
     formState: { errors },
     reset,
     trigger,
-  } = useForm<LoginRequest & RegisterRequest & { account_name: string; account_number: string; bank_code: string; bank_name: string }>();
+  } = useForm<LoginRequest & Omit<RegisterRequest, "bank_code"> & { bank_code: string }>();
 
   const onSubmit = async (data: any) => {
     setIsLoading(true);

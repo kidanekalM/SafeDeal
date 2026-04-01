@@ -10,7 +10,7 @@ export interface User {
     account_name?: string;
     account_number?: string;
     bank_code?: number;
-    trust_score: number;
+    trust_score?: number;
     created_at: string;
     updated_at: string;
 }
