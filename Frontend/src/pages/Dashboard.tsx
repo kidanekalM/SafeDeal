@@ -30,7 +30,7 @@ import GuidedTour from "../components/GuidedTour";
 import VerifiedBadge from "../components/VerifiedBadge";
 
 const Dashboard = () => {
-  useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   if (user?.id === 2) {
     return <AdminDashboard />;
@@ -75,7 +75,7 @@ const Dashboard = () => {
         total_amount: Number(summary?.total_amount ?? computed.total_amount),
       });
     } catch (err: any) {
-      toast.error("Connection failed. Showing last known data.");
+      toast.error(t('pages.connection_failed', 'Connection failed. Showing last known data.'));
     } finally {
       setIsLoading(false);
       setStatsLoading(false);
@@ -108,7 +108,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <GuidedTour />
-      <div className="space-y-8 max-w-7xl mx-auto">
+      <div className="space-y-8 max-w-7xl mx-auto pb-12">
         {/* Welcome & Trust Banner */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <motion.div
@@ -118,16 +118,16 @@ const Dashboard = () => {
           >
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-3xl font-bold text-white">Welcome, {user?.first_name}!</h2>
+                <h2 className="text-3xl font-bold text-white">{t('pages.welcome', 'Welcome')}, {user?.first_name}!</h2>
                 <VerifiedBadge isVerified={!!user?.activated} className="bg-white/20 px-2 py-1 rounded-lg text-white" />
               </div>
-              <p className="text-teal-50 opacity-90 max-w-md">Your secure gateway to trust-based transactions is active and protected.</p>
+              <p className="text-teal-50 opacity-90 max-w-md">{t('pages.your_secure_gateway_to_trust_based_transactions', 'Your secure gateway to trust-based transactions is active and protected.')}</p>
               <div className="mt-8 flex gap-4">
                 <Link to="/create-escrow" className="bg-white text-[#014d46] px-6 py-3 rounded-2xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">
-                  <Zap size={18} /> Start New Deal
+                  <Zap size={18} /> {t('pages.start_new_deal', 'Start New Deal')}
                 </Link>
                 <button onClick={() => loadData()} className="bg-teal-800/30 text-white px-6 py-3 rounded-2xl font-bold hover:bg-teal-800/50 transition-all flex items-center gap-2 border border-teal-400/30">
-                  <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} /> Refresh
+                  <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} /> {t('pages.refresh', 'Refresh')}
                 </button>
               </div>
             </div>
@@ -147,13 +147,13 @@ const Dashboard = () => {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-black text-[#014d46]">{trustScore}</span>
-                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Trust Score</span>
+                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">{t('pages.trust_score', 'Trust Score')}</span>
               </div>
             </div>
             <h4 className="font-bold text-gray-900 flex items-center gap-2">
-              <Award className="text-yellow-500" size={18} /> Verified Professional
+              <Award className="text-yellow-500" size={18} /> {t('pages.verified_professional', 'Verified Professional')}
             </h4>
-            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest font-black opacity-60">Level 1 Member</p>
+            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest font-black opacity-60">{t('pages.level_1_member', 'Level 1 Member')}</p>
           </motion.div>
         </div>
 
@@ -161,7 +161,7 @@ const Dashboard = () => {
         {nextActions.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Clock size={14} className="text-orange-500" /> Action Required
+              <Clock size={14} className="text-orange-500" /> {t('pages.action_required', 'Action Required')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {nextActions.map(action => (
@@ -171,8 +171,8 @@ const Dashboard = () => {
                       {action.status === 'Pending' ? <CreditCard size={22} /> : <CheckCircle size={22} />}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-gray-900">{action.status === 'Pending' ? 'Payment Needed' : 'Acceptance Needed'}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase">Escrow #{action.id} • {formatCurrency(action.amount)}</p>
+                      <p className="text-sm font-black text-gray-900">{action.status === 'Pending' ? t('pages.payment_needed', 'Payment Needed') : t('pages.acceptance_needed', 'Acceptance Needed')}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase">{t('pages.escrow_id', 'Escrow')} #{action.id} • {formatCurrency(action.amount)}</p>
                     </div>
                   </div>
                   <ArrowRight size={20} className="text-orange-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
@@ -185,10 +185,10 @@ const Dashboard = () => {
         {/* Dynamic Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {[
-            { label: 'Active Deals', val: stats?.active_escrows, icon: Shield, color: 'text-teal-600' },
-            { label: 'Completed', val: stats?.completed_escrows, icon: CheckCircle, color: 'text-green-600' },
-            { label: 'Total Volume', val: formatCurrency(stats?.total_amount || 0), icon: TrendingUp, color: 'text-blue-600' },
-            { label: 'Disputed', val: stats?.disputed_escrows, icon: AlertCircle, color: 'text-red-600' },
+            { label: t('pages.active_deals', 'Active Deals'), val: stats?.active_escrows, icon: Shield, color: 'text-teal-600' },
+            { label: t('pages.completed', 'Completed'), val: stats?.completed_escrows, icon: CheckCircle, color: 'text-green-600' },
+            { label: t('pages.total_volume', 'Total Volume'), val: formatCurrency(stats?.total_amount || 0), icon: TrendingUp, color: 'text-blue-600' },
+            { label: t('pages.disputed', 'Disputed'), val: stats?.disputed_escrows, icon: AlertCircle, color: 'text-red-600' },
           ].map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }} className="bg-white p-6 rounded-[2rem] border-2 border-gray-50 shadow-sm">
               <div className="flex items-center justify-between mb-4">
@@ -205,8 +205,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="xl:col-span-2 space-y-4">
             <div className="flex items-center justify-between px-2">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Recent Transactions</h3>
-              <Link to="/escrows" className="text-[10px] font-black text-[#014d46] uppercase hover:underline">View All History</Link>
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">{t('pages.recent_transactions', 'Recent Transactions')}</h3>
+              <Link to="/escrows" className="text-[10px] font-black text-[#014d46] uppercase hover:underline">{t('pages.view_all_history', 'View All History')}</Link>
             </div>
             <div className="bg-white rounded-[2.5rem] border-2 border-gray-50 shadow-sm overflow-hidden">
               {isLoading ? (
@@ -214,7 +214,7 @@ const Dashboard = () => {
               ) : escrows.length === 0 ? (
                 <div className="p-20 text-center space-y-4">
                   <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-gray-300"><Shield size={32} /></div>
-                  <p className="text-gray-400 font-bold">No transactions found</p>
+                  <p className="text-gray-400 font-bold">{t('pages.no_transactions_found', 'No transactions found')}</p>
                 </div>
               ) : (
                 <div className="divide-y-2 divide-gray-50">
@@ -223,7 +223,7 @@ const Dashboard = () => {
                       <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl ${getStatusColor(escrow.status)}`}>{getStatusIcon(escrow.status)}</div>
                         <div>
-                          <p className="font-black text-gray-900 text-sm">Escrow #{escrow.id}</p>
+                          <p className="font-black text-gray-900 text-sm">{t('pages.escrow_id', 'Escrow')} #{escrow.id}</p>
                           <p className="text-[10px] font-bold text-gray-400 uppercase">{formatRelativeTime(escrow.created_at)}</p>
                         </div>
                       </div>
@@ -240,31 +240,31 @@ const Dashboard = () => {
 
           {/* Quick Support / Info */}
           <div className="space-y-6">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] px-2">SafeDeal Hub</h3>
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] px-2">{t('pages.safedeal_hub', 'SafeDeal Hub')}</h3>
             <div className="bg-[#014d46] rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden group">
               <div className="relative z-10">
                 <Award className="text-teal-300 mb-4" size={32} />
-                <h4 className="text-lg font-black leading-tight">Become a Top-Rated Provider</h4>
-                <p className="text-teal-100 text-xs mt-2 opacity-80">Complete deals without disputes to increase your trust score and unlock lower fees.</p>
-                <button className="mt-6 text-[10px] font-black uppercase tracking-widest bg-teal-400/20 py-2 px-4 rounded-xl border border-teal-400/30 hover:bg-teal-400/40 transition-all">Learn More</button>
+                <h4 className="text-lg font-black leading-tight">{t('pages.become_a_top_rated_provider', 'Become a Top-Rated Provider')}</h4>
+                <p className="text-teal-100 text-xs mt-2 opacity-80">{t('pages.complete_deals_without_disputes', 'Complete deals without disputes to increase your trust score and unlock lower fees.')}</p>
+                <button className="mt-6 text-[10px] font-black uppercase tracking-widest bg-teal-400/20 py-2 px-4 rounded-xl border border-teal-400/30 hover:bg-teal-400/40 transition-all">{t('pages.learn_more', 'Learn More')}</button>
               </div>
               <TrendingUp className="absolute -right-4 -bottom-4 h-32 w-32 text-white opacity-5 group-hover:scale-110 transition-transform" />
             </div>
 
             <div className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm">
-              <h4 className="font-black text-gray-900 text-sm mb-4">Security Overview</h4>
+              <h4 className="font-black text-gray-900 text-sm mb-4">{t('pages.security_overview', 'Security Overview')}</h4>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <p className="text-xs font-bold text-gray-600">Encrypted Private Keys</p>
+                  <p className="text-xs font-bold text-gray-600">{t('pages.encrypted_private_keys', 'Encrypted Private Keys')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <p className="text-xs font-bold text-gray-600">Blockchain Audit Logging</p>
+                  <p className="text-xs font-bold text-gray-600">{t('pages.blockchain_audit_logging', 'Blockchain Audit Logging')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <p className="text-xs font-bold text-gray-600">AI Dispute Resolution Active</p>
+                  <p className="text-xs font-bold text-gray-600">{t('pages.ai_dispute_resolution_active', 'AI Dispute Resolution Active')}</p>
                 </div>
               </div>
             </div>

@@ -22,7 +22,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { BANKS, getBankByCode } from "../lib/banks";
 
 const Profile = () => {
-  useTranslation();
+  const { t } = useTranslation();
   const { user, setUser } = useAuthStore();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");
@@ -62,7 +62,7 @@ const Profile = () => {
         setTrustInsights(null);
       }
     } catch (error: any) {
-      toast.error('Failed to load profile data');
+      toast.error(t('pages.error_loading_profile', 'Failed to load profile data'));
     } finally {
       setIsFetchingProfile(false);
     }
@@ -92,7 +92,7 @@ const Profile = () => {
 
   const handleUpdateBankDetails = async (data: BankDetails) => {
     if (!selectedBankCode) {
-      toast.error("Please select a bank");
+      toast.error(t('pages.please_select_bank', 'Please select a bank'));
       return;
     }
 
@@ -106,12 +106,12 @@ const Profile = () => {
 
       const response = await userApi.updateBankDetails(bankData);
       setUser(response.data);
-      toast.success("Bank details updated successfully!");
+      toast.success(t('pages.bank_details_updated', 'Bank details updated successfully!'));
     } catch (error: any) {
       toast.error(
         error.response?.data?.message ||
           error.response?.data?.error ||
-          "Failed to update bank details"
+          t('pages.bank_details_update_failed', 'Failed to update bank details')
       );
     } finally {
       setIsLoading(false);
@@ -120,7 +120,7 @@ const Profile = () => {
 
   const handleCreateWallet = async () => {
     if (user?.wallet_address) {
-      toast("Wallet already exists!", { icon: "🦊" });
+      toast(t('pages.wallet_exists', 'Wallet already exists!'), { icon: "🦊" });
       return;
     }
     setIsCreatingWallet(true);
@@ -129,9 +129,9 @@ const Profile = () => {
       if (user) {
         setUser({ ...user, wallet_address: response.data.wallet_address });
       }
-      toast.success("Ethereum wallet created successfully!");
+      toast.success(t('pages.wallet_created', 'Ethereum wallet created successfully!'));
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to create wallet");
+      toast.error(error.response?.data?.message || t('pages.wallet_creation_failed', 'Failed to create wallet'));
     } finally {
       setIsCreatingWallet(false);
     }
@@ -139,7 +139,7 @@ const Profile = () => {
 
   const handleUpdateProfile = async (data: UpdateProfileRequest) => {
     if (!user?.id) {
-      toast.error("User ID not available");
+      toast.error(t('pages.user_id_not_available', 'User ID not available'));
       return;
     }
     
@@ -154,10 +154,10 @@ const Profile = () => {
         ...updatedUserData
       });
       
-      toast.success("Profile updated successfully!");
+      toast.success(t('pages.profile_updated', 'Profile updated successfully!'));
     } catch (error: any) {
       console.error("Profile update error:", error);
-      toast.error(error.response?.data?.error || error.response?.data?.message || "Failed to update profile");
+      toast.error(error.response?.data?.error || error.response?.data?.message || t('pages.profile_update_failed', 'Failed to update profile'));
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -165,13 +165,13 @@ const Profile = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
+    toast.success(t('common.copied', 'Copied to clipboard!'));
   };
 
   const tabs = [
-    { id: "profile", name: "Profile", icon: User },
-    { id: "wallet", name: "Wallet", icon: Wallet },
-    { id: "banking", name: "Banking", icon: CreditCard },
+    { id: "profile", name: t('pages.profile', 'Profile'), icon: User },
+    { id: "wallet", name: t('pages.wallet', 'Wallet'), icon: Wallet },
+    { id: "banking", name: t('pages.banking', 'Banking'), icon: CreditCard },
   ];
 
   if (!user || isFetchingProfile) {
@@ -186,7 +186,7 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto pb-12">
         {/* Onboarding Banner */}
         {(location.state as any)?.needsOnboarding && (
           <motion.div 
@@ -198,23 +198,23 @@ const Profile = () => {
               <AlertCircle className="h-8 w-8" />
             </div>
             <div>
-              <h4 className="text-xl font-black uppercase tracking-tight text-yellow-900">Complete Your Profile</h4>
-              <p className="text-yellow-700 text-sm opacity-80">You need to provide your profession and bank details before you can create or accept escrows.</p>
+              <h4 className="text-xl font-black uppercase tracking-tight text-yellow-900">{t('pages.complete_your_profile', 'Complete Your Profile')}</h4>
+              <p className="text-yellow-700 text-sm opacity-80">{t('pages.you_need_to_provide_your_profession', 'You need to provide your profession and bank details before you can create or accept escrows.')}</p>
             </div>
           </motion.div>
         )}
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('pages.profile_settings', 'Profile Settings')}</h1>
           <p className="text-gray-600 mt-2">
-            Manage your account information, wallet, and security settings
+            {t('pages.manage_your_account_information_wallet_and_security_settings', 'Manage your account information, wallet, and security settings')}
           </p>
           <div className="mt-4 p-3 rounded-lg bg-teal-50 border border-teal-100 text-sm text-teal-900">
-            Trust Score: <span className="font-bold">{user.trust_score ?? 0}</span>
+            {t('pages.trust_score', 'Trust Score')}: <span className="font-bold">{user.trust_score ?? 0}</span>
             {trustInsights && (
               <span className="ml-3 text-xs text-teal-800">
-                Completed: {trustInsights.completed} | Disputed: {trustInsights.disputed} | Refunded: {trustInsights.refunded}
+                {t('pages.completed', 'Completed')}: {trustInsights.completed} | {t('pages.disputed', 'Disputed')}: {trustInsights.disputed} | {t('pages.refunded', 'Refunded')}: {trustInsights.refunded}
               </span>
             )}
           </div>
@@ -255,28 +255,28 @@ const Profile = () => {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Personal Information
+                    {t('pages.personal_information', 'Personal Information')}
                   </h3>
                   <button
                     onClick={fetchProfile}
                     disabled={isFetchingProfile}
                     className="btn btn-outline btn-sm"
                   >
-                    {isFetchingProfile ? "Refreshing..." : "Refresh"}
+                    {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
                   </button>
                 </div>
                 <form onSubmit={handleSubmitProfile(handleUpdateProfile)} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
+                        {t('components.first_name', 'First Name')}
                       </label>
                       <input
                         {...registerProfile("first_name", {
-                          required: "First name is required",
+                          required: t('pages.first_name_required', "First name is required"),
                           minLength: {
                             value: 2,
-                            message: "First name must be at least 2 characters"
+                            message: t('pages.first_name_min_length', "First name must be at least 2 characters")
                           }
                         })}
                         type="text"
@@ -290,14 +290,14 @@ const Profile = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
+                        {t('components.last_name', 'Last Name')}
                       </label>
                       <input
                         {...registerProfile("last_name", {
-                          required: "Last name is required",
+                          required: t('pages.last_name_required', "Last name is required"),
                           minLength: {
                             value: 2,
-                            message: "Last name must be at least 2 characters"
+                            message: t('pages.last_name_min_length', "Last name must be at least 2 characters")
                           }
                         })}
                         type="text"
@@ -313,18 +313,18 @@ const Profile = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Profession
+                      {t('components.profession', 'Profession')}
                     </label>
                     <input
                       {...registerProfile("profession", {
-                        required: "Profession is required",
+                        required: t('pages.profession_required', "Profession is required"),
                         minLength: {
                           value: 2,
-                          message: "Profession must be at least 2 characters"
+                          message: t('pages.profession_min_length', "Profession must be at least 2 characters")
                         },
                         maxLength: {
                           value: 100,
-                          message: "Profession must be less than 100 characters"
+                          message: t('pages.profession_max_length', "Profession must be less than 100 characters")
                         }
                       })}
                       type="text"
@@ -340,7 +340,7 @@ const Profile = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
+                      {t('pages.email_address', 'Email Address')}
                     </label>
                     <input
                       type="email"
@@ -349,7 +349,7 @@ const Profile = () => {
                       className="input w-full bg-gray-50"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Email cannot be changed. Contact support if needed.
+                      {t('pages.email_cannot_be_changed', 'Email cannot be changed. Contact support if needed.')}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -370,8 +370,8 @@ const Profile = () => {
                       }`}
                     >
                       {user.activated
-                        ? "Account Verified"
-                        : "Account Pending Verification"}
+                        ? t('pages.account_verified', "Account Verified")
+                        : t('pages.account_pending_verification', "Account Pending Verification")}
                     </span>
                   </div>
                   {!user.activated && (
@@ -380,14 +380,14 @@ const Profile = () => {
                         onClick={async () => {
                           try {
                             await userApi.resendActivation(user.email);
-                            toast.success('Activation email sent! Please check your inbox.');
+                            toast.success(t('pages.activation_email_sent', 'Activation email sent! Please check your inbox.'));
                           } catch (e: any) {
-                            toast.error(e?.response?.data?.error || 'Failed to resend activation email');
+                            toast.error(e?.response?.data?.error || t('pages.activation_email_failed', 'Failed to resend activation email'));
                           }
                         }}
                         className="btn btn-outline btn-sm"
                       >
-                        Resend Activation Email
+                        {t('pages.resend_activation_email', 'Resend Activation Email')}
                       </button>
                     </div>
                   )}
@@ -396,7 +396,7 @@ const Profile = () => {
                     disabled={isUpdatingProfile}
                     className="btn btn-primary btn-md"
                   >
-                    {isUpdatingProfile ? "Updating..." : "Update Profile"}
+                    {isUpdatingProfile ? t('pages.updating', "Updating...") : t('pages.update_profile', "Update Profile")}
                   </button>
                 </form>
               </motion.div>
@@ -412,14 +412,14 @@ const Profile = () => {
                 <div className="card p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      Ethereum Wallet
+                      {t('pages.ethereum_wallet', 'Ethereum Wallet')}
                     </h3>
                     <button
                       onClick={fetchProfile}
                       disabled={isFetchingProfile}
                       className="btn btn-outline btn-sm"
                     >
-                      {isFetchingProfile ? "Refreshing..." : "Refresh"}
+                      {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
                     </button>
                   </div>
 
@@ -427,7 +427,7 @@ const Profile = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Wallet Address
+                          {t('pages.wallet_address', 'Wallet Address')}
                         </label>
                         <div className="flex items-center space-x-2">
                           <input
@@ -446,14 +446,14 @@ const Profile = () => {
                           </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          This is your Ethereum wallet address for blockchain transactions
+                          {t('pages.this_is_your_ethereum_wallet_address_for_blockchain_transactions', 'This is your Ethereum wallet address for blockchain transactions')}
                         </p>
                       </div>
 
                       {user.encrypted_private_key && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Private Key Status
+                            {t('pages.private_key_status', 'Private Key Status')}
                           </label>
                           <div className="flex items-center space-x-2">
                             <input
@@ -470,7 +470,7 @@ const Profile = () => {
                             </button>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
-                            Your private key is encrypted and stored securely
+                            {t('pages.your_private_key_is_encrypted_and_stored_securely', 'Your private key is encrypted and stored securely')}
                           </p>
                         </div>
                       )}
@@ -480,10 +480,10 @@ const Profile = () => {
                           <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
                           <div>
                             <h4 className="text-sm font-medium text-green-900">
-                              Wallet Active
+                              {t('pages.wallet_active', 'Wallet Active')}
                             </h4>
                             <p className="text-sm text-green-700 mt-1">
-                              Your Ethereum wallet is ready for blockchain transactions.
+                              {t('pages.your_ethereum_wallet_is_ready_for_blockchain_transactions', 'Your Ethereum wallet is ready for blockchain transactions.')}
                             </p>
                           </div>
                         </div>
@@ -493,17 +493,17 @@ const Profile = () => {
                     <div className="text-center py-8">
                       <Wallet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        No Wallet Created
+                        {t('pages.no_wallet_created', 'No Wallet Created')}
                       </h4>
                       <p className="text-gray-600 mb-6">
-                        Create an Ethereum wallet to participate in blockchain transactions.
+                        {t('pages.create_an_ethereum_wallet_to_participate_in_blockchain_transactions', 'Create an Ethereum wallet to participate in blockchain transactions.')}
                       </p>
                       <button
                         onClick={handleCreateWallet}
                         disabled={isCreatingWallet}
                         className="btn btn-primary btn-md"
                       >
-                        {isCreatingWallet ? "Creating..." : "Create Wallet"}
+                        {isCreatingWallet ? t('pages.creating', "Creating...") : t('pages.create_wallet', "Create Wallet")}
                       </button>
                     </div>
                   )}
@@ -512,19 +512,17 @@ const Profile = () => {
                 {user.wallet_address && (
                   <div className="card p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Wallet Security
+                      {t('pages.wallet_security', 'Wallet Security')}
                     </h3>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                       <div className="flex">
                         <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
                         <div>
                           <h4 className="text-sm font-medium text-yellow-900">
-                            Important Security Notice
+                            {t('pages.important_security_notice', 'Important Security Notice')}
                           </h4>
                           <p className="text-sm text-yellow-700 mt-1">
-                            Your private key is encrypted and stored securely.
-                            Never share your private key with anyone. SafeDeal
-                            will never ask for your private key.
+                            {t('pages.wallet_security_disclaimer', 'Your private key is encrypted and stored securely. Never share your private key with anyone. SafeDeal will never ask for your private key.')}
                           </p>
                         </div>
                       </div>
@@ -544,52 +542,52 @@ const Profile = () => {
                 <div className="card p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      Bank Details
+                      {t('pages.bank_details', 'Bank Details')}
                     </h3>
                     <button
                       onClick={fetchProfile}
                       disabled={isFetchingProfile}
                       className="btn btn-outline btn-sm"
                     >
-                      {isFetchingProfile ? "Refreshing..." : "Refresh"}
+                      {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
                     </button>
                   </div>
                   
                   <p className="text-gray-600 mb-6">
-                    Add your bank account details to receive payments from completed escrows.
+                    {t('pages.add_your_bank_account_details', 'Add your bank account details to receive payments from completed escrows.')}
                   </p>
 
                   {/* Display current bank details if they exist */}
                   {(user.account_name || user.account_number || user.bank_code) && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-blue-900">Current Bank Details</h4>
+                        <h4 className="text-sm font-medium text-blue-900">{t('pages.current_bank_details', 'Current Bank Details')}</h4>
                         <button
                           type="button"
                           onClick={() => setShowBankForm(!showBankForm)}
                           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                         >
-                          {showBankForm ? 'Cancel Update' : 'Update Details'}
+                          {showBankForm ? t('pages.cancel_update', 'Cancel Update') : t('pages.update_details', 'Update Details')}
                         </button>
                       </div>
                       <div className="space-y-2">
                         {user.account_name && (
                           <div className="flex justify-between">
-                            <span className="text-sm text-blue-700">Account Name:</span>
+                            <span className="text-sm text-blue-700">{t('pages.account_name', 'Account Name')}:</span>
                             <span className="text-sm font-medium text-blue-900">{user.account_name}</span>
                           </div>
                         )}
                         {user.account_number && (
                           <div className="flex justify-between">
-                            <span className="text-sm text-blue-700">Account Number:</span>
+                            <span className="text-sm text-blue-700">{t('pages.account_number', 'Account Number')}:</span>
                             <span className="text-sm font-medium text-blue-900 font-mono">{user.account_number}</span>
                           </div>
                         )}
                         {user.bank_code && (
                           <div className="flex justify-between">
-                            <span className="text-sm text-blue-700">Bank:</span>
+                            <span className="text-sm text-blue-700">{t('pages.bank', 'Bank')}:</span>
                             <span className="text-sm font-medium text-blue-900">
-                              {getBankByCode(user.bank_code)?.name || `Bank Code: ${user.bank_code}`}
+                              {getBankByCode(user.bank_code)?.name || `${t('pages.bank_code', 'Bank Code')}: ${user.bank_code}`}
                             </span>
                           </div>
                         )}
@@ -605,14 +603,14 @@ const Profile = () => {
                     >
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Account Name
+                        {t('pages.account_name', 'Account Name')}
                       </label>
                       <input
                         {...register("account_name", {
-                          required: "Account name is required",
+                          required: t('pages.account_name_required', "Account name is required"),
                         })}
                         className="input w-full"
-                        placeholder="Enter your full name as it appears on your bank account"
+                        placeholder={t('pages.account_name_placeholder', "Enter your full name as it appears on your bank account")}
                       />
                       {errors.account_name && (
                         <p className="text-red-500 text-sm mt-1">
@@ -623,28 +621,28 @@ const Profile = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Account Number
+                        {t('pages.account_number', 'Account Number')}
                       </label>
                       <input
                         {...register("account_number", {
-                          required: "Account number is required",
+                          required: t('pages.account_number_required', "Account number is required"),
                           validate: (value) => {
                             if (!selectedBankCode) {
-                              return "Please select a bank first";
+                              return t('pages.please_select_bank', "Please select a bank first");
                             }
                             const bank = getBankByCode(selectedBankCode);
                             if (!bank) {
-                              return "Invalid bank selected";
+                              return t('pages.invalid_bank', "Invalid bank selected");
                             }
                             const digitPattern = new RegExp(`^\\d{${bank.accountLength}}$`);
                             if (!digitPattern.test(value)) {
-                              return `Account number must be exactly ${bank.accountLength} digits for ${bank.name}`;
+                              return `${t('pages.account_number_length_error', 'Account number must be exactly')} ${bank.accountLength} ${t('pages.digits_for', 'digits for')} ${bank.name}`;
                             }
                             return true;
                           },
                         })}
                         className="input w-full"
-                        placeholder={selectedBankCode ? `Enter ${getBankByCode(selectedBankCode)?.accountLength || 'your'} digit account number` : "Enter your bank account number"}
+                        placeholder={selectedBankCode ? `${t('pages.enter', 'Enter')} ${getBankByCode(selectedBankCode)?.accountLength || 'your'} ${t('pages.digit_account_number', 'digit account number')}` : t('pages.enter_account_number', "Enter your bank account number")}
                       />
                       {errors.account_number && (
                         <p className="text-red-500 text-sm mt-1">
@@ -653,14 +651,14 @@ const Profile = () => {
                       )}
                       {selectedBankCode && (
                         <p className="text-blue-600 text-sm mt-1">
-                          Required: {getBankByCode(selectedBankCode)?.accountLength} digits for {getBankByCode(selectedBankCode)?.name}
+                          {t('pages.required', 'Required')}: {getBankByCode(selectedBankCode)?.accountLength} {t('pages.digits_for', 'digits for')} {getBankByCode(selectedBankCode)?.name}
                         </p>
                       )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Bank
+                        {t('pages.bank', 'Bank')}
                       </label>
                       <select
                         value={selectedBankCode || ""}
@@ -668,16 +666,16 @@ const Profile = () => {
                         className="input w-full"
                         required
                       >
-                        <option value="">Select your bank</option>
+                        <option value="">{t('pages.select_your_bank', 'Select your bank')}</option>
                         {BANKS.map((bank) => (
                           <option key={bank.code} value={bank.code}>
-                            {bank.name} {bank.isMobileMoney ? "(Mobile Money)" : ""}
+                            {bank.name} {bank.isMobileMoney ? `(${t('pages.mobile_money', 'Mobile Money')})` : ""}
                           </option>
                         ))}
                       </select>
                       {!selectedBankCode && (
                         <p className="text-red-500 text-sm mt-1">
-                          Please select a bank
+                          {t('pages.please_select_bank', 'Please select a bank')}
                         </p>
                       )}
                     </div>
@@ -687,7 +685,7 @@ const Profile = () => {
                       disabled={isLoading}
                       className="btn btn-primary btn-md"
                     >
-                      {isLoading ? "Updating..." : "Update Bank Details"}
+                      {isLoading ? t('pages.updating', "Updating...") : t('pages.update_bank_details', "Update Bank Details")}
                     </button>
                   </form>
                 ) : null}
@@ -696,22 +694,21 @@ const Profile = () => {
                 {/* Bank Information Help */}
                 <div className="card p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Bank Information Help
+                    {t('pages.bank_information_help', 'Bank Information Help')}
                   </h3>
                   <div className="space-y-3 text-sm text-gray-600">
                     <p>
-                      <strong>Account Name:</strong> The name as it appears on your bank account statement.
+                      <strong>{t('pages.account_name', 'Account Name')}:</strong> {t('pages.account_name_help', 'The name as it appears on your bank account statement.')}
                     </p>
                     <p>
-                      <strong>Account Number:</strong> Your bank account number. The required length depends on your selected bank.
+                      <strong>{t('pages.account_number', 'Account Number')}:</strong> {t('pages.account_number_help', 'Your bank account number. The required length depends on your selected bank.')}
                     </p>
                     <p>
-                      <strong>Bank:</strong> Select your bank from the dropdown. Mobile money services are clearly marked.
+                      <strong>{t('pages.bank', 'Bank')}:</strong> {t('pages.bank_help', 'Select your bank from the dropdown. Mobile money services are clearly marked.')}
                     </p>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
                       <p className="text-yellow-800">
-                        <strong>Note:</strong> This information is used to process payments from completed escrows. 
-                        Make sure the details are accurate to avoid payment delays.
+                        <strong>{t('pages.note', 'Note')}:</strong> {t('pages.bank_details_note', 'This information is used to process payments from completed escrows. Make sure the details are accurate to avoid payment delays.')}
                       </p>
                     </div>
                   </div>

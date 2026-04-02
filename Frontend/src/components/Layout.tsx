@@ -1,5 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, 
   Plus, 
@@ -11,11 +12,8 @@ import {
   Shield,
   CreditCard,
   Search,
-
   Menu,
   X,
-
-
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -29,44 +27,55 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationStore();
   const [showNotifications, setShowNotifications] = useState(false);
-const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // showBottomNav removed - bottom nav always visible on mobile
-  const [activeNavTab, setActiveNavTab] = useState('Dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
       logout();
-      toast.success('Logged out successfully');
+      toast.success(t('components.logged_out_successfully', 'Logged out successfully'));
     } catch (error) {
       logout(); // Still logout locally even if API call fails
     }
   };
 
-  const normalNavigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Start Deal', href: '/create-escrow', icon: Plus },
-    { name: 'Directory', href: '/search', icon: Search },
-    { name: 'Payments', href: '/transactions', icon: CreditCard },
-    { name: 'Profile', href: '/profile', icon: User },
-  ];
-  
-  // Only add CBE test page in development mode
-  const devNavigation = (import.meta as any).env.DEV 
-    ? [{ name: 'CBE Test', href: '/cbe-test', icon: Shield }] 
-    : [];
+  const navigation = useMemo(() => {
+    const normalNavigation = [
+      { name: t('pages.dashboard', 'Dashboard'), href: '/dashboard', icon: LayoutDashboard },
+      { name: t('pages.start_new_deal', 'Start Deal'), href: '/create-escrow', icon: Plus },
+      { name: t('pages.directory', 'Directory'), href: '/search', icon: Search },
+      { name: t('pages.payments', 'Payments'), href: '/transactions', icon: CreditCard },
+      { name: t('pages.profile', 'Profile'), href: '/profile', icon: User },
+    ];
     
-  const navigationWithDev = [...normalNavigation, ...devNavigation];
-  
-  const adminNavigation = [
-    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
-  ];
- const navigation = user?.id === 2 ? adminNavigation : navigationWithDev;
-  const isActive = (path: string) => location.pathname === path;
+    // Only add CBE test page in development mode
+    const devNavigation = (import.meta as any).env.DEV 
+      ? [{ name: t('pages.cbe_test', 'CBE Test'), href: '/cbe-test', icon: Shield }] 
+      : [];
+      
+    const navigationWithDev = [...normalNavigation, ...devNavigation];
+    
+    const adminNavigation = [
+      { name: t('pages.admin_dashboard', 'Admin Dashboard'), href: '/admin', icon: LayoutDashboard },
+    ];
+
+    return user?.id === 2 ? adminNavigation : navigationWithDev;
+  }, [user, t]);
+
+  const isActive = (path: string) => {
+    if (path === '/dashboard') return location.pathname === '/dashboard';
+    return location.pathname.startsWith(path);
+  };
+
+  const activePageName = useMemo(() => {
+    const activeItem = navigation.find(item => isActive(item.href));
+    return activeItem ? activeItem.name : t('pages.dashboard', 'Dashboard');
+  }, [navigation, location.pathname, t]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,7 +95,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-                aria-label="Open menu"
+                aria-label={t('components.open_menu', 'Open menu')}
               >
                 <Menu className="h-6 w-6 text-gray-600" />
               </button>
@@ -94,13 +103,13 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
                 <div className="flex items-center justify-center w-9 h-9 bg-primary-600 rounded-lg">
                   <Lock className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-900 hidden sm:inline">SafeDeal</span>
+                <span className="text-xl font-bold text-gray-900 hidden sm:inline">{t('components.safedeal', 'SafeDeal')}</span>
               </Link>
             </div>
             
             {/* Center: Page Title */}
             <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center absolute left-1/2 -translate-x-1/2 sm:relative sm:absolute-none">
-              {activeNavTab || 'Dashboard'}
+              {activePageName}
             </h1>
             
             {/* Right: Actions */}
@@ -108,6 +117,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
               <button 
                 onClick={() => setShowNotifications(true)}
                 className="p-2 text-gray-400 hover:text-gray-600 relative"
+                aria-label={t('components.notifications', 'Notifications')}
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
@@ -116,36 +126,34 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
                   </span>
                 )}
               </button>
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200">
+              <Link to="/profile" className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200">
                 <span className="text-sm font-medium text-primary-700">
                   {user?.first_name?.[0]}{user?.last_name?.[0]}
                 </span>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
         
         {/* Desktop Horizontal Nav */}
         <nav className="hidden md:block px-6 py-2 bg-gray-50 border-t border-gray-100">
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 max-w-7xl mx-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.href);
               return (
-                <button
+                <Link
                   key={item.name}
-                  onClick={() => {
-                    setActiveNavTab(item.name);
-                    // Simulate navigation
-                  }}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 ${
-                    activeNavTab === item.name
+                  to={item.href}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center ${
+                    active
                       ? 'bg-white text-primary-700 shadow-sm border border-primary-200'
                       : 'text-gray-600 hover:bg-white hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{item.name}</span>
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -164,12 +172,12 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
               <div className="flex items-center justify-center w-8 h-8 bg-primary-600 rounded-lg">
                 <Lock className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">SafeDeal</span>
+              <span className="text-xl font-bold text-gray-900">{t('components.safedeal', 'SafeDeal')}</span>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-              aria-label="Close menu"
+              className="p-2 rounded-lg hover:bg-gray-100"
+              aria-label={t('components.close_menu', 'Close menu')}
             >
               <X className="h-5 w-5 text-gray-600" />
             </button>
@@ -199,10 +207,14 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
           {/* Quick Actions */}
           <div className="px-6 py-4 space-y-2">
-            <button className="w-full flex items-center space-x-3 p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-all">
+            <Link 
+              to="/profile" 
+              className="w-full flex items-center space-x-3 p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-all"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <Settings className="h-5 w-5 text-gray-500" />
-              <span className="font-medium text-gray-700">Settings</span>
-            </button>
+              <span className="font-medium text-gray-700">{t('components.settings', 'Settings')}</span>
+            </Link>
           </div>
 
           {/* User Section */}
@@ -228,7 +240,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
               className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
+              <span>{t('components.sign_out', 'Sign out')}</span>
             </button>
           </div>
         </div>
@@ -237,26 +249,21 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
       {/* Bottom Nav - Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl p-2">
         <div className="grid grid-cols-5 gap-1 max-w-4xl mx-auto">
-          {[
-            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-            { name: 'New Deal', href: '/create-escrow', icon: Plus },
-            { name: 'Escrows', href: '/escrows', icon: Shield },
-            { name: 'Payments', href: '/transactions', icon: CreditCard },
-            { name: 'Profile', href: '/profile', icon: User },
-          ].map((item) => {
+          {navigation.map((item) => {
             const Icon = item.icon;
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex flex-col items-center p-2 rounded-xl text-xs font-bold transition-all ${
-                  location.pathname === item.href || location.pathname.includes(item.href.replace('/',''))
+                className={`flex flex-col items-center p-2 rounded-xl text-[10px] font-bold transition-all ${
+                  active
                     ? 'bg-primary-500 text-white shadow-lg'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-primary-600'
                 }`}
               >
                 <Icon className="h-5 w-5 mb-0.5" />
-                <span>{item.name}</span>
+                <span className="truncate w-full text-center">{item.name}</span>
               </Link>
             );
           })}
@@ -264,7 +271,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
       </div>
       
       {/* Main Content - Full width, mobile padding bottom */}
-      <main className="pb-24 md:pb-6 p-4 sm:p-6 lg:p-8">
+      <main className="pb-24 md:pb-6 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8">
         {children}
       </main>
       

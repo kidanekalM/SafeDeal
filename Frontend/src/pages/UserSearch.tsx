@@ -13,7 +13,7 @@ import { userApi } from '../lib/api';
 import { SearchUser } from '../types';
 
 const UserSearch = () => {
-  useTranslation();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -65,7 +65,7 @@ const UserSearch = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 pb-12">
         {/* Header */}
         <div>
           <Link
@@ -73,11 +73,11 @@ const UserSearch = () => {
             className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
+            <span>{t('pages.back_to_dashboard', 'Back to Dashboard')}</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Search Users</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('pages.search_users', 'Search Users')}</h1>
           <p className="text-gray-600 mt-2">
-            Find users to create escrow transactions with
+            {t('pages.find_users_to_create_escrow_transactions_with', 'Find users to create escrow transactions with')}
           </p>
         </div>
 
@@ -88,7 +88,7 @@ const UserSearch = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search people..."
+                placeholder={t('pages.search_people_placeholder', 'Search people...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input pl-12 w-full"
@@ -101,14 +101,14 @@ const UserSearch = () => {
             {hasSearched && searchTerm && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">
-                  {isSearching ? 'Searching...' : `${searchResults.length} user${searchResults.length !== 1 ? 's' : ''} found`}
+                  {isSearching ? t('pages.searching', 'Searching...') : `${searchResults.length} ${t('pages.users_found', 'users found')}`}
                 </span>
                 <button
                   type="button"
                   onClick={clearSearch}
                   className="btn btn-outline btn-sm"
                 >
-                  Clear
+                  {t('pages.clear', 'Clear')}
                 </button>
               </div>
             )}
@@ -120,19 +120,19 @@ const UserSearch = () => {
           <div className="card p-6">
             {searchResults.length > 0 && (
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                People
+                {t('pages.people', 'People')}
               </h3>
             )}
 
             {isSearching ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-                <span className="ml-2 text-gray-600">Searching users...</span>
+                <span className="ml-2 text-gray-600">{t('pages.searching_users', 'Searching users...')}</span>
               </div>
             ) : searchResults.length === 0 && !isSearching ? (
               <div className="text-center py-6">
                 <p className="text-gray-600">
-                  No people found for "{searchTerm}"
+                  {t('pages.no_people_found', 'No people found for')} "{searchTerm}"
                 </p>
               </div>
             ) : (
@@ -160,7 +160,7 @@ const UserSearch = () => {
                           {user.activated && (
                             <div className="flex items-center space-x-1">
                               <CheckCircle className="h-3 w-3 text-green-500" />
-                              <span className="text-green-600 text-xs">Verified</span>
+                              <span className="text-green-600 text-xs">{t('pages.verified', 'Verified')}</span>
                             </div>
                           )}
                         </div>
@@ -172,11 +172,11 @@ const UserSearch = () => {
                           to={`/create-escrow?seller=${encodeURIComponent(user.first_name + ' ' + user.last_name)}&seller_id=${user.id}`}
                           className="btn btn-primary btn-sm px-4"
                         >
-                          Create Escrow
+                          {t('pages.create_escrow', 'Create Escrow')}
                         </Link>
                       ) : (
                         <span className="text-xs text-gray-400 px-3">
-                          Not verified
+                          {t('pages.not_verified', 'Not verified')}
                         </span>
                       )}
                     </div>
@@ -191,7 +191,7 @@ const UserSearch = () => {
         {!searchTerm && (
           <div className="card p-4 sm:p-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-              Find People
+              {t('pages.find_people', 'Find People')}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:gap-6">
               <div className="flex items-start space-x-3">
@@ -199,9 +199,9 @@ const UserSearch = () => {
                   <Search className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Instant Search</h4>
+                  <h4 className="font-medium text-gray-900">{t('pages.instant_search', 'Instant Search')}</h4>
                   <p className="text-sm sm:text-base text-gray-600">
-                    Just start typing! Results appear instantly as you type, just like Facebook.
+                    {t('pages.just_start_typing', 'Just start typing! Results appear instantly as you type, just like Facebook.')}
                   </p>
                 </div>
               </div>
@@ -210,9 +210,9 @@ const UserSearch = () => {
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Create Escrows</h4>
+                  <h4 className="font-medium text-gray-900">{t('pages.create_escrows', 'Create Escrows')}</h4>
                   <p className="text-sm sm:text-base text-gray-600">
-                    Find verified users and create secure escrow transactions with them.
+                    {t('pages.find_verified_users_and_create_secure_escrow_transactions', 'Find verified users and create secure escrow transactions with them.')}
                   </p>
                 </div>
               </div>

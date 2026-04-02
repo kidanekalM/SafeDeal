@@ -21,7 +21,7 @@ import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TransactionHistory = () => {
-  useTranslation();
+  const { t } = useTranslation();
   const [transactions, setTransactions] = useState<TransactionHistoryType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +40,8 @@ const TransactionHistory = () => {
       const list = (response.data as any)?.transactions;
       setTransactions(Array.isArray(list) ? list : []);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to fetch transactions');
-      toast.error('Failed to load transaction history');
+      setError(error.response?.data?.message || t('pages.error_loading_transactions', 'Failed to fetch transactions'));
+      toast.error(t('pages.error_loading_transactions_toast', 'Failed to load transaction history'));
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +49,7 @@ const TransactionHistory = () => {
 
   const handleRefresh = async () => {
     await fetchTransactions();
-    toast.success('Transaction history refreshed');
+    toast.success(t('pages.transaction_history_refreshed', 'Transaction history refreshed'));
   };
 
   const getStatusIcon = (status: string) => {
@@ -105,7 +105,7 @@ const TransactionHistory = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -114,11 +114,11 @@ const TransactionHistory = () => {
               className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Dashboard</span>
+              <span>{t('pages.back_to_dashboard', 'Back to Dashboard')}</span>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Transaction History</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t('pages.transaction_history', 'Transaction History')}</h1>
             <p className="text-gray-600 mt-2">
-              View all your payment transactions
+              {t('pages.view_all_your_payment_transactions', 'View all your payment transactions')}
             </p>
           </div>
           <button
@@ -127,7 +127,7 @@ const TransactionHistory = () => {
             className="btn btn-outline btn-md"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('pages.refresh', 'Refresh')}
           </button>
         </div>
 
@@ -139,7 +139,7 @@ const TransactionHistory = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by transaction ref, escrow ID, or amount..."
+                  placeholder={t('pages.search_transactions_placeholder', 'Search by transaction ref, escrow ID, or amount...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="input pl-10 w-full"
@@ -152,11 +152,11 @@ const TransactionHistory = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="input w-full"
               >
-                <option value="all">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Completed">Completed</option>
-                <option value="Failed">Failed</option>
-                <option value="Refunded">Refunded</option>
+                <option value="all">{t('pages.all_status', 'All Status')}</option>
+                <option value="Pending">{t('pages.pending', 'Pending')}</option>
+                <option value="Completed">{t('pages.completed', 'Completed')}</option>
+                <option value="Failed">{t('pages.failed', 'Failed')}</option>
+                <option value="Refunded">{t('pages.refunded', 'Refunded')}</option>
               </select>
             </div>
           </div>
@@ -168,11 +168,11 @@ const TransactionHistory = () => {
             <div className="text-center">
               <XCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
               <h4 className="text-lg font-medium text-gray-900 mb-2">
-                Error loading transactions
+                {t('pages.error_loading_transactions_title', 'Error loading transactions')}
               </h4>
               <p className="text-gray-600 mb-4">{error}</p>
               <button onClick={fetchTransactions} className="btn btn-outline btn-sm">
-                Try Again
+                {t('pages.try_again', 'Try Again')}
               </button>
             </div>
           </div>
@@ -184,17 +184,17 @@ const TransactionHistory = () => {
             <div className="text-center">
               <CreditCard className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h4 className="text-xl font-medium text-gray-900 mb-2">
-                {searchTerm || statusFilter !== 'all' ? 'No matching transactions' : 'No transactions yet'}
+                {searchTerm || statusFilter !== 'all' ? t('pages.no_matching_transactions', 'No matching transactions') : t('pages.no_transactions_yet', 'No transactions yet')}
               </h4>
               <p className="text-gray-600 mb-6">
                 {searchTerm || statusFilter !== 'all' 
-                  ? 'Try adjusting your search or filter criteria.'
-                  : 'Your payment transactions will appear here once you start making payments.'
+                  ? t('pages.try_adjusting_search_filters', 'Try adjusting your search or filter criteria.')
+                  : t('pages.transactions_empty_state_desc', 'Your payment transactions will appear here once you start making payments.')
                 }
               </p>
               {!searchTerm && statusFilter === 'all' && (
                 <Link to="/dashboard" className="btn btn-primary btn-lg">
-                  Go to Dashboard
+                  {t('pages.go_to_dashboard', 'Go to Dashboard')}
                 </Link>
               )}
             </div>
@@ -220,13 +220,13 @@ const TransactionHistory = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Transaction #{transaction.transaction_ref}
+                        {t('pages.transaction', 'Transaction')} #{transaction.transaction_ref}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Escrow #{transaction.escrow_id} • {formatRelativeTime(transaction.created_at)}
+                        {t('pages.escrow', 'Escrow')} #{transaction.escrow_id} • {formatRelativeTime(transaction.created_at)}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {transaction.currency} • {transaction.status}
+                        {transaction.currency} • {t(`pages.${transaction.status.toLowerCase()}`, transaction.status)}
                       </p>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ const TransactionHistory = () => {
                         )}`}
                       >
                         {getStatusIcon(transaction.status)}
-                        <span className="ml-1">{transaction.status}</span>
+                        <span className="ml-1">{t(`pages.${transaction.status.toLowerCase()}`, transaction.status)}</span>
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 mt-3">
@@ -249,7 +249,7 @@ const TransactionHistory = () => {
                         to={`/escrow/${transaction.escrow_id}`}
                         className="btn btn-outline btn-sm"
                       >
-                        View Escrow
+                        {t('pages.view_escrow', 'View Escrow')}
                       </Link>
                       {transaction.payment_url && transaction.status === 'Pending' && (
                         <a
@@ -259,7 +259,7 @@ const TransactionHistory = () => {
                           className="btn btn-primary btn-sm"
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
-                          Pay
+                          {t('pages.pay', 'Pay')}
                         </a>
                       )}
                     </div>
@@ -274,30 +274,30 @@ const TransactionHistory = () => {
         {!isLoading && !error && transactions.length > 0 && (
           <div className="card p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Summary
+              {t('pages.summary', 'Summary')}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-gray-900">{transactions.length}</p>
-                <p className="text-sm text-gray-600">Total Transactions</p>
+                <p className="text-sm text-gray-600">{t('pages.total_transactions', 'Total Transactions')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">
                   {transactions.filter(t => t.status === 'Completed').length}
                 </p>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-gray-600">{t('pages.completed', 'Completed')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-yellow-600">
                   {transactions.filter(t => t.status === 'Pending').length}
                 </p>
-                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-sm text-gray-600">{t('pages.pending', 'Pending')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(transactions.reduce((sum, t) => sum + t.amount, 0))}
                 </p>
-                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-sm text-gray-600">{t('pages.total_amount', 'Total Amount')}</p>
               </div>
             </div>
           </div>
