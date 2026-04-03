@@ -41,12 +41,6 @@ function App() {
     setShowLangModal(false);
   };
 
-  // #region agent log
-  useEffect(() => {
-    const hasResourceBundleFn = typeof (i18n as any)?.hasResourceBundle === 'function';
-    fetch('http://127.0.0.1:7242/ingest/aa4edf5c-6321-4b39-ba94-76f38cd1122e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix-init',hypothesisId:'H1',location:'src/App.tsx:45',message:'i18n runtime state on app mount',data:{isInitialized:(i18n as any)?.isInitialized,language:(i18n as any)?.language,resolvedLanguage:(i18n as any)?.resolvedLanguage,hasResourceBundleFn,hasEnTranslation:hasResourceBundleFn?(i18n as any).hasResourceBundle('en','translation'):null,hasAmTranslation:hasResourceBundleFn?(i18n as any).hasResourceBundle('am','translation'):null,sampleWhySafedeal:t('pages.why_safedeal'),sampleSignIn:t('components.sign_in')},timestamp:Date.now()})}).catch(()=>{});
-  }, [i18n, t]);
-  // #endregion
 
 
   // 🧩 Initialize auth on page load

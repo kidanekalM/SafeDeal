@@ -37,7 +37,7 @@ const AuthPage = () => {
             className="mb-8 px-6 py-2 rounded-lg border-2 border-gray-400 text-gray-700 hover:bg-primary-900 hover:text-white transition w-sm max-w-md flex items-center justify-center"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            <span>Back to Home</span>
+            <span>{t('common.back_to_home')}</span>
           </button>
           <AuthForm initialMode={modeParam as 'login' | 'register'} />
         </motion.div>

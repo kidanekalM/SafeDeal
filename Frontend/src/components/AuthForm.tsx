@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { authApi, userApi } from "../lib/api";
@@ -13,6 +14,7 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
           bank_name: selectedBank ? selectedBank.name : "Unknown"
         };
         await authApi.register(regData as RegisterRequest);
-        toast.success("Account created successfully! Please sign in.");
+        toast.success(t('components.account_created_successfully'));
         setIsLogin(true);
         setRegStep(1);
         reset();
@@ -91,15 +93,13 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
     reset();
   };
 
-  // ... rest of existing helpers
-
   const handleResendActivation = async () => {
     if (!lastAttemptedEmail) return;
     
     setIsResendingActivation(true);
     try {
       await userApi.resendActivation(lastAttemptedEmail);
-      toast.success("Activation email sent! Please check your inbox.");
+      toast.success(t('components.activation_email_sent'));
       setShowResendActivation(false);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to resend activation email";
@@ -121,7 +121,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
-          Sign In
+          {t('components.sign_in')}
         </button>
         <button
           onClick={() => handleTabChange("register")}
@@ -131,7 +131,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
-          Sign Up
+          {t('components.sign_up')}
         </button>
       </div>
 
@@ -142,18 +142,18 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
           <>
             <div className="flex space-x-4">
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.first_name')}</label>
                 <input {...register("first_name", { required: "First name is required" })} className="input w-full" />
                 {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name.message}</p>}
               </div>
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.last_name')}</label>
                 <input {...register("last_name", { required: "Last name is required" })} className="input w-full" />
                 {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name.message}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Profession</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.profession')}</label>
               <input {...register("profession", { required: "Profession is required" })} className="input w-full" placeholder="e.g., Designer" />
             </div>
           </>
@@ -162,19 +162,19 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
         {/* Step 2: Payout Details */}
         {!isLogin && regStep === 2 && (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-lg font-bold text-gray-900 border-b pb-2">Payout Details</h3>
-            <p className="text-xs text-gray-500">We need these to secure your payments.</p>
+            <h3 className="text-lg font-bold text-gray-900 border-b pb-2">{t('components.payout_details')}</h3>
+            <p className="text-xs text-gray-500">{t('components.we_need_these_to_secure_your_payments')}</p>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('components.account_holder_name')}</label>
               <input {...register("account_name", { required: "Account name is required" })} className="input w-full" />
             </div>
             
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('components.bank_name')}</label>
                 <select {...register("bank_code", { required: "Bank is required" })} className="input w-full">
-                  <option value="">Select a bank</option>
+                  <option value="">{t('components.select_a_bank')}</option>
                   {BANKS.map((bank) => (
                     <option key={bank.code} value={bank.code}>
                       {bank.name}
@@ -186,7 +186,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('components.account_number')}</label>
               <input {...register("account_number", { required: "Required" })} className="input w-full" />
             </div>
           </div>
@@ -196,11 +196,11 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
         {(isLogin || regStep === 1) && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.email')}</label>
               <input {...register("email", { required: "Email is required" })} type="email" className="input w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.password')}</label>
               <div className="relative">
                 <input {...register("password", { required: "Required" })} type={showPassword ? "text" : "password"} className="input w-full pr-10" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -214,18 +214,18 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
         {/* Dynamic Buttons */}
         <div className="flex gap-3">
           {!isLogin && regStep === 2 && (
-            <button type="button" onClick={() => setRegStep(1)} className="btn btn-secondary flex-1">Back</button>
+            <button type="button" onClick={() => setRegStep(1)} className="btn btn-secondary flex-1">{t('components.back')}</button>
           )}
           
           {isLogin ? (
             <button type="submit" disabled={isLoading} className="btn btn-primary btn-md w-full">
-              {isLoading ? "Loading..." : "Login"}
+              {isLoading ? t('components.loading') : t('components.sign_in')}
             </button>
           ) : regStep === 1 ? (
-            <button type="button" onClick={nextStep} className="btn btn-primary btn-md w-full">Next: Payout Details</button>
+            <button type="button" onClick={nextStep} className="btn btn-primary btn-md w-full">{t('components.next_payout_details')}</button>
           ) : (
             <button type="submit" disabled={isLoading} className="btn btn-primary btn-md flex-[2]">
-              {isLoading ? "Creating..." : "Complete Registration"}
+              {isLoading ? t('components.creating') : t('components.complete_registration')}
             </button>
           )}
         </div>
@@ -241,16 +241,16 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-yellow-800">Account Not Activated</h3>
+              <h3 className="text-sm font-medium text-yellow-800">{t('components.account_not_activated')}</h3>
               <p className="text-sm text-yellow-700 mt-1">
-                Your account needs to be activated before you can login. Click below to resend the activation email to <strong>{lastAttemptedEmail}</strong>.
+                {t('components.your_account_needs_to_be_activated', 'Your account needs to be activated before you can login. Click below to resend the activation email to')}&nbsp;<strong>{lastAttemptedEmail}</strong>.
               </p>
               <button
                 onClick={handleResendActivation}
                 disabled={isResendingActivation}
                 className="mt-3 btn btn-sm bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600 hover:border-yellow-700 disabled:opacity-50"
               >
-                {isResendingActivation ? "Sending..." : "Resend Activation Email"}
+                {isResendingActivation ? t('components.sending') : t('components.resend_activation_email')}
               </button>
             </div>
           </div>
@@ -260,12 +260,12 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
       {/* Footer link */}
       {isLogin && (
         <p className="text-center text-sm text-gray-600 mt-6">
-          Don’t have an account?{" "}
+          {t('components.dont_have_account', `Don't have an account?`)}&nbsp;
           <button
             onClick={() => handleTabChange("register")}
             className="text-primary-600 hover:text-primary-700 font-medium"
           >
-            Create new account
+            {t('components.create_new_account')}
           </button>
         </p>
       )}
@@ -274,3 +274,4 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
 };
 
 export default AuthForm;
+
