@@ -136,9 +136,15 @@ const LandingPage = () => {
               <select
                 aria-label={t("common.language", "Language")}
                 value={i18n.language}
-                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                onChange={(e) => {
+                  const newLang = e.target.value;
+                  i18n.changeLanguage(newLang);
+                  localStorage.setItem('lang', newLang);
+                  document.documentElement.lang = newLang;
+                }}
                 className="border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
               >
+
                 <option value="en">{t("common.english")}</option>
                 <option value="am">{t("common.amharic")}</option>
               </select>

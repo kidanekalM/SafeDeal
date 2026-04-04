@@ -6,8 +6,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import GreenGirl from '../assets/GreenGirl.png';
 
 const AuthPage = () => {
-  useTranslation();
+  const { t } = useTranslation();
   const location = useLocation();
+
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const modeParam = params.get('mode') === 'register' ? 'register' : 'login';

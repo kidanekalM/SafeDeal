@@ -39,7 +39,9 @@ function App() {
     localStorage.setItem('lang', l);
     document.documentElement.lang = l;
     setShowLangModal(false);
+    // Optional: window.location.reload(); // Uncomment if needed for full sync
   };
+
 
 
 

@@ -19,6 +19,15 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    // debug: true, // Disabled after fix
   });
+
+
+// Listen for language changes and persist
+i18n.on('languageChanged', (lng) => {
+  localStorage.setItem('lang', lng);
+  document.documentElement.lang = lng;
+});
+
 
 export default i18n;
