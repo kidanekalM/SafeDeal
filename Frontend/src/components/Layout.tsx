@@ -53,12 +53,8 @@ const Layout = ({ children }: LayoutProps) => {
       { name: t('pages.profile', 'Profile'), href: '/profile', icon: User },
     ];
     
-    // Only add CBE test page in development mode
-    const devNavigation = (import.meta as any).env.DEV 
-      ? [{ name: t('pages.cbe_test', 'CBE Test'), href: '/cbe-test', icon: Shield }] 
-      : [];
       
-    const navigationWithDev = [...normalNavigation, ...devNavigation];
+    const navigationWithDev = normalNavigation;
     
     const adminNavigation = [
       { name: t('pages.admin_dashboard', 'Admin Dashboard'), href: '/admin', icon: LayoutDashboard },

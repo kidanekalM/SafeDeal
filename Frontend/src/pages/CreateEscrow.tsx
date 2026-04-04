@@ -58,7 +58,7 @@ const CreateEscrow = () => {
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting, isValid, errors },
+    formState: { isSubmitting, isValid },
     watch,
     setValue,
     control,
@@ -190,7 +190,7 @@ const CreateEscrow = () => {
         payload.seller_id = data.counterparty_id; 
       }
       
-      const response = await api.post(`/api/escrows`, payload);
+      await api.post(`/api/escrows`, payload);
       toast.success(t('pages.escrow_created_success', 'Created!')); 
       navigate('/escrows');
     } catch (error: any) {
