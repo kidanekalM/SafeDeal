@@ -22,8 +22,8 @@ test.describe('New Features Testing', () => {
     await page.click('text=Start New Deal');
     await expect(page).toHaveURL(/.*create-escrow/);
 
-    // Select Ultra Comprehensive option
-    await page.click('text=Ultra Comprehensive');
+    // Select Detailed option
+    await page.click('text=Detailed');
     await page.click('button:has-text("Continue")');
 
     // Proceed to Terms section
@@ -89,8 +89,8 @@ test.describe('New Features Testing', () => {
     await page.click('text=Start New Deal');
     await expect(page).toHaveURL(/.*create-escrow/);
 
-    // Select Ultra Comprehensive option
-    await page.click('text=Ultra Comprehensive');
+    // Select Detailed option
+    await page.click('text=Detailed');
     await page.click('button:has-text("Continue")');
 
     // Try to search for a non-existent user by using an email that likely doesn't exist

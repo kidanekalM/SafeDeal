@@ -14,10 +14,10 @@ SafeDeal is a hybrid escrow platform that combines traditional fiat payments wit
 
 ## 2. Advanced Escrow Creation
 - TODO when creating escrow there is a useless card taking large space that is not useful remove it 
-- **Dynamic Workflow (Simple vs. Ultra Comprehensive)**:
+- **Dynamic Workflow (Simple vs. Detailed)**:
     - **Simple Mode**: 3-step wizard for quick, straightforward transactions.
-    - **Ultra Comprehensive Mode**: 6-step wizard for complex, high-stakes deals requiring legal and milestone-based oversight.
-    - TODO: on the ultra comprehensive mode we should be able to have the option to add e-sign if it is not too difficult to implement and after the users have accepted they should be able to print the agreed ones who agreed what was agreeed etc.
+    - **Detailed Mode**: 6-step wizard for complex, high-stakes deals requiring legal and milestone-based oversight.
+    - TODO: on the Detailed mode we should be able to have the option to add e-sign if it is not too difficult to implement and after the users have accepted they should be able to print the agreed ones who agreed what was agreeed etc.
     - TODO: also the users the ones that are in same escrow/invited to join the escrow should be able to suggest changes like i dont like the mileston... or the title this that in the chat and the creator should be able to edit it but after the agreement no one can edit anything.
 - **Role-Based Creation**: Users can initiate escrows as a **Buyer**, **Seller**, or a neutral **Mediator**.
 - **Mediator Integration**: Option to assign a specific third-party mediator to a deal for manual oversight and dispute resolution.

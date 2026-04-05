@@ -97,7 +97,7 @@ const CreateEscrow = () => {
   useEffect(() => {
     if (isDetailed) {
       if (milestones.length === 0) append({ title: '', amount: 0, description: '' });
-      const total = milestones.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+      const total = milestones.reduce((sum: number, m: any) => sum + (Number(m.amount) || 0), 0);
       if (total > 0 && total !== amount) setValue('amount', total);
     }
   }, [milestones, isDetailed, amount, setValue, append]);
@@ -106,24 +106,90 @@ const CreateEscrow = () => {
     if (term.length < 3) { setSearchResults([]); return; }
     try {
       const response = await userApi.searchUsers(term);
-      setSearchResults(response.data.data.users || []);
+      // Check if an invitation was sent (indicates the email doesn't exist but was invited)
+      if (response.data.data.invited) {
+        // Create a temporary user object for the email
+        const tempUser: SearchUser = {
+          id: 0, // Placeholder ID for non-existent user
+          first_name: term.split('@')[0], // Use email prefix as first name
+          last_name: term.split('@')[1]?.split('.')[0] || 'Invited', // Use domain prefix as last name
+          profession: 'Invited User',
+          activated: false,
+          email: term,
+        };
+        setSearchResults([tempUser]);
+      } else {
+        setSearchResults(response.data.data.users || []);
+      }
     } catch (error) { console.error('Search failed', error); }
   };
 
   const selectUser = (user: SearchUser, type: string) => {
+    // Check if this is an invited user (id = 0 and has email)
+    const isInvitedUser = user.id === 0 && user.email && !user.activated;
+    
     if (type === 'buyer') { 
       setSelectedBuyer(user); 
-      setValue('buyer_id', user.id); 
+      if (isInvitedUser && user.email) {
+        setValue('buyer_id', undefined); // Don't set ID for invited user
+        setValue('buyer_email', user.email);
+      } else {
+        setValue('buyer_id', user.id); 
+        setValue('buyer_email', undefined);
+      }
       setValue('counterparty_id', user.id);
     }
     else if (type === 'seller') { 
       setSelectedSeller(user); 
-      setValue('seller_id', user.id); 
+      if (isInvitedUser && user.email) {
+        setValue('seller_id', undefined); // Don't set ID for invited user
+        setValue('seller_email', user.email);
+      } else {
+        setValue('seller_id', user.id); 
+        setValue('seller_email', undefined);
+      }
       setValue('counterparty_id', user.id);
     }
-    else { 
+    else { // counterparty
       setSelectedCounterparty(user); 
-      setValue('counterparty_id', user.id); 
+      if (isInvitedUser && user.email) {
+        setValue('counterparty_id', undefined); // Don't set ID for invited user
+        
+        // Also set specific email based on creator role
+        if (creatorRole === 'seller') {
+          setValue('buyer_id', undefined);
+          setValue('buyer_email', user.email);
+        } else if (creatorRole === 'mediator') {
+          // For mediator, we need to determine if this is buyer or seller based on current state
+          if (!selectedBuyer) {
+            // This is the buyer
+            setValue('buyer_id', undefined);
+            setValue('buyer_email', user.email);
+          } else {
+            // This is the seller
+            setValue('seller_id', undefined);
+            setValue('seller_email', user.email);
+          }
+        } else {
+          // Creator is buyer, so this is the seller
+          setValue('seller_id', undefined);
+          setValue('seller_email', user.email);
+        }
+      } else {
+        setValue('counterparty_id', user.id); 
+        // Clear the specific email fields
+        if (creatorRole === 'seller') {
+          setValue('buyer_email', undefined);
+        } else if (creatorRole === 'mediator') {
+          if (!selectedBuyer) {
+            setValue('buyer_email', undefined);
+          } else {
+            setValue('seller_email', undefined);
+          }
+        } else {
+          setValue('seller_email', undefined);
+        }
+      }
     }
     setSearchResults([]);
   };
@@ -168,7 +234,7 @@ const CreateEscrow = () => {
         payload.governing_law = data.governing_law; 
         payload.dispute_resolution = data.dispute_resolution;
         if (data.milestones) {
-          payload.milestones = data.milestones.map((m, i) => ({ 
+          payload.milestones = data.milestones.map((m: any, i: number) => ({ 
             ...m, 
             order_index: i, 
             amount: Number(m.amount) 
@@ -177,17 +243,30 @@ const CreateEscrow = () => {
       }
       
       if (creatorRole === 'mediator') { 
-        payload.buyer_id = data.buyer_id; 
-        payload.seller_id = data.seller_id; 
+        // Include buyer and seller IDs if they exist, otherwise include emails
+        if (data.buyer_id) payload.buyer_id = data.buyer_id;
+        if (data.seller_id) payload.seller_id = data.seller_id;
+        if (data.buyer_email) payload.buyer_email = data.buyer_email;
+        if (data.seller_email) payload.seller_email = data.seller_email;
         payload.mediator_id = currentUser?.id; 
       }
       else if (creatorRole === 'seller') { 
-        payload.buyer_id = data.counterparty_id; 
+        // Include buyer ID if it exists, otherwise include buyer email
+        if (data.counterparty_id) {
+          payload.buyer_id = data.counterparty_id;
+        } else if (data.buyer_email) {
+          payload.buyer_email = data.buyer_email;
+        }
         payload.seller_id = currentUser?.id; 
       }
-      else { 
+      else { // buyer role
         payload.buyer_id = currentUser?.id; 
-        payload.seller_id = data.counterparty_id; 
+        // Include seller ID if it exists, otherwise include seller email
+        if (data.counterparty_id) {
+          payload.seller_id = data.counterparty_id;
+        } else if (data.seller_email) {
+          payload.seller_email = data.seller_email;
+        }
       }
       
       await api.post(`/api/escrows`, payload);

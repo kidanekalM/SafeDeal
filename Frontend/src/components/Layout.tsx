@@ -9,7 +9,6 @@ import {
   Lock,
   Bell,
   Settings,
-  Shield,
   CreditCard,
   Search,
   Menu,

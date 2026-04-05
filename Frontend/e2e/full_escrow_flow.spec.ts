@@ -216,10 +216,10 @@ test.describe('Complete Escrow Flow', () => {
   });
 
   // ============================================
-  // PART 5: CREATE ESCROW (ULTRA COMPREHENSIVE)
+  // PART 5: CREATE ESCROW (Detailed)
   // ============================================
-  test.describe('5. Create Ultra Comprehensive Escrow', () => {
-    test('should create an ultra comprehensive escrow with dispute clauses', async ({ page }) => {
+  test.describe('5. Create Detailed Escrow', () => {
+    test('should create an Detailed escrow with dispute clauses', async ({ page }) => {
       // Login as buyer
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
@@ -231,8 +231,8 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('text=Start New Deal');
       await expect(page).toHaveURL(/.*create-escrow/);
 
-      // Step 1: Select Ultra Comprehensive option
-      await page.click('text=Ultra Comprehensive');
+      // Step 1: Select Detailed option
+      await page.click('text=Detailed');
       await page.click('button:has-text("Continue")');
 
       // Step 2: Select counterparty
@@ -242,7 +242,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('button:has-text("Continue")');
 
       // Step 3: Fill terms
-      await page.fill('textarea[name="conditions"]', 'Ultra Comprehensive Escrow Terms - This is a detailed test deal for the ultra comprehensive route.');
+      await page.fill('textarea[name="conditions"]', 'Detailed Escrow Terms - This is a detailed test deal for the Detailed route.');
       await page.fill('input[name="amount"]', '1500');
       await page.click('button:has-text("Continue")');
 

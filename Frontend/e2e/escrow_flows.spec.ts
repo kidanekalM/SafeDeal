@@ -64,13 +64,13 @@ test.describe('Escrow Creation Flows', () => {
     await expect(page.locator('text=Escrow created successfully')).toBeVisible();
   });
 
-  test('should complete the Ultra Comprehensive flow', async ({ page }) => {
+  test('should complete the Detailed flow', async ({ page }) => {
     test.slow();
     await page.click('text=Start New Deal');
     
     // Step 1: Role & Type
-    // Select Ultra Comprehensive
-    await page.click('text=Ultra Comprehensive');
+    // Select Detailed
+    await page.click('text=Detailed');
     await page.click('button:has-text("Continue")');
 
     // Step 2: Parties
