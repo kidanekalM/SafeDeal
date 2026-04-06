@@ -1022,4 +1022,126 @@ func (h *EscrowHandler) DownloadFinalizedAgreement(c *fiber.Ctx) error {
 	return c.SendString(b.String())
 }
 
+func (h *EscrowHandler) RequestAIDecision(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var escrow models.Escrow
+	if err := h.DB.Preload("Buyer").Preload("Seller").First(&escrow, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	if escrow.Status != "Disputed" {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in Disputed state"})
+	}
+
+	// Fetch chat history
+	var messages []models.Message
+	h.DB.Where("escrow_id = ?", escrow.ID).Order("created_at asc").Find(&messages)
+
+	chatLog := ""
+	for _, msg := range messages {
+		sender := "Unknown"
+		if msg.SenderID == escrow.BuyerID {
+			sender = "BUYER"
+		} else if msg.SenderID == escrow.SellerID {
+			sender = "SELLER"
+		}
+		chatLog += fmt.Sprintf("[%s]: %s\n", sender, msg.Content)
+	}
+
+	prompt := fmt.Sprintf(`You are an impartial AI judge for SafeDeal escrow platform. 
+Decide if funds should be 'RELEASED' to seller or 'REFUNDED' to buyer.
+
+Escrow Details:
+- ID: %d
+- Amount: %d ETB
+- Conditions: %s
+- Dispute Reason: %s
+
+Chat History:
+%s
+
+Output your response as JSON: {"decision": "RELEASE" or "REFUND", "justification": "short explanation"}`,
+		escrow.ID, escrow.Amount, escrow.Conditions, escrow.DisputeReason, chatLog)
+
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		return c.Status(500).JSON(fiber.Map{"error": "AI Service unavailable (API key missing)"})
+	}
+
+	client := resty.New()
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey
+
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(map[string]interface{}{
+			"contents": []interface{}{
+				map[string]interface{}{
+					"parts": []interface{}{
+						map[string]interface{}{
+							"text": prompt,
+						},
+					},
+				},
+			},
+			"generationConfig": map[string]interface{}{
+				"response_mime_type": "application/json",
+			},
+		}).
+		Post(url)
+
+	if err != nil || resp.IsError() {
+		log.Printf("Gemini API error: %v, Body: %s", err, resp.String())
+		return c.Status(500).JSON(fiber.Map{"error": "AI decision failed"})
+	}
+
+	var geminiResp struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
+	}
+
+	if err := json.Unmarshal(resp.Body(), &geminiResp); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to parse AI response"})
+	}
+
+	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+		return c.Status(500).JSON(fiber.Map{"error": "Empty AI response"})
+	}
+
+	aiResultText := geminiResp.Candidates[0].Content.Parts[0].Text
+	var decisionData struct {
+		Decision      string `json:"decision"`
+		Justification string `json:"justification"`
+	}
+
+	if err := json.Unmarshal([]byte(aiResultText), &decisionData); err != nil {
+		log.Printf("Failed to parse decision JSON from: %s", aiResultText)
+		return c.Status(500).JSON(fiber.Map{"error": "Invalid AI decision format"})
+	}
+
+	// Update escrow with AI suggestion
+	escrow.ResolutionNote = fmt.Sprintf("AI DECISION: %s. JUSTIFICATION: %s", decisionData.Decision, decisionData.Justification)
+	h.DB.Save(&escrow)
+
+	return c.JSON(fiber.Map{
+		"message":       "AI Decision received",
+		"decision":      decisionData.Decision,
+		"justification": decisionData.Justification,
+		"full_note":     escrow.ResolutionNote,
+	})
+}
+
 // CancelEscrow continues...

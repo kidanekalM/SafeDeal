@@ -117,7 +117,8 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		}
 	}
 
-	// TODO: Send activation email with activationCode
+	// Send activation email with activationCode
+	h.NotificationHandler.SendActivationEmail(req.Email, activationCode)
 	log.Printf("Activation code for %s: %s", req.Email, activationCode)
 
 	// Remove password from response
@@ -253,7 +254,8 @@ func (h *UserHandler) ResendActivation(c *fiber.Ctx) error {
 	user.ActivationCode = newCode
 	h.DB.Save(&user)
 
-	// TODO: Send activation email with newCode
+	// Send activation email with newCode
+	h.NotificationHandler.SendActivationEmail(req.Email, newCode)
 	log.Printf("New activation code for %s: %s", req.Email, newCode)
 
 	return c.JSON(fiber.Map{"message": "New activation code sent"})

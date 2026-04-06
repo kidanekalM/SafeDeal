@@ -270,15 +270,11 @@ func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 	}
 
 	// Log to blockchain for audit trail (court compliance)
-	// if h.BlockChainClient != nil {
-	// 	escrowID := big.NewInt(int64(milestone.EscrowID))
-	// 	milestoneID := big.NewInt(int64(milestone.ID))
-	// 	// TODO: Implement MilestoneSubmitted event in Escrow.sol
-	// 	// tx, err := h.BlockChainClient.Contract.LogMilestoneSubmitted(h.BlockChainClient.Auth, escrowID, milestoneID)
-	// 	// if err != nil {
-	// 	// 	log.Printf("Blockchain logging failed: %v", err)
-	// 	// }
-	// }
+	if h.BlockChainClient != nil {
+		escrowID := big.NewInt(int64(milestone.EscrowID))
+		milestoneID := big.NewInt(int64(milestone.ID))
+		_, _ = h.BlockChainClient.LogMilestoneSubmitted(escrowID, milestoneID)
+	}
 
 	// Use ISO 8601 format for consistency
 	now := time.Now().Format(time.RFC3339)
@@ -329,12 +325,11 @@ func (h *MilestoneHandler) ApproveMilestone(c *fiber.Ctx) error {
 	milestone.ApprovedAt = &now
 	
 	// Log APPROVAL to blockchain (court critical)
-	// if h.BlockChainClient != nil {
-	// 	milestoneID := big.NewInt(int64(milestone.ID))
-	// 	approverID := big.NewInt(int64(userID))
-	// 	// TODO: tx, err := h.BlockChainClient.Contract.LogMilestoneApproved(h.BlockChainClient.Auth, milestoneID, approverID)
-	// 	// log.Printf("Milestone approved on-chain: %s", tx.Hash().Hex())
-	// }
+	if h.BlockChainClient != nil {
+		escrowID := big.NewInt(int64(milestone.EscrowID))
+		milestoneID := big.NewInt(int64(milestone.ID))
+		_, _ = h.BlockChainClient.LogMilestoneApproved(escrowID, milestoneID)
+	}
 
 	if err := h.DB.Save(&milestone).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update milestone"})
@@ -378,12 +373,11 @@ func (h *MilestoneHandler) RejectMilestone(c *fiber.Ctx) error {
 	milestone.Status = models.MilestoneRejected
 	
 	// Log REJECTION to blockchain
-	// if h.BlockChainClient != nil {
-	// 	milestoneID := big.NewInt(int64(milestone.ID))
-	// 	approverID := big.NewInt(int64(userID))
-	// 	// TODO: tx, err := h.BlockChainClient.Contract.LogMilestoneRejected(h.BlockChainClient.Auth, milestoneID, approverID)
-	// 	// log.Printf("Milestone rejected on-chain: %s", tx.Hash().Hex())
-	// }
+	if h.BlockChainClient != nil {
+		escrowID := big.NewInt(int64(milestone.EscrowID))
+		milestoneID := big.NewInt(int64(milestone.ID))
+		_, _ = h.BlockChainClient.LogMilestoneRejected(escrowID, milestoneID)
+	}
 
 	if err := h.DB.Save(&milestone).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update milestone"})

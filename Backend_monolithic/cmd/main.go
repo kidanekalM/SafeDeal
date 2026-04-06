@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"backend_monolithic/configs"
 	"backend_monolithic/internal/rabbitmq"
@@ -12,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/joho/godotenv"
 )
 
@@ -25,6 +27,12 @@ func main() {
 
 	// Middlewares
 	app.Use(logger.New())
+	
+	// Rate Limiter: 100 requests per minute
+	app.Use(limiter.New(limiter.Config{
+		Max:        100,
+		Expiration: 1 * time.Minute,
+	}))
 
 	// CORS middleware - based on your original setup
 	allowedOrigins := []string{

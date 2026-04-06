@@ -167,4 +167,30 @@ func (h *NotificationHandler) SendEscrowUpdate(escrowID uint, status string, buy
 	}
 }
 
+func (h *NotificationHandler) SendActivationEmail(email string, code string) {
+	mailer := mailer.NewMailer()
+	subject := "SafeDeal - Activate Your Account"
+	html := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SafeDeal Activation</title>
+</head>
+<body>
+    <h1>Welcome to SafeDeal!</h1>
+    <p>Please use the following code to activate your account:</p>
+    <h2 style="background: #f4f4f4; padding: 10px; display: inline-block;">%s</h2>
+    <p>Or click the link below:</p>
+    <p><a href="http://localhost:8080/activate?email=%s&code=%s">Activate Account</a></p>
+</body>
+</html>
+`, code, email, code)
+
+	if err := mailer.SendEmail([]string{email}, subject, html); err != nil {
+		log.Printf("Failed to send activation email to %s: %v", email, err)
+	} else {
+		log.Printf("Activation email sent to %s", email)
+	}
+}
+
 

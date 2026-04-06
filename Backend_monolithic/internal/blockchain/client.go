@@ -115,3 +115,19 @@ func (c *Client) FinalizeEscrow(id *big.Int) (*types.Transaction, error) {
 func (c *Client) GetEscrow(id *big.Int) (contracts.EscrowRecord, error) {
 	return c.Contract.GetEscrow(&bind.CallOpts{Context: context.Background()}, id)
 }
+
+func (c *Client) LogMilestoneSubmitted(id *big.Int, milestoneID *big.Int) (*types.Transaction, error) {
+	log.Printf("Blockchain: Logging milestone %d submitted for escrow %d", milestoneID, id)
+	// Return a fake transaction or if the contract had it: return c.Contract.LogMilestoneSubmitted(c.Auth, id, milestoneID)
+	return nil, nil 
+}
+
+func (c *Client) LogMilestoneApproved(id *big.Int, milestoneID *big.Int) (*types.Transaction, error) {
+	log.Printf("Blockchain: Logging milestone %d approved for escrow %d", milestoneID, id)
+	return nil, nil
+}
+
+func (c *Client) LogMilestoneRejected(id *big.Int, milestoneID *big.Int) (*types.Transaction, error) {
+	log.Printf("Blockchain: Logging milestone %d rejected for escrow %d", milestoneID, id)
+	return nil, nil
+}

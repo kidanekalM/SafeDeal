@@ -114,6 +114,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	protected.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
 	protected.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
 	protected.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)
+	protected.Post("/escrows/dispute/:id/ai-decision", sc.EscrowHandler.RequestAIDecision)
 	protected.Post("/escrows/dispute/:id/resolve", sc.EscrowHandler.ResolveDispute)
 	protected.Post("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow) // Changed to POST to match standard REST practices
 	protected.Post("/escrows/:id/receipt", sc.EscrowHandler.UploadReceipt)

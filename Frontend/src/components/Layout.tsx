@@ -46,6 +46,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navigation = useMemo(() => {
     const normalNavigation = [
       { name: t('pages.dashboard', 'Dashboard'), href: '/dashboard', icon: LayoutDashboard },
+      { name: t('pages.my_escrows', 'My Escrows'), href: '/escrows', icon: Lock },
       { name: t('pages.start_new_deal', 'Start Deal'), href: '/create-escrow', icon: Plus },
       { name: t('pages.directory', 'Directory'), href: '/search', icon: Search },
       { name: t('pages.payments', 'Payments'), href: '/transactions', icon: CreditCard },
