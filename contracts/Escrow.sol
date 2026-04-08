@@ -18,6 +18,9 @@ contract Escrow {
     event EscrowCreated(uint256 indexed id, address buyer, address seller, uint256 amount);
     event PaymentConfirmed(uint256 indexed id, Status status);
     event EscrowFinalized(uint256 indexed id, Status status);
+    event MilestoneSubmitted(uint256 indexed id, uint256 milestoneId);
+    event MilestoneApproved(uint256 indexed id, uint256 milestoneId);
+    event MilestoneRejected(uint256 indexed id, uint256 milestoneId);
 
     function createEscrow(
         address buyer,
@@ -56,5 +59,20 @@ contract Escrow {
     function getEscrow(uint256 id) external view returns (Record memory) {
         require(escrows[id].exists, "Escrow does not exist");
         return escrows[id];
+    }
+
+    function logMilestoneSubmitted(uint256 id, uint256 milestoneId) external {
+        require(escrows[id].exists, "Escrow does not exist");
+        emit MilestoneSubmitted(id, milestoneId);
+    }
+
+    function logMilestoneApproved(uint256 id, uint256 milestoneId) external {
+        require(escrows[id].exists, "Escrow does not exist");
+        emit MilestoneApproved(id, milestoneId);
+    }
+
+    function logMilestoneRejected(uint256 id, uint256 milestoneId) external {
+        require(escrows[id].exists, "Escrow does not exist");
+        emit MilestoneRejected(id, milestoneId);
     }
 }

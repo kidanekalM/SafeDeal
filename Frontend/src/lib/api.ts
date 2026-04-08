@@ -193,10 +193,13 @@ export const escrowApi = {
         api.post(`/api/escrows/dispute/${id}/resolve`, { action, note }),
     getStatusHistory: (id: number): Promise<AxiosResponse<any[]>> =>
         api.get(`/api/escrows/${id}/status-history`),
-    downloadFinalAgreement: (id: number): Promise<AxiosResponse<Blob>> =>
+
+    downloadFinalAgreement: (id: number): Promise<AxiosResponse<any>> =>
         api.get(`/api/escrows/${id}/final-agreement`, { responseType: 'blob' }),
 
-
+    requestAIDecision: (id: number): Promise<AxiosResponse<any>> =>
+        api.post(`/api/escrows/dispute/${id}/ai-decision`),
+    };
     // POST Refund
     refund: (id: number): Promise<AxiosResponse<Escrow>> =>
         api.post(`/api/escrows/${id}/refund`),

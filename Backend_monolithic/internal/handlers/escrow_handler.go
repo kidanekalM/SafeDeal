@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"math/big"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -793,6 +795,19 @@ func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
 	if err := h.DB.Save(&escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow status"})
 	}
+
+	// Create transaction record for CBE payment
+	transaction := &models.Transaction{
+		EscrowID:       escrow.ID,
+		BuyerID:        userID,
+		Amount:         uint(extractedAmount),
+		Currency:       "ETB",
+		Status:         "Completed",
+		TransactionRef: req.TransactionID,
+		PaymentMethod:  "CBE",
+	}
+	h.DB.Create(transaction)
+
 	h.recordStatusEvent(escrow.ID, userID, prevStatus, "Funded", "CBE payment verified", "", req.TransactionID)
 
 	// Update milestones
@@ -1028,7 +1043,7 @@ func (h *EscrowHandler) RequestAIDecision(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	userID, ok := c.Locals("userID").(uint)
+	_, ok := c.Locals("userID").(uint)
 	if !ok {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}

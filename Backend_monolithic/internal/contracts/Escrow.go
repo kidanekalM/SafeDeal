@@ -40,8 +40,8 @@ type EscrowRecord struct {
 
 // ContractsMetaData contains all meta data concerning the Contracts contract.
 var ContractsMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"EscrowCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"EscrowFinalized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"PaymentConfirmed\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"confirmPayment\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"createEscrow\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"escrows\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"exists\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"finalizeEscrow\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getEscrow\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"exists\",\"type\":\"bool\"}],\"internalType\":\"structEscrow.Record\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
-	Bin: "0x6080604052600180553480156012575f5ffd5b50610d04806100205f395ff3fe608060405234801561000f575f5ffd5b5060043610610060575f3560e01c8063012f52ee1461006457806361b8ce8c146100985780637d19e596146100b6578063876ca09f146100e6578063b43a405a14610102578063c36176501461011e575b5f5ffd5b61007e60048036038101906100799190610887565b61014e565b60405161008f95949392919061098d565b60405180910390f35b6100a06101d6565b6040516100ad91906109de565b60405180910390f35b6100d060048036038101906100cb9190610887565b6101dc565b6040516100dd9190610a99565b60405180910390f35b61010060048036038101906100fb9190610887565b61036e565b005b61011c60048036038101906101179190610887565b6104ca565b005b61013860048036038101906101339190610adc565b610627565b60405161014591906109de565b60405180910390f35b5f602052805f5260405f205f91509050805f015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1690806001015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1690806002015490806003015f9054906101000a900460ff16908060030160019054906101000a900460ff16905085565b60015481565b6101e46107e6565b5f5f8381526020019081526020015f2060030160019054906101000a900460ff16610244576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161023b90610b86565b60405180910390fd5b5f5f8381526020019081526020015f206040518060a00160405290815f82015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001600182015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200160028201548152602001600382015f9054906101000a900460ff16600281111561033657610335610900565b5b600281111561034857610347610900565b5b81526020016003820160019054906101000a900460ff1615151515815250509050919050565b5f5f8281526020019081526020015f2060030160019054906101000a900460ff166103ce576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016103c590610b86565b60405180910390fd5b5f60028111156103e1576103e0610900565b5b5f5f8381526020019081526020015f206003015f9054906101000a900460ff16600281111561041357610412610900565b5b14610453576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161044a90610bee565b60405180910390fd5b60015f5f8381526020019081526020015f206003015f6101000a81548160ff0219169083600281111561048957610488610900565b5b0217905550807f3b0a85ee8d6bba1a181a05a3591e9612fe7bae220ce385bd5f0243dd572e408360016040516104bf9190610c0c565b60405180910390a250565b5f5f8281526020019081526020015f2060030160019054906101000a900460ff1661052a576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161052190610b86565b60405180910390fd5b6001600281111561053e5761053d610900565b5b5f5f8381526020019081526020015f206003015f9054906101000a900460ff1660028111156105705761056f610900565b5b146105b0576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016105a790610bee565b60405180910390fd5b60025f5f8381526020019081526020015f206003015f6101000a81548160ff021916908360028111156105e6576105e5610900565b5b0217905550807f58662431db13314bc9b8be8c45dc7f1cec31ef5b18d41c6a5a76d03389c84ec6600260405161061c9190610c0c565b60405180910390a250565b5f5f60015f81548092919061063b90610c52565b9190505590506040518060a001604052808673ffffffffffffffffffffffffffffffffffffffff1681526020018573ffffffffffffffffffffffffffffffffffffffff1681526020018481526020015f600281111561069d5761069c610900565b5b8152602001600115158152505f5f8381526020019081526020015f205f820151815f015f6101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506020820151816001015f6101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550604082015181600201556060820151816003015f6101000a81548160ff0219169083600281111561077757610776610900565b5b021790555060808201518160030160016101000a81548160ff021916908315150217905550905050807f9405ad0a6208539879349284d71265479b1623846f70303da1f9890d6e8c10a78686866040516107d393929190610c99565b60405180910390a2809150509392505050565b6040518060a001604052805f73ffffffffffffffffffffffffffffffffffffffff1681526020015f73ffffffffffffffffffffffffffffffffffffffff1681526020015f81526020015f600281111561084257610841610900565b5b81526020015f151581525090565b5f5ffd5b5f819050919050565b61086681610854565b8114610870575f5ffd5b50565b5f813590506108818161085d565b92915050565b5f6020828403121561089c5761089b610850565b5b5f6108a984828501610873565b91505092915050565b5f73ffffffffffffffffffffffffffffffffffffffff82169050919050565b5f6108db826108b2565b9050919050565b6108eb816108d1565b82525050565b6108fa81610854565b82525050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52602160045260245ffd5b6003811061093e5761093d610900565b5b50565b5f81905061094e8261092d565b919050565b5f61095d82610941565b9050919050565b61096d81610953565b82525050565b5f8115159050919050565b61098781610973565b82525050565b5f60a0820190506109a05f8301886108e2565b6109ad60208301876108e2565b6109ba60408301866108f1565b6109c76060830185610964565b6109d4608083018461097e565b9695505050505050565b5f6020820190506109f15f8301846108f1565b92915050565b610a00816108d1565b82525050565b610a0f81610854565b82525050565b610a1e81610953565b82525050565b610a2d81610973565b82525050565b60a082015f820151610a475f8501826109f7565b506020820151610a5a60208501826109f7565b506040820151610a6d6040850182610a06565b506060820151610a806060850182610a15565b506080820151610a936080850182610a24565b50505050565b5f60a082019050610aac5f830184610a33565b92915050565b610abb816108d1565b8114610ac5575f5ffd5b50565b5f81359050610ad681610ab2565b92915050565b5f5f5f60608486031215610af357610af2610850565b5b5f610b0086828701610ac8565b9350506020610b1186828701610ac8565b9250506040610b2286828701610873565b9150509250925092565b5f82825260208201905092915050565b7f457363726f7720646f6573206e6f7420657869737400000000000000000000005f82015250565b5f610b70601583610b2c565b9150610b7b82610b3c565b602082019050919050565b5f6020820190508181035f830152610b9d81610b64565b9050919050565b7f496e76616c6964207374617475730000000000000000000000000000000000005f82015250565b5f610bd8600e83610b2c565b9150610be382610ba4565b602082019050919050565b5f6020820190508181035f830152610c0581610bcc565b9050919050565b5f602082019050610c1f5f830184610964565b92915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f610c5c82610854565b91507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8203610c8e57610c8d610c25565b5b600182019050919050565b5f606082019050610cac5f8301866108e2565b610cb960208301856108e2565b610cc660408301846108f1565b94935050505056fea2646970667358221220132889e5ab5d097b54e4731eff1f1c1237a85356092f7ceb639561f3b485ccda64736f6c634300081e0033",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"EscrowCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"EscrowFinalized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"milestoneId\",\"type\":\"uint256\"}],\"name\":\"MilestoneApproved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"milestoneId\",\"type\":\"uint256\"}],\"name\":\"MilestoneRejected\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"milestoneId\",\"type\":\"uint256\"}],\"name\":\"MilestoneSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"PaymentConfirmed\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"confirmPayment\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"createEscrow\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"escrows\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"exists\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"finalizeEscrow\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getEscrow\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"enumEscrow.Status\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"exists\",\"type\":\"bool\"}],\"internalType\":\"structEscrow.Record\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"milestoneId\",\"type\":\"uint256\"}],\"name\":\"logMilestoneApproved\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"milestoneId\",\"type\":\"uint256\"}],\"name\":\"logMilestoneRejected\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"milestoneId\",\"type\":\"uint256\"}],\"name\":\"logMilestoneSubmitted\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	Bin: "0x608060405260018055348015610013575f80fd5b50610f9b806100215f395ff3fe608060405234801561000f575f80fd5b5060043610610091575f3560e01c806361b8ce8c1161006457806361b8ce8c1461011d5780637d19e5961461013b578063876ca09f1461016b578063b43a405a14610187578063c3617650146101a357610091565b8063012f52ee14610095578063132eed04146100c95780633b523135146100e55780634223d94c14610101575b5f80fd5b6100af60048036038101906100aa9190610ae0565b6101d3565b6040516100c0959493929190610be6565b60405180910390f35b6100e360048036038101906100de9190610c37565b61025b565b005b6100ff60048036038101906100fa9190610c37565b6102f7565b005b61011b60048036038101906101169190610c37565b610393565b005b61012561042f565b6040516101329190610c75565b60405180910390f35b61015560048036038101906101509190610ae0565b610435565b6040516101629190610d30565b60405180910390f35b61018560048036038101906101809190610ae0565b6105c7565b005b6101a1600480360381019061019c9190610ae0565b610723565b005b6101bd60048036038101906101b89190610d73565b610880565b6040516101ca9190610c75565b60405180910390f35b5f602052805f5260405f205f91509050805f015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1690806001015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1690806002015490806003015f9054906101000a900460ff16908060030160019054906101000a900460ff16905085565b5f808381526020019081526020015f2060030160019054906101000a900460ff166102bb576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016102b290610e1d565b60405180910390fd5b817f26cf581e2709e0615164af15a371b2dd10fb48d5baed91e9eacd557633c16bcb826040516102eb9190610c75565b60405180910390a25050565b5f808381526020019081526020015f2060030160019054906101000a900460ff16610357576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161034e90610e1d565b60405180910390fd5b817f939da3b627c123c81fe5aacebf925163337a0d4f8a03724640618078cad24894826040516103879190610c75565b60405180910390a25050565b5f808381526020019081526020015f2060030160019054906101000a900460ff166103f3576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016103ea90610e1d565b60405180910390fd5b817f4e2fd11f84344693b41d2aba9910e33b34a4f02d4d3a65b65b2201f3c8fa3c89826040516104239190610c75565b60405180910390a25050565b60015481565b61043d610a3f565b5f808381526020019081526020015f2060030160019054906101000a900460ff1661049d576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161049490610e1d565b60405180910390fd5b5f808381526020019081526020015f206040518060a00160405290815f82015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001600182015f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200160028201548152602001600382015f9054906101000a900460ff16600281111561058f5761058e610b59565b5b60028111156105a1576105a0610b59565b5b81526020016003820160019054906101000a900460ff1615151515815250509050919050565b5f808281526020019081526020015f2060030160019054906101000a900460ff16610627576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161061e90610e1d565b60405180910390fd5b5f600281111561063a57610639610b59565b5b5f808381526020019081526020015f206003015f9054906101000a900460ff16600281111561066c5761066b610b59565b5b146106ac576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016106a390610e85565b60405180910390fd5b60015f808381526020019081526020015f206003015f6101000a81548160ff021916908360028111156106e2576106e1610b59565b5b0217905550807f3b0a85ee8d6bba1a181a05a3591e9612fe7bae220ce385bd5f0243dd572e408360016040516107189190610ea3565b60405180910390a250565b5f808281526020019081526020015f2060030160019054906101000a900460ff16610783576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161077a90610e1d565b60405180910390fd5b6001600281111561079757610796610b59565b5b5f808381526020019081526020015f206003015f9054906101000a900460ff1660028111156107c9576107c8610b59565b5b14610809576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161080090610e85565b60405180910390fd5b60025f808381526020019081526020015f206003015f6101000a81548160ff0219169083600281111561083f5761083e610b59565b5b0217905550807f58662431db13314bc9b8be8c45dc7f1cec31ef5b18d41c6a5a76d03389c84ec660026040516108759190610ea3565b60405180910390a250565b5f8060015f81548092919061089490610ee9565b9190505590506040518060a001604052808673ffffffffffffffffffffffffffffffffffffffff1681526020018573ffffffffffffffffffffffffffffffffffffffff1681526020018481526020015f60028111156108f6576108f5610b59565b5b8152602001600115158152505f808381526020019081526020015f205f820151815f015f6101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506020820151816001015f6101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550604082015181600201556060820151816003015f6101000a81548160ff021916908360028111156109d0576109cf610b59565b5b021790555060808201518160030160016101000a81548160ff021916908315150217905550905050807f9405ad0a6208539879349284d71265479b1623846f70303da1f9890d6e8c10a7868686604051610a2c93929190610f30565b60405180910390a2809150509392505050565b6040518060a001604052805f73ffffffffffffffffffffffffffffffffffffffff1681526020015f73ffffffffffffffffffffffffffffffffffffffff1681526020015f81526020015f6002811115610a9b57610a9a610b59565b5b81526020015f151581525090565b5f80fd5b5f819050919050565b610abf81610aad565b8114610ac9575f80fd5b50565b5f81359050610ada81610ab6565b92915050565b5f60208284031215610af557610af4610aa9565b5b5f610b0284828501610acc565b91505092915050565b5f73ffffffffffffffffffffffffffffffffffffffff82169050919050565b5f610b3482610b0b565b9050919050565b610b4481610b2a565b82525050565b610b5381610aad565b82525050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52602160045260245ffd5b60038110610b9757610b96610b59565b5b50565b5f819050610ba782610b86565b919050565b5f610bb682610b9a565b9050919050565b610bc681610bac565b82525050565b5f8115159050919050565b610be081610bcc565b82525050565b5f60a082019050610bf95f830188610b3b565b610c066020830187610b3b565b610c136040830186610b4a565b610c206060830185610bbd565b610c2d6080830184610bd7565b9695505050505050565b5f8060408385031215610c4d57610c4c610aa9565b5b5f610c5a85828601610acc565b9250506020610c6b85828601610acc565b9150509250929050565b5f602082019050610c885f830184610b4a565b92915050565b610c9781610b2a565b82525050565b610ca681610aad565b82525050565b610cb581610bac565b82525050565b610cc481610bcc565b82525050565b60a082015f820151610cde5f850182610c8e565b506020820151610cf16020850182610c8e565b506040820151610d046040850182610c9d565b506060820151610d176060850182610cac565b506080820151610d2a6080850182610cbb565b50505050565b5f60a082019050610d435f830184610cca565b92915050565b610d5281610b2a565b8114610d5c575f80fd5b50565b5f81359050610d6d81610d49565b92915050565b5f805f60608486031215610d8a57610d89610aa9565b5b5f610d9786828701610d5f565b9350506020610da886828701610d5f565b9250506040610db986828701610acc565b9150509250925092565b5f82825260208201905092915050565b7f457363726f7720646f6573206e6f7420657869737400000000000000000000005f82015250565b5f610e07601583610dc3565b9150610e1282610dd3565b602082019050919050565b5f6020820190508181035f830152610e3481610dfb565b9050919050565b7f496e76616c6964207374617475730000000000000000000000000000000000005f82015250565b5f610e6f600e83610dc3565b9150610e7a82610e3b565b602082019050919050565b5f6020820190508181035f830152610e9c81610e63565b9050919050565b5f602082019050610eb65f830184610bbd565b92915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f610ef382610aad565b91507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8203610f2557610f24610ebc565b5b600182019050919050565b5f606082019050610f435f830186610b3b565b610f506020830185610b3b565b610f5d6040830184610b4a565b94935050505056fea26469706673582212200fc84dece2308af57a48685f73ec22a4dcd370bddf53c1a6b71d3e9e9c6c94fa64736f6c63430008140033",
 }
 
 // ContractsABI is the input ABI used to generate the binding from.
@@ -396,6 +396,69 @@ func (_Contracts *ContractsTransactorSession) FinalizeEscrow(id *big.Int) (*type
 	return _Contracts.Contract.FinalizeEscrow(&_Contracts.TransactOpts, id)
 }
 
+// LogMilestoneApproved is a paid mutator transaction binding the contract method 0x3b523135.
+//
+// Solidity: function logMilestoneApproved(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsTransactor) LogMilestoneApproved(opts *bind.TransactOpts, id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.contract.Transact(opts, "logMilestoneApproved", id, milestoneId)
+}
+
+// LogMilestoneApproved is a paid mutator transaction binding the contract method 0x3b523135.
+//
+// Solidity: function logMilestoneApproved(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsSession) LogMilestoneApproved(id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.Contract.LogMilestoneApproved(&_Contracts.TransactOpts, id, milestoneId)
+}
+
+// LogMilestoneApproved is a paid mutator transaction binding the contract method 0x3b523135.
+//
+// Solidity: function logMilestoneApproved(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsTransactorSession) LogMilestoneApproved(id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.Contract.LogMilestoneApproved(&_Contracts.TransactOpts, id, milestoneId)
+}
+
+// LogMilestoneRejected is a paid mutator transaction binding the contract method 0x4223d94c.
+//
+// Solidity: function logMilestoneRejected(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsTransactor) LogMilestoneRejected(opts *bind.TransactOpts, id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.contract.Transact(opts, "logMilestoneRejected", id, milestoneId)
+}
+
+// LogMilestoneRejected is a paid mutator transaction binding the contract method 0x4223d94c.
+//
+// Solidity: function logMilestoneRejected(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsSession) LogMilestoneRejected(id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.Contract.LogMilestoneRejected(&_Contracts.TransactOpts, id, milestoneId)
+}
+
+// LogMilestoneRejected is a paid mutator transaction binding the contract method 0x4223d94c.
+//
+// Solidity: function logMilestoneRejected(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsTransactorSession) LogMilestoneRejected(id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.Contract.LogMilestoneRejected(&_Contracts.TransactOpts, id, milestoneId)
+}
+
+// LogMilestoneSubmitted is a paid mutator transaction binding the contract method 0x132eed04.
+//
+// Solidity: function logMilestoneSubmitted(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsTransactor) LogMilestoneSubmitted(opts *bind.TransactOpts, id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.contract.Transact(opts, "logMilestoneSubmitted", id, milestoneId)
+}
+
+// LogMilestoneSubmitted is a paid mutator transaction binding the contract method 0x132eed04.
+//
+// Solidity: function logMilestoneSubmitted(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsSession) LogMilestoneSubmitted(id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.Contract.LogMilestoneSubmitted(&_Contracts.TransactOpts, id, milestoneId)
+}
+
+// LogMilestoneSubmitted is a paid mutator transaction binding the contract method 0x132eed04.
+//
+// Solidity: function logMilestoneSubmitted(uint256 id, uint256 milestoneId) returns()
+func (_Contracts *ContractsTransactorSession) LogMilestoneSubmitted(id *big.Int, milestoneId *big.Int) (*types.Transaction, error) {
+	return _Contracts.Contract.LogMilestoneSubmitted(&_Contracts.TransactOpts, id, milestoneId)
+}
+
 // ContractsEscrowCreatedIterator is returned from FilterEscrowCreated and is used to iterate over the raw logs and unpacked data for EscrowCreated events raised by the Contracts contract.
 type ContractsEscrowCreatedIterator struct {
 	Event *ContractsEscrowCreated // Event containing the contract specifics and raw log
@@ -682,6 +745,441 @@ func (_Contracts *ContractsFilterer) WatchEscrowFinalized(opts *bind.WatchOpts, 
 func (_Contracts *ContractsFilterer) ParseEscrowFinalized(log types.Log) (*ContractsEscrowFinalized, error) {
 	event := new(ContractsEscrowFinalized)
 	if err := _Contracts.contract.UnpackLog(event, "EscrowFinalized", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// ContractsMilestoneApprovedIterator is returned from FilterMilestoneApproved and is used to iterate over the raw logs and unpacked data for MilestoneApproved events raised by the Contracts contract.
+type ContractsMilestoneApprovedIterator struct {
+	Event *ContractsMilestoneApproved // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ContractsMilestoneApprovedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ContractsMilestoneApproved)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ContractsMilestoneApproved)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ContractsMilestoneApprovedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ContractsMilestoneApprovedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ContractsMilestoneApproved represents a MilestoneApproved event raised by the Contracts contract.
+type ContractsMilestoneApproved struct {
+	Id          *big.Int
+	MilestoneId *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// FilterMilestoneApproved is a free log retrieval operation binding the contract event 0x939da3b627c123c81fe5aacebf925163337a0d4f8a03724640618078cad24894.
+//
+// Solidity: event MilestoneApproved(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) FilterMilestoneApproved(opts *bind.FilterOpts, id []*big.Int) (*ContractsMilestoneApprovedIterator, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _Contracts.contract.FilterLogs(opts, "MilestoneApproved", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return &ContractsMilestoneApprovedIterator{contract: _Contracts.contract, event: "MilestoneApproved", logs: logs, sub: sub}, nil
+}
+
+// WatchMilestoneApproved is a free log subscription operation binding the contract event 0x939da3b627c123c81fe5aacebf925163337a0d4f8a03724640618078cad24894.
+//
+// Solidity: event MilestoneApproved(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) WatchMilestoneApproved(opts *bind.WatchOpts, sink chan<- *ContractsMilestoneApproved, id []*big.Int) (event.Subscription, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _Contracts.contract.WatchLogs(opts, "MilestoneApproved", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ContractsMilestoneApproved)
+				if err := _Contracts.contract.UnpackLog(event, "MilestoneApproved", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseMilestoneApproved is a log parse operation binding the contract event 0x939da3b627c123c81fe5aacebf925163337a0d4f8a03724640618078cad24894.
+//
+// Solidity: event MilestoneApproved(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) ParseMilestoneApproved(log types.Log) (*ContractsMilestoneApproved, error) {
+	event := new(ContractsMilestoneApproved)
+	if err := _Contracts.contract.UnpackLog(event, "MilestoneApproved", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// ContractsMilestoneRejectedIterator is returned from FilterMilestoneRejected and is used to iterate over the raw logs and unpacked data for MilestoneRejected events raised by the Contracts contract.
+type ContractsMilestoneRejectedIterator struct {
+	Event *ContractsMilestoneRejected // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ContractsMilestoneRejectedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ContractsMilestoneRejected)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ContractsMilestoneRejected)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ContractsMilestoneRejectedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ContractsMilestoneRejectedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ContractsMilestoneRejected represents a MilestoneRejected event raised by the Contracts contract.
+type ContractsMilestoneRejected struct {
+	Id          *big.Int
+	MilestoneId *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// FilterMilestoneRejected is a free log retrieval operation binding the contract event 0x4e2fd11f84344693b41d2aba9910e33b34a4f02d4d3a65b65b2201f3c8fa3c89.
+//
+// Solidity: event MilestoneRejected(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) FilterMilestoneRejected(opts *bind.FilterOpts, id []*big.Int) (*ContractsMilestoneRejectedIterator, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _Contracts.contract.FilterLogs(opts, "MilestoneRejected", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return &ContractsMilestoneRejectedIterator{contract: _Contracts.contract, event: "MilestoneRejected", logs: logs, sub: sub}, nil
+}
+
+// WatchMilestoneRejected is a free log subscription operation binding the contract event 0x4e2fd11f84344693b41d2aba9910e33b34a4f02d4d3a65b65b2201f3c8fa3c89.
+//
+// Solidity: event MilestoneRejected(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) WatchMilestoneRejected(opts *bind.WatchOpts, sink chan<- *ContractsMilestoneRejected, id []*big.Int) (event.Subscription, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _Contracts.contract.WatchLogs(opts, "MilestoneRejected", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ContractsMilestoneRejected)
+				if err := _Contracts.contract.UnpackLog(event, "MilestoneRejected", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseMilestoneRejected is a log parse operation binding the contract event 0x4e2fd11f84344693b41d2aba9910e33b34a4f02d4d3a65b65b2201f3c8fa3c89.
+//
+// Solidity: event MilestoneRejected(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) ParseMilestoneRejected(log types.Log) (*ContractsMilestoneRejected, error) {
+	event := new(ContractsMilestoneRejected)
+	if err := _Contracts.contract.UnpackLog(event, "MilestoneRejected", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// ContractsMilestoneSubmittedIterator is returned from FilterMilestoneSubmitted and is used to iterate over the raw logs and unpacked data for MilestoneSubmitted events raised by the Contracts contract.
+type ContractsMilestoneSubmittedIterator struct {
+	Event *ContractsMilestoneSubmitted // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ContractsMilestoneSubmittedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ContractsMilestoneSubmitted)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ContractsMilestoneSubmitted)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ContractsMilestoneSubmittedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ContractsMilestoneSubmittedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ContractsMilestoneSubmitted represents a MilestoneSubmitted event raised by the Contracts contract.
+type ContractsMilestoneSubmitted struct {
+	Id          *big.Int
+	MilestoneId *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// FilterMilestoneSubmitted is a free log retrieval operation binding the contract event 0x26cf581e2709e0615164af15a371b2dd10fb48d5baed91e9eacd557633c16bcb.
+//
+// Solidity: event MilestoneSubmitted(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) FilterMilestoneSubmitted(opts *bind.FilterOpts, id []*big.Int) (*ContractsMilestoneSubmittedIterator, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _Contracts.contract.FilterLogs(opts, "MilestoneSubmitted", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return &ContractsMilestoneSubmittedIterator{contract: _Contracts.contract, event: "MilestoneSubmitted", logs: logs, sub: sub}, nil
+}
+
+// WatchMilestoneSubmitted is a free log subscription operation binding the contract event 0x26cf581e2709e0615164af15a371b2dd10fb48d5baed91e9eacd557633c16bcb.
+//
+// Solidity: event MilestoneSubmitted(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) WatchMilestoneSubmitted(opts *bind.WatchOpts, sink chan<- *ContractsMilestoneSubmitted, id []*big.Int) (event.Subscription, error) {
+
+	var idRule []interface{}
+	for _, idItem := range id {
+		idRule = append(idRule, idItem)
+	}
+
+	logs, sub, err := _Contracts.contract.WatchLogs(opts, "MilestoneSubmitted", idRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ContractsMilestoneSubmitted)
+				if err := _Contracts.contract.UnpackLog(event, "MilestoneSubmitted", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseMilestoneSubmitted is a log parse operation binding the contract event 0x26cf581e2709e0615164af15a371b2dd10fb48d5baed91e9eacd557633c16bcb.
+//
+// Solidity: event MilestoneSubmitted(uint256 indexed id, uint256 milestoneId)
+func (_Contracts *ContractsFilterer) ParseMilestoneSubmitted(log types.Log) (*ContractsMilestoneSubmitted, error) {
+	event := new(ContractsMilestoneSubmitted)
+	if err := _Contracts.contract.UnpackLog(event, "MilestoneSubmitted", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

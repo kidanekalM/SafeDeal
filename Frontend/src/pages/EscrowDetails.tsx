@@ -201,6 +201,17 @@ const EscrowDetails = () => {
     } catch (error) { toast.error(t('pages.receipt_upload_failed', "Failed upload")); }
   };
 
+  const handleRequestAIDecision = async () => {
+    try {
+      toast.loading(t('pages.ai_analyzing', "AI is analyzing chat and terms..."), { id: 'ai-loading' });
+      await escrowApi.requestAIDecision(Number(id));
+      toast.success(t('pages.ai_decision_ready', "AI has provided a suggestion!"), { id: 'ai-loading' });
+      fetchEscrowDetails();
+    } catch (error) {
+      toast.error(t('pages.ai_failed', "AI arbitration failed"), { id: 'ai-loading' });
+    }
+  };
+
   useEffect(() => { if (id) fetchEscrowDetails(); }, [id]);
 
   useEffect(() => {
