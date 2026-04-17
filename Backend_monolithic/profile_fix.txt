@@ -1,0 +1,46 @@
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+          {/* Top Tabs - Mobile Header */}
+          <div className="lg:col-span-4 block lg:hidden mb-6">
+            <div className="flex overflow-x-auto pb-2 space-x-2 scrollbar-hide">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-none flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                      activeTab === tab.id
+                        ? "bg-primary-600 text-white shadow-lg scale-105"
+                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{tab.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sidebar Tabs - Desktop */}
+          <div className="lg:col-span-1 lg:block hidden">
+            <nav className="space-y-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center space-x-3 px-6 py-4 rounded-2xl text-left transition-all font-bold ${
+                      activeTab === tab.id
+                        ? "bg-primary-600 text-white shadow-xl scale-[1.02]"
+                        : "text-gray-600 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-bold">{tab.name}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>

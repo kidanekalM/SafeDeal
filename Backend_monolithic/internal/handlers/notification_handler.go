@@ -121,9 +121,10 @@ func (h *NotificationHandler) NotificationWebSocket(c *websocket.Conn) {
 
 // InviteUser sends real email invitation to non-existent user
 func (h *NotificationHandler) InviteUser(email string) {
-	mailer := mailer.NewMailer()
-	subject := "Join SafeDeal - You've been invited to an escrow deal"
-	html := `
+	go func() {
+		mailer := mailer.NewMailer()
+		subject := "Join SafeDeal - You've been invited to an escrow deal"
+		html := `
 <!DOCTYPE html>
 <html>
 <head>
@@ -137,40 +138,44 @@ func (h *NotificationHandler) InviteUser(email string) {
 </body>
 </html>
 `
-	if err := mailer.SendEmail([]string{email}, subject, html); err != nil {
-		log.Printf("Failed to send invite to %s: %v", email, err)
-	} else {
-		log.Printf("Invitation email sent to %s", email)
-	}
+		if err := mailer.SendEmail([]string{email}, subject, html); err != nil {
+			log.Printf("Failed to send invite to %s: %v", email, err)
+		} else {
+			log.Printf("Invitation email sent to %s", email)
+		}
+	}()
 }
 
 func (h *NotificationHandler) SendEscrowUpdate(escrowID uint, status string, buyerEmail, sellerEmail string, amount uint) {
-	mailer := mailer.NewMailer()
-	subject := fmt.Sprintf("SafeDeal Escrow #%d Update: %s", escrowID, status)
-	html := fmt.Sprintf(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-		    <title>SafeDeal Escrow Update</title>
-		</head>
-		<body>
-		    <h1>Escrow #%d Status Update</h1>
-		    <p>Status changed to: <strong>%s</strong></p>
-		    <p>Amount: %d ETB</p>
-		    <p><a href="http://localhost:8080/escrow/%d">View Escrow Details</a></p>
-		</body>
-		</html>
-	`, escrowID, status, amount, escrowID)
-	
-	if err := mailer.SendEmail([]string{buyerEmail, sellerEmail}, subject, html); err != nil {
-		log.Printf("Failed to send escrow update: %v", err)
-	}
+	go func() {
+		mailer := mailer.NewMailer()
+		subject := fmt.Sprintf("SafeDeal Escrow #%d Update: %s", escrowID, status)
+		html := fmt.Sprintf(`
+			<!DOCTYPE html>
+			<html>
+			<head>
+			    <title>SafeDeal Escrow Update</title>
+			</head>
+			<body>
+			    <h1>Escrow #%d Status Update</h1>
+			    <p>Status changed to: <strong>%s</strong></p>
+			    <p>Amount: %d ETB</p>
+			    <p><a href="http://localhost:8080/escrow/%d">View Escrow Details</a></p>
+			</body>
+			</html>
+		`, escrowID, status, amount, escrowID)
+		
+		if err := mailer.SendEmail([]string{buyerEmail, sellerEmail}, subject, html); err != nil {
+			log.Printf("Failed to send escrow update: %v", err)
+		}
+	}()
 }
 
 func (h *NotificationHandler) SendActivationEmail(email string, code string) {
-	mailer := mailer.NewMailer()
-	subject := "SafeDeal - Activate Your Account"
-	html := fmt.Sprintf(`
+	go func() {
+		mailer := mailer.NewMailer()
+		subject := "SafeDeal - Activate Your Account"
+		html := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -186,11 +191,12 @@ func (h *NotificationHandler) SendActivationEmail(email string, code string) {
 </html>
 `, code, email, code)
 
-	if err := mailer.SendEmail([]string{email}, subject, html); err != nil {
-		log.Printf("Failed to send activation email to %s: %v", email, err)
-	} else {
-		log.Printf("Activation email sent to %s", email)
-	}
+		if err := mailer.SendEmail([]string{email}, subject, html); err != nil {
+			log.Printf("Failed to send activation email to %s: %v", email, err)
+		} else {
+			log.Printf("Activation email sent to %s", email)
+		}
+	}()
 }
 
 

@@ -49,7 +49,6 @@ const Profile = () => {
     reset: resetProfile,
   } = useForm<UpdateProfileRequest>();
 
-  // Function to fetch latest profile data
   const fetchProfile = async () => {
     setIsFetchingProfile(true);
     try {
@@ -69,7 +68,6 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    // Fetch latest profile data when component mounts
     fetchProfile();
   }, []);
 
@@ -85,7 +83,6 @@ const Profile = () => {
         last_name: user.last_name || "",
         profession: user.profession || "",
       });
-      // Set selected bank code for dropdown
       setSelectedBankCode(user.bank_code || null);
     }
   }, [user, reset, resetProfile]);
@@ -98,21 +95,12 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      const bankData = {
-        ...data,
-        bank_code: selectedBankCode,
-      };
-      
-
+      const bankData = { ...data, bank_code: selectedBankCode };
       const response = await userApi.updateBankDetails(bankData);
       setUser(response.data);
       toast.success(t('pages.bank_details_updated', 'Bank details updated successfully!'));
     } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          error.response?.data?.error ||
-          t('pages.bank_details_update_failed', 'Failed to update bank details')
-      );
+      toast.error(error.response?.data?.error || t('pages.bank_details_update_failed', 'Failed to update bank details'));
     } finally {
       setIsLoading(false);
     }
@@ -142,22 +130,13 @@ const Profile = () => {
       toast.error(t('pages.user_id_not_available', 'User ID not available'));
       return;
     }
-    
     setIsUpdatingProfile(true);
     try {
       const response = await userApi.updateProfile(data, user.id);
-      
-      // Backend returns partial user data, merge with existing user data
-      const updatedUserData = response.data;
-      setUser({
-        ...user,
-        ...updatedUserData
-      });
-      
+      setUser({ ...user, ...response.data });
       toast.success(t('pages.profile_updated', 'Profile updated successfully!'));
     } catch (error: any) {
-      console.error("Profile update error:", error);
-      toast.error(error.response?.data?.error || error.response?.data?.message || t('pages.profile_update_failed', 'Failed to update profile'));
+      toast.error(error.response?.data?.error || t('pages.profile_update_failed', 'Failed to update profile'));
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -189,11 +168,7 @@ const Profile = () => {
       <div className="max-w-6xl mx-auto pb-12">
         {/* Onboarding Banner */}
         {(location.state as any)?.needsOnboarding && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-[2rem] flex items-center gap-6 shadow-xl"
-          >
+          <div className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-[2rem] flex items-center gap-6 shadow-xl">
             <div className="p-4 bg-yellow-100 rounded-2xl text-yellow-600">
               <AlertCircle className="h-8 w-8" />
             </div>
@@ -201,27 +176,50 @@ const Profile = () => {
               <h4 className="text-xl font-black uppercase tracking-tight text-yellow-900">{t('pages.complete_your_profile', 'Complete Your Profile')}</h4>
               <p className="text-yellow-700 text-sm opacity-80">{t('pages.you_need_to_provide_your_profession', 'You need to provide your profession and bank details before you can create or accept escrows.')}</p>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t('pages.profile_settings', 'Profile Settings')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t("pages.profile_settings", "Profile Settings")}</h1>
           <p className="text-gray-600 mt-2">
-            {t('pages.manage_your_account_information_wallet_and_security_settings', 'Manage your account information, wallet, and security settings')}
+            {t("pages.manage_your_account_information_wallet_and_security_settings", "Manage your account information, wallet, and security settings")}
           </p>
           <div className="mt-4 p-3 rounded-lg bg-teal-50 border border-teal-100 text-sm text-teal-900">
-            {t('pages.trust_score', 'Trust Score')}: <span className="font-bold">{user.trust_score ?? 0}</span>
+            {t("pages.trust_score", "Trust Score")}: <span className="font-bold">{user.trust_score ?? 0}</span>
             {trustInsights && (
               <span className="ml-3 text-xs text-teal-800">
-                {t('pages.completed', 'Completed')}: {trustInsights.completed} | {t('pages.disputed', 'Disputed')}: {trustInsights.disputed} | {t('pages.refunded', 'Refunded')}: {trustInsights.refunded}
+                {t("pages.completed", "Completed")}: {trustInsights.completed} | {t("pages.disputed", "Disputed")}: {trustInsights.disputed} | {t("pages.refunded", "Refunded")}: {trustInsights.refunded}
               </span>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          {/* Top Tabs - Mobile First */}
+          {/* Top Tabs - Mobile Header */}
+          <div className="lg:col-span-4 block lg:hidden mb-6">
+            <div className="flex overflow-x-auto pb-2 space-x-2 scrollbar-hide">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-none flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                      activeTab === tab.id
+                        ? "bg-primary-600 text-white shadow-lg scale-105"
+                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{tab.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sidebar Tabs - Desktop */}
           <div className="lg:col-span-1 lg:block hidden">
             <nav className="space-y-2">
               {tabs.map((tab) => {
@@ -230,14 +228,14 @@ const Profile = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                    className={`w-full flex items-center space-x-3 px-6 py-4 rounded-2xl text-left transition-all font-bold ${
                       activeTab === tab.id
-                        ? "bg-primary-50 text-primary-700 border-r-2 border-primary-600"
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? "bg-primary-600 text-white shadow-xl scale-[1.02]"
+                        : "text-gray-600 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
-                    <span className="font-medium">{tab.name}</span>
+                    <span className="font-bold">{tab.name}</span>
                   </button>
                 );
               })}
@@ -246,477 +244,85 @@ const Profile = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Profile Tab */}
             {activeTab === "profile" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="card p-6"
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {t('pages.personal_information', 'Personal Information')}
-                  </h3>
-                  <button
-                    onClick={fetchProfile}
-                    disabled={isFetchingProfile}
-                    className="btn btn-outline btn-sm"
-                  >
+                  <h3 className="text-lg font-semibold text-gray-900">{t('pages.personal_information', 'Personal Information')}</h3>
+                  <button onClick={fetchProfile} disabled={isFetchingProfile} className="btn btn-outline btn-sm">
                     {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
                   </button>
                 </div>
                 <form onSubmit={handleSubmitProfile(handleUpdateProfile)} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('components.first_name', 'First Name')}
-                      </label>
-                      <input
-                        {...registerProfile("first_name", {
-                          required: t('pages.first_name_required', "First name is required"),
-                          minLength: {
-                            value: 2,
-                            message: t('pages.first_name_min_length', "First name must be at least 2 characters")
-                          }
-                        })}
-                        type="text"
-                        className="input w-full"
-                      />
-                      {profileErrors.first_name && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {profileErrors.first_name.message}
-                        </p>
-                      )}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.first_name', 'First Name')}</label>
+                      <input {...registerProfile("first_name", { required: true })} type="text" className="input w-full" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('components.last_name', 'Last Name')}
-                      </label>
-                      <input
-                        {...registerProfile("last_name", {
-                          required: t('pages.last_name_required', "Last name is required"),
-                          minLength: {
-                            value: 2,
-                            message: t('pages.last_name_min_length', "Last name must be at least 2 characters")
-                          }
-                        })}
-                        type="text"
-                        className="input w-full"
-                      />
-                      {profileErrors.last_name && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {profileErrors.last_name.message}
-                        </p>
-                      )}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.last_name', 'Last Name')}</label>
+                      <input {...registerProfile("last_name", { required: true })} type="text" className="input w-full" />
                     </div>
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('components.profession', 'Profession')}
-                    </label>
-                    <input
-                      {...registerProfile("profession", {
-                        required: t('pages.profession_required', "Profession is required"),
-                        minLength: {
-                          value: 2,
-                          message: t('pages.profession_min_length', "Profession must be at least 2 characters")
-                        },
-                        maxLength: {
-                          value: 100,
-                          message: t('pages.profession_max_length', "Profession must be less than 100 characters")
-                        }
-                      })}
-                      type="text"
-                      className="input w-full"
-                      placeholder="e.g., Software Developer, Teacher, etc."
-                    />
-                    {profileErrors.profession && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {profileErrors.profession.message}
-                      </p>
-                    )}
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.profession', 'Profession')}</label>
+                    <input {...registerProfile("profession", { required: true })} type="text" className="input w-full" />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('pages.email_address', 'Email Address')}
-                    </label>
-                    <input
-                      type="email"
-                      value={user.email}
-                      disabled
-                      className="input w-full bg-gray-50"
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      {t('pages.email_cannot_be_changed', 'Email cannot be changed. Contact support if needed.')}
-                    </p>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.email_address', 'Email Address')}</label>
+                    <input type="email" value={user.email} disabled className="input w-full bg-gray-50" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`p-2 rounded-full ${
-                        user.activated ? "bg-green-100" : "bg-yellow-100"
-                      }`}
-                    >
-                      {user.activated ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 text-yellow-600" />
-                      )}
-                    </div>
-                    <span
-                      className={`text-sm font-medium ${
-                        user.activated ? "text-green-700" : "text-yellow-700"
-                      }`}
-                    >
-                      {user.activated
-                        ? t('pages.account_verified', "Account Verified")
-                        : t('pages.account_pending_verification', "Account Pending Verification")}
-                    </span>
-                  </div>
-                  {!user.activated && (
-                    <div className="mt-3">
-                      <button
-                        onClick={async () => {
-                          try {
-                            await userApi.resendActivation(user.email);
-                            toast.success(t('pages.activation_email_sent', 'Activation email sent! Please check your inbox.'));
-                          } catch (e: any) {
-                            toast.error(e?.response?.data?.error || t('pages.activation_email_failed', 'Failed to resend activation email'));
-                          }
-                        }}
-                        className="btn btn-outline btn-sm"
-                      >
-                        {t('pages.resend_activation_email', 'Resend Activation Email')}
-                      </button>
-                    </div>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isUpdatingProfile}
-                    className="btn btn-primary btn-md"
-                  >
+                  <button type="submit" disabled={isUpdatingProfile} className="btn btn-primary btn-md">
                     {isUpdatingProfile ? t('pages.updating', "Updating...") : t('pages.update_profile', "Update Profile")}
                   </button>
                 </form>
               </motion.div>
             )}
 
-            {/* Wallet Tab */}
             {activeTab === "wallet" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div className="card p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {t('pages.ethereum_wallet', 'Ethereum Wallet')}
-                    </h3>
-                    <button
-                      onClick={fetchProfile}
-                      disabled={isFetchingProfile}
-                      className="btn btn-outline btn-sm"
-                    >
-                      {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
-                    </button>
-                  </div>
-
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('pages.ethereum_wallet', 'Ethereum Wallet')}</h3>
                   {user.wallet_address ? (
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('pages.wallet_address', 'Wallet Address')}
-                        </label>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            value={user.wallet_address}
-                            readOnly
-                            className="input flex-1 font-mono text-sm"
-                          />
-                          <button
-                            onClick={() =>
-                              copyToClipboard(user.wallet_address!)
-                            }
-                            className="btn btn-outline btn-sm"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {t('pages.this_is_your_ethereum_wallet_address_for_blockchain_transactions', 'This is your Ethereum wallet address for blockchain transactions')}
-                        </p>
-                      </div>
-
-                      {user.encrypted_private_key && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('pages.private_key_status', 'Private Key Status')}
-                          </label>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type={showPrivateKey ? "text" : "password"}
-                              value={showPrivateKey ? "••••••••••••••••••••••••••••••••" : "••••••••••••••••••••••••••••••••"}
-                              readOnly
-                              className="input flex-1 font-mono text-sm"
-                            />
-                            <button
-                              onClick={() => setShowPrivateKey(!showPrivateKey)}
-                              className="btn btn-outline btn-sm"
-                            >
-                              {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {t('pages.your_private_key_is_encrypted_and_stored_securely', 'Your private key is encrypted and stored securely')}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center">
-                          <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
-                          <div>
-                            <h4 className="text-sm font-medium text-green-900">
-                              {t('pages.wallet_active', 'Wallet Active')}
-                            </h4>
-                            <p className="text-sm text-green-700 mt-1">
-                              {t('pages.your_ethereum_wallet_is_ready_for_blockchain_transactions', 'Your Ethereum wallet is ready for blockchain transactions.')}
-                            </p>
-                          </div>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <input type="text" value={user.wallet_address} readOnly className="input flex-1 font-mono text-sm" />
+                        <button onClick={() => copyToClipboard(user.wallet_address!)} className="btn btn-outline btn-sm"><Copy className="h-4 w-4" /></button>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <Wallet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        {t('pages.no_wallet_created', 'No Wallet Created')}
-                      </h4>
-                      <p className="text-gray-600 mb-6">
-                        {t('pages.create_an_ethereum_wallet_to_participate_in_blockchain_transactions', 'Create an Ethereum wallet to participate in blockchain transactions.')}
-                      </p>
-                      <button
-                        onClick={handleCreateWallet}
-                        disabled={isCreatingWallet}
-                        className="btn btn-primary btn-md"
-                      >
-                        {isCreatingWallet ? t('pages.creating', "Creating...") : t('pages.create_wallet', "Create Wallet")}
-                      </button>
-                    </div>
+                    <button onClick={handleCreateWallet} disabled={isCreatingWallet} className="btn btn-primary btn-md">
+                      {isCreatingWallet ? t('pages.creating', "Creating...") : t('pages.create_wallet', "Create Wallet")}
+                    </button>
                   )}
                 </div>
-
-                {user.wallet_address && (
-                  <div className="card p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      {t('pages.wallet_security', 'Wallet Security')}
-                    </h3>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <div className="flex">
-                        <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
-                        <div>
-                          <h4 className="text-sm font-medium text-yellow-900">
-                            {t('pages.important_security_notice', 'Important Security Notice')}
-                          </h4>
-                          <p className="text-sm text-yellow-700 mt-1">
-                            {t('pages.wallet_security_disclaimer', 'Your private key is encrypted and stored securely. Never share your private key with anyone. SafeDeal will never ask for your private key.')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </motion.div>
             )}
 
-            {/* Banking Tab */}
             {activeTab === "banking" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div className="card p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {t('pages.bank_details', 'Bank Details')}
-                    </h3>
-                    <button
-                      onClick={fetchProfile}
-                      disabled={isFetchingProfile}
-                      className="btn btn-outline btn-sm"
-                    >
-                      {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
-                    </button>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-6">
-                    {t('pages.add_your_bank_account_details', 'Add your bank account details to receive payments from completed escrows.')}
-                  </p>
-
-                  {/* Display current bank details if they exist */}
-                  {(user.account_name || user.account_number || user.bank_code) && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-blue-900">{t('pages.current_bank_details', 'Current Bank Details')}</h4>
-                        <button
-                          type="button"
-                          onClick={() => setShowBankForm(!showBankForm)}
-                          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          {showBankForm ? t('pages.cancel_update', 'Cancel Update') : t('pages.update_details', 'Update Details')}
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {user.account_name && (
-                          <div className="flex justify-between">
-                            <span className="text-sm text-blue-700">{t('pages.account_name', 'Account Name')}:</span>
-                            <span className="text-sm font-medium text-blue-900">{user.account_name}</span>
-                          </div>
-                        )}
-                        {user.account_number && (
-                          <div className="flex justify-between">
-                            <span className="text-sm text-blue-700">{t('pages.account_number', 'Account Number')}:</span>
-                            <span className="text-sm font-medium text-blue-900 font-mono">{user.account_number}</span>
-                          </div>
-                        )}
-                        {user.bank_code && (
-                          <div className="flex justify-between">
-                            <span className="text-sm text-blue-700">{t('pages.bank', 'Bank')}:</span>
-                            <span className="text-sm font-medium text-blue-900">
-                              {getBankByCode(user.bank_code)?.name || `${t('pages.bank_code', 'Bank Code')}: ${user.bank_code}`}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Show form only if no bank details exist or user wants to update */}
-                  {(!user.account_name && !user.account_number && !user.bank_code) || showBankForm ? (
-                    <form
-                      onSubmit={handleSubmit(handleUpdateBankDetails)}
-                      className="space-y-6"
-                    >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('pages.bank_details', 'Bank Details')}</h3>
+                  <form onSubmit={handleSubmit(handleUpdateBankDetails)} className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('pages.account_name', 'Account Name')}
-                      </label>
-                      <input
-                        {...register("account_name", {
-                          required: t('pages.account_name_required', "Account name is required"),
-                        })}
-                        className="input w-full"
-                        placeholder={t('pages.account_name_placeholder', "Enter your full name as it appears on your bank account")}
-                      />
-                      {errors.account_name && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.account_name.message}
-                        </p>
-                      )}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.account_name', 'Account Name')}</label>
+                      <input {...register("account_name", { required: true })} className="input w-full" />
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('pages.account_number', 'Account Number')}
-                      </label>
-                      <input
-                        {...register("account_number", {
-                          required: t('pages.account_number_required', "Account number is required"),
-                          validate: (value) => {
-                            if (!selectedBankCode) {
-                              return t('pages.please_select_bank', "Please select a bank first");
-                            }
-                            const bank = getBankByCode(selectedBankCode);
-                            if (!bank) {
-                              return t('pages.invalid_bank', "Invalid bank selected");
-                            }
-                            const digitPattern = new RegExp(`^\\d{${bank.accountLength}}$`);
-                            if (!digitPattern.test(value)) {
-                              return `${t('pages.account_number_length_error', 'Account number must be exactly')} ${bank.accountLength} ${t('pages.digits_for', 'digits for')} ${bank.name}`;
-                            }
-                            return true;
-                          },
-                        })}
-                        className="input w-full"
-                        placeholder={selectedBankCode ? `${t('pages.enter', 'Enter')} ${getBankByCode(selectedBankCode)?.accountLength || 'your'} ${t('pages.digit_account_number', 'digit account number')}` : t('pages.enter_account_number', "Enter your bank account number")}
-                      />
-                      {errors.account_number && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.account_number.message}
-                        </p>
-                      )}
-                      {selectedBankCode && (
-                        <p className="text-blue-600 text-sm mt-1">
-                          {t('pages.required', 'Required')}: {getBankByCode(selectedBankCode)?.accountLength} {t('pages.digits_for', 'digits for')} {getBankByCode(selectedBankCode)?.name}
-                        </p>
-                      )}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.account_number', 'Account Number')}</label>
+                      <input {...register("account_number", { required: true })} className="input w-full" />
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('pages.bank', 'Bank')}
-                      </label>
-                      <select
-                        value={selectedBankCode || ""}
-                        onChange={(e) => setSelectedBankCode(Number(e.target.value) || null)}
-                        className="input w-full"
-                        required
-                      >
-                        <option value="">{t('pages.select_your_bank', 'Select your bank')}</option>
-                        {BANKS.map((bank) => (
-                          <option key={bank.code} value={bank.code}>
-                            {bank.name} {bank.isMobileMoney ? `(${t('pages.mobile_money', 'Mobile Money')})` : ""}
-                          </option>
-                        ))}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.bank', 'Bank')}</label>
+                      <select value={selectedBankCode || ""} onChange={(e) => setSelectedBankCode(Number(e.target.value))} className="input w-full">
+                        <option value="">Select Bank</option>
+                        {BANKS.map(bank => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
                       </select>
-                      {!selectedBankCode && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {t('pages.please_select_bank', 'Please select a bank')}
-                        </p>
-                      )}
                     </div>
-
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="btn btn-primary btn-md"
-                    >
-                      {isLoading ? t('pages.updating', "Updating...") : t('pages.update_bank_details', "Update Bank Details")}
-                    </button>
+                    <button type="submit" disabled={isLoading} className="btn btn-primary btn-md">Update Bank Details</button>
                   </form>
-                ) : null}
-                </div>
-
-                {/* Bank Information Help */}
-                <div className="card p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    {t('pages.bank_information_help', 'Bank Information Help')}
-                  </h3>
-                  <div className="space-y-3 text-sm text-gray-600">
-                    <p>
-                      <strong>{t('pages.account_name', 'Account Name')}:</strong> {t('pages.account_name_help', 'The name as it appears on your bank account statement.')}
-                    </p>
-                    <p>
-                      <strong>{t('pages.account_number', 'Account Number')}:</strong> {t('pages.account_number_help', 'Your bank account number. The required length depends on your selected bank.')}
-                    </p>
-                    <p>
-                      <strong>{t('pages.bank', 'Bank')}:</strong> {t('pages.bank_help', 'Select your bank from the dropdown. Mobile money services are clearly marked.')}
-                    </p>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
-                      <p className="text-yellow-800">
-                        <strong>{t('pages.note', 'Note')}:</strong> {t('pages.bank_details_note', 'This information is used to process payments from completed escrows. Make sure the details are accurate to avoid payment delays.')}
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </motion.div>
             )}
-
-
           </div>
         </div>
       </div>

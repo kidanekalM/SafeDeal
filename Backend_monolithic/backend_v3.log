@@ -1,0 +1,130 @@
+Successfully connected to PostgreSQL database
+Server starting on port 8081
+
+ ┌───────────────────────────────────────────────────┐ 
+ │                   Fiber v2.52.0                   │ 
+ │               http://127.0.0.1:8081               │ 
+ │       (bound on host 0.0.0.0 and port 8081)       │ 
+ │                                                   │ 
+ │ Handlers ............ 68  Processes ........... 1 │ 
+ │ Prefork ....... Disabled  PID ............. 78600 │ 
+ └───────────────────────────────────────────────────┘ 
+
+23:24:27 | 204 |      40.914µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/16 23:24:27 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[220.645ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'buyer-1776371055002@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/16 23:24:27 Registering user: buyer-1776371055002@test.com
+2026/04/16 23:24:31 User created successfully: buyer-1776371055002@test.com (ID: 34)
+2026/04/16 23:24:31 Wallet created for user buyer-1776371055002@test.com with address 0x3d1F0646C5B7044FbCF21eC81Fc90aBe8BeAeFEC
+23:24:32 | 204 |      21.332µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/16 23:24:32 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[2.143ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'seller-1776371055002@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/16 23:24:32 Registering user: seller-1776371055002@test.com
+2026/04/16 23:24:35 User created successfully: seller-1776371055002@test.com (ID: 35)
+2026/04/16 23:24:35 Wallet created for user seller-1776371055002@test.com with address 0x20391a97eA607bd35865f3803b5548087ed1881B
+2026/04/16 23:24:35 Activation email sent to buyer-1776371055002@test.com
+2026/04/16 23:24:35 Activation code for buyer-1776371055002@test.com: 1776371071304561000
+23:24:27 | 200 |  8.315469468s | 127.0.0.1 | POST | /api/register | -
+2026/04/16 23:24:39 Failed to send activation email to seller-1776371055002@test.com: gomail: could not send email 1: 550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing
+2026/04/16 23:24:39 Activation code for seller-1776371055002@test.com: 1776371075298565000
+23:24:32 | 200 |  6.805502876s | 127.0.0.1 | POST | /api/register | -
+23:35:07 | 204 |      40.503µs | 127.0.0.1 | OPTIONS | /register | -
+23:35:07 | 404 |      92.881µs | 127.0.0.1 | POST | /register | Cannot POST /register
+23:35:11 | 204 |      21.283µs | 127.0.0.1 | OPTIONS | /register | -
+23:35:11 | 404 |      23.825µs | 127.0.0.1 | POST | /register | Cannot POST /register
+23:43:08 | 204 |      73.908µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/16 23:43:09 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[5.220ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'buyer-1776372171548@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/16 23:43:09 Registering user: buyer-1776372171548@test.com
+23:43:12 | 204 |      31.691µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/16 23:43:12 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[1.085ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'seller-1776372171548@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/16 23:43:12 Registering user: seller-1776372171548@test.com
+2026/04/16 23:43:13 User created successfully: buyer-1776372171548@test.com (ID: 36)
+2026/04/16 23:43:13 Wallet created for user buyer-1776372171548@test.com with address 0xA645CdAe00Cf1B5eAb47963B3D4c74750F9D2BA1
+2026/04/16 23:43:15 User created successfully: seller-1776372171548@test.com (ID: 37)
+2026/04/16 23:43:15 Wallet created for user seller-1776372171548@test.com with address 0x8801688866aebb4F83105c6dbcE2fE8A8A6883a4
+2026/04/16 23:43:17 Activation email sent to buyer-1776372171548@test.com
+2026/04/16 23:43:17 Activation code for buyer-1776372171548@test.com: 1776372193245501000
+23:43:08 | 200 |  8.399535295s | 127.0.0.1 | POST | /api/register | -
+2026/04/16 23:43:20 Failed to send activation email to seller-1776372171548@test.com: gomail: could not send email 1: 550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing
+2026/04/16 23:43:20 Activation code for seller-1776372171548@test.com: 1776372195747462000
+23:43:12 | 200 |  8.204331383s | 127.0.0.1 | POST | /api/register | -
+22:52:10 | 204 |    2.327079ms | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/17 22:52:10 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[337.412ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'buyer-1776455518694@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/17 22:52:10 Registering user: buyer-1776455518694@test.com
+22:52:12 | 204 |      59.502µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/17 22:52:13 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[48.038ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'seller-1776455518694@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/17 22:52:13 Registering user: seller-1776455518694@test.com
+2026/04/17 22:52:14 User created successfully: buyer-1776455518694@test.com (ID: 38)
+2026/04/17 22:52:14 Wallet created for user buyer-1776455518694@test.com with address 0x0ECb24FDffc958AC2cf8346C624D603Ed24fc43f
+2026/04/17 22:52:15 User created successfully: seller-1776455518694@test.com (ID: 39)
+2026/04/17 22:52:15 Wallet created for user seller-1776455518694@test.com with address 0x8C711744052Bbf384a3Ab26d39B554Fc4A9F91b7
+2026/04/17 22:52:16 Activation email sent to buyer-1776455518694@test.com
+2026/04/17 22:52:16 Activation code for buyer-1776455518694@test.com: 1776455533864703000
+22:52:10 | 200 |  6.410437082s | 127.0.0.1 | POST | /api/register | -
+2026/04/17 22:52:17 Failed to send activation email to seller-1776455518694@test.com: gomail: could not send email 1: 550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing
+2026/04/17 22:52:17 Activation code for seller-1776455518694@test.com: 1776455535098804000
+22:52:12 | 200 |  4.306398638s | 127.0.0.1 | POST | /api/register | -
+23:00:00 | 204 |      70.638µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/17 23:00:00 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[135.389ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'buyer-1776455977542@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/17 23:00:00 Registering user: buyer-1776455977542@test.com
+2026/04/17 23:00:04 User created successfully: buyer-1776455977542@test.com (ID: 40)
+2026/04/17 23:00:04 Wallet created for user buyer-1776455977542@test.com with address 0xe242E8658160fdDC44D9FcF80132705D8952cCdE
+23:00:07 | 204 |      25.226µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/17 23:00:07 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[65.542ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'seller-1776455977542@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/17 23:00:07 Registering user: seller-1776455977542@test.com
+2026/04/17 23:00:08 Activation email sent to buyer-1776455977542@test.com
+2026/04/17 23:00:08 Activation code for buyer-1776455977542@test.com: 1776456004829971000
+23:00:00 | 200 |   8.26447394s | 127.0.0.1 | POST | /api/register | -
+2026/04/17 23:00:11 User created successfully: seller-1776455977542@test.com (ID: 41)
+2026/04/17 23:00:11 Wallet created for user seller-1776455977542@test.com with address 0x9cE9cf74DbdbD66497DD2Dbdee248DfD71c02490
+2026/04/17 23:00:13 Failed to send activation email to seller-1776455977542@test.com: gomail: could not send email 1: 550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing
+2026/04/17 23:00:13 Activation code for seller-1776455977542@test.com: 1776456011020111000
+23:00:07 | 200 |  6.530941097s | 127.0.0.1 | POST | /api/register | -
+23:09:34 | 204 |      81.456µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/17 23:09:34 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[5.929ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'buyer-1776456550439@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/17 23:09:34 Registering user: buyer-1776456550439@test.com
+2026/04/17 23:09:38 User created successfully: buyer-1776456550439@test.com (ID: 42)
+2026/04/17 23:09:38 Wallet created for user buyer-1776456550439@test.com with address 0xa1060C3716924d99fb459bA8cC0Dd6276bA2D579
+23:09:40 | 204 |      29.667µs | 127.0.0.1 | OPTIONS | /api/register | -
+
+2026/04/17 23:09:40 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/user_handler.go:56 [35;1mrecord not found
+[0m[33m[2.128ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'seller-1776456550439@test.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/17 23:09:40 Registering user: seller-1776456550439@test.com
+2026/04/17 23:09:41 Activation email sent to buyer-1776456550439@test.com
+2026/04/17 23:09:41 Activation code for buyer-1776456550439@test.com: 1776456578827713000
+23:09:34 | 200 |  7.274254819s | 127.0.0.1 | POST | /api/register | -
+23:09:43 | 204 |      21.476µs | 127.0.0.1 | OPTIONS | /api/login | -
+2026/04/17 23:09:43 Login attempt for email: buyer-1776456550439@test.com
+2026/04/17 23:09:43 User created successfully: seller-1776456550439@test.com (ID: 43)
+2026/04/17 23:09:43 Wallet created for user seller-1776456550439@test.com with address 0xC4C7f9C5Cc11d7e84f8cCE5D246290F88b5A0418
+23:09:43 | 200 |  1.507499731s | 127.0.0.1 | POST | /api/login | -
+23:09:44 | 101 |    2.781645ms | 127.0.0.1 | GET | /api/notifications/ws | -
+23:09:45 | 204 |      43.103µs | 127.0.0.1 | OPTIONS | /api/v1/escrows | -
+23:09:45 | 204 |      35.972µs | 127.0.0.1 | OPTIONS | /api/v1/escrows | -
+
+2026/04/17 23:09:46 [32m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/escrow_handler.go:310 [33mSLOW SQL >= 200ms
+[0m[31;1m[899.388ms] [33m[rows:0][35m SELECT * FROM "escrows" WHERE (buyer_id = 42 OR seller_id = 42 OR mediator_id = 42) AND "escrows"."deleted_at" IS NULL[0m
+23:09:45 | 200 |  902.513548ms | 127.0.0.1 | GET | /api/v1/escrows | -
+
+2026/04/17 23:09:46 [32m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/handlers/escrow_handler.go:310 [33mSLOW SQL >= 200ms
+[0m[31;1m[932.027ms] [33m[rows:0][35m SELECT * FROM "escrows" WHERE (buyer_id = 42 OR seller_id = 42 OR mediator_id = 42) AND "escrows"."deleted_at" IS NULL[0m
+23:09:45 | 200 |  932.268526ms | 127.0.0.1 | GET | /api/v1/escrows | -
+2026/04/17 23:09:46 Failed to send activation email to seller-1776456550439@test.com: gomail: could not send email 1: 550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing
+2026/04/17 23:09:46 Activation code for seller-1776456550439@test.com: 1776456583958248000
+23:09:40 | 200 |  6.150482532s | 127.0.0.1 | POST | /api/register | -

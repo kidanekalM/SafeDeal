@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log"
 	"math/big"
 	"strconv"
 	"time"
@@ -274,7 +275,12 @@ func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 	if h.BlockChainClient != nil {
 		escrowID := big.NewInt(int64(milestone.EscrowID))
 		milestoneID := big.NewInt(int64(milestone.ID))
-		_, _ = h.BlockChainClient.LogMilestoneSubmitted(escrowID, milestoneID)
+		tx, err := h.BlockChainClient.LogMilestoneSubmitted(escrowID, milestoneID)
+		if err != nil {
+			log.Printf("Failed to log MilestoneSubmitted to blockchain for milestone %d: %v", milestone.ID, err)
+		} else {
+			log.Printf("Successfully logged MilestoneSubmitted to blockchain with TX: %v", tx.Hash().Hex())
+		}
 	}
 
 	// Use ISO 8601 format for consistency
@@ -329,7 +335,12 @@ func (h *MilestoneHandler) ApproveMilestone(c *fiber.Ctx) error {
 	if h.BlockChainClient != nil {
 		escrowID := big.NewInt(int64(milestone.EscrowID))
 		milestoneID := big.NewInt(int64(milestone.ID))
-		_, _ = h.BlockChainClient.LogMilestoneApproved(escrowID, milestoneID)
+		tx, err := h.BlockChainClient.LogMilestoneApproved(escrowID, milestoneID)
+		if err != nil {
+			log.Printf("Failed to log MilestoneApproved to blockchain for milestone %d: %v", milestone.ID, err)
+		} else {
+			log.Printf("Successfully logged MilestoneApproved to blockchain with TX: %v", tx.Hash().Hex())
+		}
 	}
 
 	if err := h.DB.Save(&milestone).Error; err != nil {
@@ -377,7 +388,12 @@ func (h *MilestoneHandler) RejectMilestone(c *fiber.Ctx) error {
 	if h.BlockChainClient != nil {
 		escrowID := big.NewInt(int64(milestone.EscrowID))
 		milestoneID := big.NewInt(int64(milestone.ID))
-		_, _ = h.BlockChainClient.LogMilestoneRejected(escrowID, milestoneID)
+		tx, err := h.BlockChainClient.LogMilestoneRejected(escrowID, milestoneID)
+		if err != nil {
+			log.Printf("Failed to log MilestoneRejected to blockchain for milestone %d: %v", milestone.ID, err)
+		} else {
+			log.Printf("Successfully logged MilestoneRejected to blockchain with TX: %v", tx.Hash().Hex())
+		}
 	}
 
 	if err := h.DB.Save(&milestone).Error; err != nil {

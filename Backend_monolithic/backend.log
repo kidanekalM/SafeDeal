@@ -1,7 +1,36 @@
-
-2026/03/29 00:33:15 [32m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/configs/db.go:30 [33mSLOW SQL >= 200ms
-[0m[31;1m[254.794ms] [33m[rows:-][35m SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description, c.identity_increment FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = 'safedeal_db' AND table_schema = CURRENT_SCHEMA() AND table_name = 'users'[0m
 Successfully connected to PostgreSQL database
 Server starting on port 8081
-2026/03/29 00:33:17 failed to listen: listen tcp4 :8081: bind: address already in use
-exit status 1
+
+ ┌───────────────────────────────────────────────────┐ 
+ │                   Fiber v2.52.0                   │ 
+ │               http://127.0.0.1:8081               │ 
+ │       (bound on host 0.0.0.0 and port 8081)       │ 
+ │                                                   │ 
+ │ Handlers ............ 66  Processes ........... 1 │ 
+ │ Prefork ....... Disabled  PID ............. 76644 │ 
+ └───────────────────────────────────────────────────┘ 
+
+00:26:38 | 204 |     535.347µs | 127.0.0.1 | OPTIONS | /api/register | -
+00:26:38 | 401 |    2.995002ms | 127.0.0.1 | POST | /api/register | -
+00:26:38 | 204 |       12.82µs | 127.0.0.1 | OPTIONS | /refresh-token | -
+00:26:38 | 401 |     960.609µs | 127.0.0.1 | POST | /refresh-token | -
+00:26:44 | 204 |      19.688µs | 127.0.0.1 | OPTIONS | /api/register | -
+00:26:44 | 401 |    1.550357ms | 127.0.0.1 | POST | /api/register | -
+00:26:44 | 204 |      12.612µs | 127.0.0.1 | OPTIONS | /refresh-token | -
+00:26:44 | 401 |      23.809µs | 127.0.0.1 | POST | /refresh-token | -
+22:24:01 | 204 |     107.591µs | 127.0.0.1 | OPTIONS | /api/register | -
+22:24:01 | 401 |     440.878µs | 127.0.0.1 | POST | /api/register | -
+22:24:01 | 204 |      12.703µs | 127.0.0.1 | OPTIONS | /refresh-token | -
+22:24:01 | 401 |      32.664µs | 127.0.0.1 | POST | /refresh-token | -
+22:24:05 | 204 |      11.913µs | 127.0.0.1 | OPTIONS | /api/register | -
+22:24:05 | 401 |      66.029µs | 127.0.0.1 | POST | /api/register | -
+22:24:05 | 204 |       29.42µs | 127.0.0.1 | OPTIONS | /refresh-token | -
+22:24:05 | 401 |      17.909µs | 127.0.0.1 | POST | /refresh-token | -
+22:30:18 | 204 |      80.672µs | 127.0.0.1 | OPTIONS | /api/register | -
+22:30:18 | 401 |     173.007µs | 127.0.0.1 | POST | /api/register | -
+22:30:18 | 204 |      30.888µs | 127.0.0.1 | OPTIONS | /refresh-token | -
+22:30:18 | 401 |      23.459µs | 127.0.0.1 | POST | /refresh-token | -
+22:30:22 | 204 |      14.248µs | 127.0.0.1 | OPTIONS | /api/register | -
+22:30:22 | 401 |        67.1µs | 127.0.0.1 | POST | /api/register | -
+22:30:22 | 204 |        19.8µs | 127.0.0.1 | OPTIONS | /refresh-token | -
+22:30:23 | 401 |      20.634µs | 127.0.0.1 | POST | /refresh-token | -

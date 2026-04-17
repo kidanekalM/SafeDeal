@@ -3,13 +3,15 @@ package auth
 import (
 	"backend_monolithic/internal/models"
 	"errors"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"net/http"
-	"os"
-	"time"
 )
 
 type Service struct {
@@ -56,7 +58,7 @@ func (s *Service) ValidateToken(tokenString string) (*Claims, error) {
 }
 
 func (s *Service) HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	return string(bytes), err
 }
 
@@ -92,6 +94,7 @@ func (s *Service) GetUserByID(id uint) (*models.User, error) {
 func (s *Service) JWTMiddleware(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
+		log.Printf("JWTMiddleware: Authorization header missing for %s %s", c.Method(), c.Path())
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Authorization header missing",
 		})
@@ -104,6 +107,7 @@ func (s *Service) JWTMiddleware(c *fiber.Ctx) error {
 
 	claims, err := s.ValidateToken(token)
 	if err != nil {
+		log.Printf("JWTMiddleware: Invalid token for %s %s: %v", c.Method(), c.Path(), err)
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid token",
 		})

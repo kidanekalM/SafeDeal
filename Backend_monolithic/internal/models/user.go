@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -31,3 +33,11 @@ type BankDetails struct {
 	BankCode      int     `json:"bank_code" validate:"required"`
 	BankName      string  `json:"bank_name" validate:"required"`
 }
+
+type ActivationToken struct {
+	gorm.Model
+	UserID    uint      `gorm:"not null"`
+	Token     string    `gorm:"not null;uniqueIndex"`
+	ExpiresAt time.Time `gorm:"not null"`
+}
+

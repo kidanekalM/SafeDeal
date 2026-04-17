@@ -58,9 +58,12 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "User with this email already exists"})
 	}
 
+	log.Printf("Registering user: %s", req.Email)
+
 	// Hash password
 	hashedPassword, err := h.AuthService.HashPassword(req.Password)
 	if err != nil {
+		log.Printf("Register: HashPassword error: %v", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Could not hash password"})
 	}
 
@@ -82,8 +85,11 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
+		log.Printf("Register: DB Create error for %s: %v", req.Email, err)
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create user"})
 	}
+
+	log.Printf("User created successfully: %s (ID: %d)", user.Email, user.ID)
 
 	// Also create entry in BankDetails table
 	bankDetails := &models.BankDetails{
@@ -126,7 +132,10 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Registration successful. Please check your email for activation.",
-		"user":    user,
+		"data": fiber.Map{
+			"user": user,
+		},
+		"user": user, // Keep top-level for backward compatibility
 	})
 }
 
@@ -161,25 +170,31 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&req); err != nil {
+		log.Printf("Login: BodyParser error: %v", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
+	log.Printf("Login attempt for email: %s", req.Email)
+
 	user, err := h.AuthService.GetUserByEmail(req.Email)
 	if err != nil {
+		log.Printf("Login: User not found: %s", req.Email)
 		return c.Status(401).JSON(fiber.Map{
 			"error": "Invalid credentials",
 		})
 	}
 
 	if !h.AuthService.CheckPasswordHash(req.Password, user.Password) {
+		log.Printf("Login: Password mismatch for user: %s", req.Email)
 		return c.Status(401).JSON(fiber.Map{
 			"error": "Invalid credentials",
 		})
 	}
 
 	if !user.Activated {
+		log.Printf("Login: User not activated: %s", req.Email)
 		return c.Status(401).JSON(fiber.Map{
 			"error": "Account not activated. Please check your email.",
 		})
@@ -196,8 +211,16 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	user.Password = ""
 
 	return c.JSON(fiber.Map{
-		"user":         user,
-		"access_token": token,
+		"message": "Login successful",
+		"data": fiber.Map{
+			"user":         user,
+			"access_token": token,
+			"accessToken":  token, // Camel case for compatibility
+			"token_type":   "Bearer",
+		},
+		"user":         user,         // Keep top-level for backward compatibility
+		"access_token": token,        // Keep top-level for backward compatibility
+		"accessToken":  token,        // Add camelCase at top level too
 	})
 }
 
@@ -227,7 +250,14 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"access_token": newToken,
+		"message": "Token refreshed successfully",
+		"data": fiber.Map{
+			"access_token": newToken,
+			"accessToken":  newToken,
+			"token_type":   "Bearer",
+		},
+		"access_token": newToken, // Keep top-level for backward compatibility
+		"accessToken":  newToken, // Add camelCase at top level too
 	})
 }
 

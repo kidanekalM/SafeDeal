@@ -16,7 +16,7 @@ import {
 } from '../types';
 
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8081';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || '';
 
 // Create Axios instance
 const api = axios.create({
@@ -60,7 +60,7 @@ api.interceptors.response.use(
       try {
         console.log("🔄 401 detected - attempting automatic token refresh...");
         if (!refreshPromise) {
-          refreshPromise = api.post('/refresh-token')
+          refreshPromise = api.post('/api/refresh-token')
             .then((refreshResponse) => {
               const newToken = refreshResponse.data.access_token;
               localStorage.setItem('access_token', newToken);
@@ -103,24 +103,24 @@ api.interceptors.response.use(
 // ---------- API endpoints ----------
 export const authApi = {
   login: (data: LoginRequest): Promise<AxiosResponse<AuthResponse>> =>
-    api.post('/login', data),
+    api.post('/api/login', data),
 
   register: (data: RegisterRequest): Promise<AxiosResponse<AuthResponse>> =>
-    api.post('/register', data),
+    api.post('/api/register', data),
 
-  logout: (): Promise<AxiosResponse<void>> => api.post('/api/logout'),
+  logout: (): Promise<AxiosResponse<void>> => api.post('/api/v1/logout'),
 
   // ✅ Refresh using cookie — no params needed
   refreshToken: (): Promise<AxiosResponse<{ access_token: string; expires_in: number }>> =>
-    api.post('/refresh-token'),
+    api.post('/api/refresh-token'),
 };
 
 export const userApi = {
-  getProfile: (): Promise<AxiosResponse<User>> => api.get('/api/profile'),
+  getProfile: (): Promise<AxiosResponse<User>> => api.get('/api/v1/profile'),
   getTrustInsights: (): Promise<AxiosResponse<{trust_score:number; factors:{completed:number; disputed:number; refunded:number}}>> =>
-    api.get('/api/profile/trust-insights'),
+    api.get('/api/v1/profile/trust-insights'),
   updateProfile: (data: UpdateProfileRequest, userId: number): Promise<AxiosResponse<User>> =>
-    api.patch('/api/updateprofile', data, {
+    api.patch('/api/v1/updateprofile', data, {
       headers: {
         'X-User-ID': userId.toString(),
       },
@@ -130,12 +130,12 @@ export const userApi = {
     api.get(`/api/search?q=${encodeURIComponent(query)}`),
 
   getContacts: (): Promise<AxiosResponse<{ contacts: SearchUser[]; total: number }>> => 
-    api.get('/api/escrows/contacts'),
+    api.get('/api/v1/escrows/contacts'),
   getAllUsers: (): Promise<AxiosResponse<{ users: SearchUser[]; total: number }>> => 
-    api.get('/api/search'),
+    api.get('/api/v1/search'),
   updateBankDetails: (data: BankDetails): Promise<AxiosResponse<User>> =>
-    api.put('/api/profile/bank-details', data),
-  createWallet: (): Promise<AxiosResponse<User>> => api.post('/api/wallet'),
+    api.put('/api/v1/profile/bank-details', data),
+  createWallet: (): Promise<AxiosResponse<User>> => api.post('/api/v1/wallet'),
   resendActivation: (email: string): Promise<AxiosResponse<{ message: string }>> =>
     axios.post(`${API_BASE_URL}/resend`, { email }),
 };
@@ -144,65 +144,63 @@ export const userApi = {
 export const escrowApi = {
     // POST Create-escrow
     create: (data: CreateEscrowRequest): Promise<AxiosResponse<Escrow>> =>
-        api.post('/api/escrows', data),
+        api.post('/api/v1/escrows', data),
 
     // GET My Escrows - Get user's escrows
     // Backend returns: { escrows: Escrow[], summary: { total, active, completed } }
     // Fix route mismatch - backend: /api/escrows, frontend was /my  
     getMyEscrows: (): Promise<AxiosResponse<Escrow[]>> =>
-        api.get('/api/escrows'),
+        api.get('/api/v1/escrows'),
 
     // GET Fetch-escrow
     getById: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.get(`/api/escrows/${id}`),
+        api.get(`/v1/escrows/${id}`),
 
     // POST Accept-escrow
     accept: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/${id}/accept`),
+        api.post(`/v1/escrows/${id}/accept`),
 
     // POST Confirm-receipt
     confirmReceipt: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/${id}/confirm-receipt`),
+        api.post(`/v1/escrows/${id}/confirm-receipt`),
 
     // POST Dispute
     dispute: (id: number, reason: string): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/dispute/${id}`, { reason }),
+        api.post(`/v1/escrows/dispute/${id}`, { reason }),
 
     // POST Cancel
     cancel: (id: number): Promise<AxiosResponse<void>> =>
-        api.post(`/api/escrows/${id}/cancel`),
+        api.post(`/v1/escrows/${id}/cancel`),
 
     // POST Upload-receipt
     uploadReceipt: (id: number, receiptUrl: string): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
+        api.post(`/v1/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
 
     // POST Verify-CBE
     verifyCBE: (id: number, transactionId: string, accountSuffix: string): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
+        api.post(`/v1/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
 
     update: (id: number, data: { amount?: number; conditions?: string }): Promise<AxiosResponse<Escrow>> => 
-        api.put(`/api/escrows/${id}`, data),
+        api.put(`/v1/escrows/${id}`, data),
     
     lock: (id: number): Promise<AxiosResponse<Escrow>> => 
-        api.post(`/api/escrows/${id}/lock`),
+        api.post(`/v1/escrows/${id}/lock`),
 
     // GET Dispute (if available)
     getDispute: (id: number): Promise<AxiosResponse<any>> =>
-        api.get(`/api/escrows/dispute/${id}`),
+        api.get(`/v1/escrows/dispute/${id}`),
     resolveDispute: (id: number, action: 'release' | 'refund', note: string): Promise<AxiosResponse<any>> =>
-        api.post(`/api/escrows/dispute/${id}/resolve`, { action, note }),
+        api.post(`/v1/escrows/dispute/${id}/resolve`, { action, note }),
     getStatusHistory: (id: number): Promise<AxiosResponse<any[]>> =>
-        api.get(`/api/escrows/${id}/status-history`),
+        api.get(`/v1/escrows/${id}/status-history`),
 
     downloadFinalAgreement: (id: number): Promise<AxiosResponse<any>> =>
-        api.get(`/api/escrows/${id}/final-agreement`, { responseType: 'blob' }),
+        api.get(`/v1/escrows/${id}/final-agreement`, { responseType: 'blob' }),
 
     requestAIDecision: (id: number): Promise<AxiosResponse<any>> =>
-        api.post(`/api/escrows/dispute/${id}/ai-decision`),
-    };
-    // POST Refund
+        api.post(`/v1/escrows/dispute/${id}/ai-decision`),
     refund: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/escrows/${id}/refund`),
+        api.post(`/v1/escrows/${id}/refund`),
 
     // Helper function to get multiple escrows by IDs
     getMultipleByIds: async (ids: number[]): Promise<Escrow[]> => {
@@ -218,10 +216,10 @@ export const escrowApi = {
 // NEW: Milestone API - matches backend milestone_handler.go
 export const milestoneApi = {
   getByEscrow: (escrowId: number): Promise<AxiosResponse<Milestone[]>> =>
-    api.get(`/api/escrows/${escrowId}/milestones`),
+    api.get(`/v1/escrows/${escrowId}/milestones`),
 
   create: (data: CreateMilestoneRequest): Promise<AxiosResponse<Milestone>> =>
-    api.post('/api/milestones', data),
+    api.post('/api/v1/milestones', data),
 
   getById: (id: number): Promise<AxiosResponse<Milestone>> =>
     api.get(`/api/milestones/${id}`),
@@ -244,7 +242,7 @@ export const paymentApi = {
     // POST Payment
     initiateEscrowPayment: async (escrowId: number, paymentMethod: 'Chapa' | 'Transfer' = 'Chapa'): Promise<AxiosResponse<EscrowPayment>> => {
         // Fetch escrow to get amount if needed
-        const escrowResp = await api.get(`/api/escrows/${escrowId}`);
+        const escrowResp = await api.get(`/v1/escrows/${escrowId}`);
         const amount = escrowResp?.data?.amount;
         const profileRaw = localStorage.getItem('user_profile');
         let email = '';
@@ -261,7 +259,7 @@ export const paymentApi = {
             }
         } catch { }
 
-        return api.post('/api/payments/initiate', {
+        return api.post('/api/v1/payments/initiate', {
             escrow_id: escrowId,
             amount,
             payment_method: paymentMethod,
@@ -275,7 +273,7 @@ export const paymentApi = {
 
     // GET Transaction History
     getTransactionHistory: (): Promise<AxiosResponse<{ transactions: TransactionHistory[]; total: number; status: string }>> =>
-        api.get('/api/payments/transactions'),
+        api.get('/api/v1/payments/transactions'),
 };
 
 // WebSocket API for real-time features

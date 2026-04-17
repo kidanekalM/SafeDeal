@@ -1,0 +1,118 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]:
+        - link "SafeDeal" [ref=e9] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e11]
+          - generic [ref=e14]: SafeDeal
+        - heading "Dashboard" [level=1] [ref=e15]
+        - generic [ref=e16]:
+          - button "Notifications" [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - link "BT" [ref=e21] [cursor=pointer]:
+            - /url: /profile
+            - generic [ref=e22]: BT
+      - navigation [ref=e23]:
+        - generic [ref=e24]:
+          - link "Dashboard" [ref=e25] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e26]
+            - generic [ref=e31]: Dashboard
+          - link "My Escrows" [ref=e32] [cursor=pointer]:
+            - /url: /escrows
+            - img [ref=e33]
+            - generic [ref=e36]: My Escrows
+          - link "Start New Deal" [ref=e37] [cursor=pointer]:
+            - /url: /create-escrow
+            - img [ref=e38]
+            - generic [ref=e41]: Start New Deal
+          - link "Directory" [ref=e42] [cursor=pointer]:
+            - /url: /search
+            - img [ref=e43]
+            - generic [ref=e46]: Directory
+          - link "Payments" [ref=e47] [cursor=pointer]:
+            - /url: /transactions
+            - img [ref=e48]
+            - generic [ref=e51]: Payments
+          - link "Profile" [ref=e52] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e53]
+            - generic [ref=e56]: Profile
+    - main [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - heading "Welcome, Buyer!" [level=2] [ref=e63]
+                - generic "Verified User" [ref=e64]:
+                  - img [ref=e65]
+                  - generic [ref=e68]: Verified
+              - paragraph [ref=e69]: Your secure gateway to trust-based transactions is active and protected.
+              - generic [ref=e70]:
+                - link "Start New Deal" [ref=e71] [cursor=pointer]:
+                  - /url: /create-escrow
+                  - img [ref=e72]
+                  - text: Start New Deal
+                - button "Refresh" [ref=e74] [cursor=pointer]:
+                  - img [ref=e75]
+                  - text: Refresh
+            - img [ref=e80]
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - img [ref=e84]
+              - generic [ref=e87]:
+                - generic [ref=e88]: "65"
+                - generic [ref=e89]: Trust Score
+            - heading "Verified Professional" [level=4] [ref=e90]:
+              - img [ref=e91]
+              - text: Verified Professional
+            - paragraph [ref=e94]: Level 1 Member
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - img [ref=e99]
+            - paragraph [ref=e101]: Active Deals
+            - paragraph [ref=e102]: "0"
+          - generic [ref=e103]:
+            - img [ref=e106]
+            - paragraph [ref=e109]: Completed
+            - paragraph [ref=e110]: "0"
+          - generic [ref=e111]:
+            - img [ref=e114]
+            - paragraph [ref=e117]: Total Volume
+            - paragraph [ref=e118]: ETB 0.00
+          - generic [ref=e119]:
+            - img [ref=e122]
+            - paragraph [ref=e126]: Disputed
+            - paragraph [ref=e127]: "0"
+        - generic [ref=e128]:
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - heading "Recent Transactions" [level=3] [ref=e131]
+              - link "View All History" [ref=e132] [cursor=pointer]:
+                - /url: /escrows
+            - generic [ref=e134]:
+              - img [ref=e136]
+              - paragraph [ref=e138]: No transactions found
+          - generic [ref=e139]:
+            - heading "SafeDeal Hub" [level=3] [ref=e140]
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - img [ref=e143]
+                - heading "Become a Top-Rated Provider" [level=4] [ref=e146]
+                - paragraph [ref=e147]: Complete deals without disputes to increase your trust score and unlock lower fees.
+                - button "Learn More" [ref=e148] [cursor=pointer]
+              - img [ref=e149]
+            - generic [ref=e152]:
+              - heading "Security Overview" [level=4] [ref=e153]
+              - generic [ref=e154]:
+                - paragraph [ref=e157]: Encrypted Private Keys
+                - paragraph [ref=e160]: Blockchain Audit Logging
+                - paragraph [ref=e163]: AI Dispute Resolution Active
+    - button "🔍 Show Debug" [ref=e165] [cursor=pointer]
+  - status [ref=e171]: Welcome back, Buyer!
+```

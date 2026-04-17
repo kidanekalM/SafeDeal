@@ -1,0 +1,16 @@
+        {/* Onboarding Banner */}
+        {(location.state as any)?.needsOnboarding && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-[2rem] flex items-center gap-6 shadow-xl"
+          >
+            <div className="p-4 bg-yellow-100 rounded-2xl text-yellow-600">
+              <AlertCircle className="h-8 w-8" />
+            </div>
+            <div>
+              <h4 className="text-xl font-black uppercase tracking-tight text-yellow-900">{t('pages.complete_your_profile', 'Complete Your Profile')}</h4>
+              <p className="text-yellow-700 text-sm opacity-80">{t('pages.you_need_to_provide_your_profession', 'You need to provide your profession and bank details before you can create or accept escrows.')}</p>
+            </div>
+          </motion.div>
+        )}

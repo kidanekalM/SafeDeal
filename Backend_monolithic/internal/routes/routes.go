@@ -8,10 +8,11 @@ import (
 	"backend_monolithic/internal/blockchain"
 	"backend_monolithic/internal/handlers"
 	"backend_monolithic/internal/rabbitmq"
+	"backend_monolithic/pkg/mailer"
 	"gorm.io/gorm"
-)
+	)
 
-type ServiceContainer struct {
+	type ServiceContainer struct {
 	DB                  *gorm.DB
 	AuthService         *auth.Service
 	UserHandler         *handlers.UserHandler
@@ -21,9 +22,10 @@ type ServiceContainer struct {
 	NotificationHandler *handlers.NotificationHandler
 	BlockChainClient    *blockchain.Client
 	MilestoneHandler    *handlers.MilestoneHandler
-}
+	Mailer              *mailer.Mailer
+	}
 
-func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
+	func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
 	authService := auth.NewService(db)
 	blockchainClient, err := blockchain.NewClient() // Actual implementation
 	if err != nil {
@@ -32,6 +34,7 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 
 	notificationHandler := handlers.NewNotificationHandler(db, authService)
 	milestoneHandler := handlers.NewMilestoneHandler(db, blockchainClient)
+	mail := mailer.NewMailer() // Instantiate the mailer
 
 	return &ServiceContainer{
 		DB:                  db,
@@ -43,19 +46,22 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		NotificationHandler: notificationHandler,
 		MilestoneHandler:    milestoneHandler,
 		BlockChainClient:    blockchainClient,
+		Mailer:              mail, // Add the mailer instance
 	}
-}
+	}
 
 func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
-	// Public routes
-	public := app.Group("/")
-	public.Post("/register", sc.UserHandler.Register)
-	public.Post("/login", sc.UserHandler.Login)
-	public.Get("/activate", sc.UserHandler.ActivateAccount)
-	public.Post("/refresh-token", sc.UserHandler.RefreshToken)
+	// Root API group
+	api := app.Group("/api")
+
+	// Public routes (no middleware)
+	api.Post("/register", sc.UserHandler.Register)
+	api.Post("/login", sc.UserHandler.Login)
+	api.Get("/activate", sc.UserHandler.ActivateAccount)
+	api.Post("/refresh-token", sc.UserHandler.RefreshToken)
 	
-	// WebSocket routes moved to public group for better auth handling
-	public.Get("/api/chat/ws/:id", func(c *fiber.Ctx) error {
+	// WebSocket routes (no middleware)
+	api.Get("/chat/ws/:id", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			// Extract token from header or query parameter
 			authHeader := c.Get("Authorization")
@@ -72,7 +78,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 		return fiber.ErrUpgradeRequired
 	}, websocket.New(sc.ChatHandler.HandleWebSocket))
 
-	public.Get("/api/notifications/ws", func(c *fiber.Ctx) error {
+	api.Get("/notifications/ws", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			// Extract token from header or query parameter
 			authHeader := c.Get("Authorization")
@@ -88,56 +94,56 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 		return fiber.ErrUpgradeRequired
 	}, websocket.New(sc.NotificationHandler.HandleWebSocket))
 
-	// Protected routes
-	protected := app.Group("/api", sc.AuthService.JWTMiddleware)
+	// Protected routes group (v1)
+	v1 := api.Group("/v1", sc.AuthService.JWTMiddleware)
 
 	// User routes
-	protected.Get("/profile", sc.UserHandler.GetProfile)            // GET request to fetch profile
-	protected.Get("/profile/trust-insights", sc.UserHandler.GetTrustInsights)
-	protected.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
-	protected.Get("/profile/bank-details", sc.UserHandler.GetBankDetails)
-	protected.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
-	protected.Post("/wallet", sc.UserHandler.CreateWallet) // Endpoint for creating Ethereum wallet
-	protected.Post("/logout", sc.UserHandler.Logout)
+	v1.Get("/profile", sc.UserHandler.GetProfile)            // GET request to fetch profile
+	v1.Get("/profile/trust-insights", sc.UserHandler.GetTrustInsights)
+	v1.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
+	v1.Get("/profile/bank-details", sc.UserHandler.GetBankDetails)
+	v1.Put("/profile/bank-details", sc.UserHandler.UpdateBankDetails)
+	v1.Post("/wallet", sc.UserHandler.CreateWallet) // Endpoint for creating Ethereum wallet
+	v1.Post("/logout", sc.UserHandler.Logout)
 
 	// Escrow routes
-	protected.Post("/escrows", sc.EscrowHandler.CreateEscrow)
-	protected.Get("/escrows/:id", sc.EscrowHandler.GetEscrowByID)
-	protected.Get("/escrows", sc.EscrowHandler.GetMyEscrows)
-	protected.Put("/escrows/:id/accept", sc.EscrowHandler.AcceptEscrow)
-	protected.Post("/escrows/:id/lock", sc.EscrowHandler.LockEscrow)
-	protected.Put("/escrows/:id", sc.EscrowHandler.UpdateEscrow)
-	protected.Post("/escrows/:id/verify", sc.EscrowHandler.VerifyPayment)
-	protected.Post("/escrows/:id/verify-cbe", sc.EscrowHandler.VerifyCBEPayment)
-	protected.Post("/escrows/:id/cancel", sc.EscrowHandler.CancelEscrow)
+	v1.Post("/escrows", sc.EscrowHandler.CreateEscrow)
+	v1.Get("/escrows/:id", sc.EscrowHandler.GetEscrowByID)
+	v1.Get("/escrows", sc.EscrowHandler.GetMyEscrows)
+	v1.Put("/escrows/:id/accept", sc.EscrowHandler.AcceptEscrow)
+	v1.Post("/escrows/:id/lock", sc.EscrowHandler.LockEscrow)
+	v1.Put("/escrows/:id", sc.EscrowHandler.UpdateEscrow)
+	v1.Post("/escrows/:id/verify", sc.EscrowHandler.VerifyPayment)
+	v1.Post("/escrows/:id/verify-cbe", sc.EscrowHandler.VerifyCBEPayment)
+	v1.Post("/escrows/:id/cancel", sc.EscrowHandler.CancelEscrow)
 
-	protected.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
-	protected.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
-	protected.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)
-	protected.Post("/escrows/dispute/:id/ai-decision", sc.EscrowHandler.RequestAIDecision)
-	protected.Post("/escrows/dispute/:id/resolve", sc.EscrowHandler.ResolveDispute)
-	protected.Post("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow) // Changed to POST to match standard REST practices
-	protected.Post("/escrows/:id/receipt", sc.EscrowHandler.UploadReceipt)
-	protected.Get("/escrows/:id/status-history", sc.EscrowHandler.GetStatusHistory)
-	protected.Get("/escrows/:id/final-agreement", sc.EscrowHandler.DownloadFinalizedAgreement)
-	protected.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
+	v1.Put("/escrows/:id/confirm-receipt", sc.EscrowHandler.ConfirmReceipt)
+	v1.Post("/escrows/dispute/:id", sc.EscrowHandler.CreateDispute) // Endpoint for creating disputes
+	v1.Get("/escrows/dispute/:id", sc.EscrowHandler.GetDispute)
+	v1.Post("/escrows/dispute/:id/ai-decision", sc.EscrowHandler.RequestAIDecision)
+	v1.Post("/escrows/dispute/:id/resolve", sc.EscrowHandler.ResolveDispute)
+	v1.Post("/escrows/:id/refund", sc.EscrowHandler.RefundEscrow) // Changed to POST to match standard REST practices
+	v1.Post("/escrows/:id/receipt", sc.EscrowHandler.UploadReceipt)
+	v1.Get("/escrows/:id/status-history", sc.EscrowHandler.GetStatusHistory)
+	v1.Get("/escrows/:id/final-agreement", sc.EscrowHandler.DownloadFinalizedAgreement)
+	v1.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
 
 	// Search routes - for finding users
-	protected.Get("/search", sc.UserHandler.GetAllUsers)        // Endpoint for getting all users
-	protected.Get("/search/:query", sc.UserHandler.SearchUsers) // Endpoint for searching users by query
+	v1.Get("/search", sc.UserHandler.GetAllUsers)        // Endpoint for getting all users
+	v1.Get("/search/:query", sc.UserHandler.SearchUsers) // Endpoint for searching users by query
 
 	// Milestone routes
-	protected.Post("/milestones", sc.MilestoneHandler.CreateMilestone)
-	protected.Get("/milestones/:id", sc.MilestoneHandler.GetMilestone)
-	protected.Get("/escrows/:escrowId/milestones", sc.MilestoneHandler.GetMilestonesByEscrow)
-	protected.Put("/milestones/:id", sc.MilestoneHandler.UpdateMilestone)
-	protected.Put("/milestones/:id/submit", sc.MilestoneHandler.SubmitMilestone)
-	protected.Put("/milestones/:id/approve", sc.MilestoneHandler.ApproveMilestone)
-	protected.Put("/milestones/:id/reject", sc.MilestoneHandler.RejectMilestone)
+	v1.Post("/milestones", sc.MilestoneHandler.CreateMilestone)
+	v1.Get("/milestones/:id", sc.MilestoneHandler.GetMilestone)
+	v1.Get("/escrows/:escrowId/milestones", sc.MilestoneHandler.GetMilestonesByEscrow)
+	v1.Put("/milestones/:id", sc.MilestoneHandler.UpdateMilestone)
+	v1.Put("/milestones/:id/submit", sc.MilestoneHandler.SubmitMilestone)
+	v1.Put("/milestones/:id/approve", sc.MilestoneHandler.ApproveMilestone)
+	v1.Put("/milestones/:id/reject", sc.MilestoneHandler.RejectMilestone)
 
 	// Payment routes
-	protected.Post("/payments/initiate", sc.PaymentHandler.InitiatePayment)
-	protected.Get("/payments/transactions", sc.PaymentHandler.GetTransactions)
+	v1.Post("/payments/initiate", sc.PaymentHandler.InitiatePayment)
+	v1.Get("/payments/transactions", sc.PaymentHandler.GetTransactions)
 }
 
 // Export the service container for use in verification handler
