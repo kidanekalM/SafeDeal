@@ -7,9 +7,6 @@ import {
   Wallet,
   CreditCard,
   Copy,
-  Eye,
-  EyeOff,
-  CheckCircle,
   AlertCircle,
 } from "lucide-react";
 import Layout from "../components/Layout";
@@ -19,7 +16,7 @@ import { toast } from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { BankDetails, UpdateProfileRequest } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { BANKS, getBankByCode } from "../lib/banks";
+import { BANKS } from "../lib/banks";
 
 const Profile = () => {
   const { t } = useTranslation();
@@ -27,25 +24,21 @@ const Profile = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoading, setIsLoading] = useState(false);
-  const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const [selectedBankCode, setSelectedBankCode] = useState<number | null>(null);
-  const [showBankForm, setShowBankForm] = useState(false);
   const [trustInsights, setTrustInsights] = useState<{completed:number; disputed:number; refunded:number} | null>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
     reset,
   } = useForm<BankDetails>();
 
   const {
     register: registerProfile,
     handleSubmit: handleSubmitProfile,
-    formState: { errors: profileErrors },
     reset: resetProfile,
   } = useForm<UpdateProfileRequest>();
 

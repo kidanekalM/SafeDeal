@@ -127,6 +127,14 @@ const Layout = ({ children }: LayoutProps) => {
                   {user?.first_name?.[0]}{user?.last_name?.[0]}
                 </span>
               </Link>
+              <button
+                onClick={handleLogout}
+                className="hidden md:flex p-2 text-gray-400 hover:text-red-600 transition-colors"
+                aria-label={t('components.sign_out', 'Sign out')}
+                title={t('components.sign_out', 'Sign out')}
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>

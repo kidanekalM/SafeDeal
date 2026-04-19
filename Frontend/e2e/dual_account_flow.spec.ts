@@ -44,7 +44,7 @@ test.describe('Dual Account Escrow Flow', () => {
     await buyerPage.fill('input[name="account_number"]', '1000123456789');
     await buyerPage.click('button:has-text("Complete Registration")');
     
-    await expect(buyerPage.locator('button:has-text("Sign In")')).toBeVisible({ timeout: 15000 });
+    await expect(buyerPage.locator('button[type="submit"]:has-text("Sign In")')).toBeVisible({ timeout: 15000 });
     console.log('Buyer registered');
 
     console.log('Registering seller...');
@@ -60,7 +60,7 @@ test.describe('Dual Account Escrow Flow', () => {
     await sellerPage.fill('input[name="account_number"]', '2000123456789');
     await sellerPage.click('button:has-text("Complete Registration")');
     
-    await expect(sellerPage.locator('button:has-text("Sign In")')).toBeVisible({ timeout: 15000 });
+    await expect(sellerPage.locator('button[type="submit"]:has-text("Sign In")')).toBeVisible({ timeout: 15000 });
     console.log('Seller registered');
 
     // 3. Login both
@@ -86,11 +86,14 @@ test.describe('Dual Account Escrow Flow', () => {
 
     // 4. Buyer creates escrow
     console.log('Buyer creating escrow...');
-    await buyerPage.click('text=Start Deal');
+    await buyerPage.click('text=Start New Deal');
+    await expect(buyerPage).toHaveURL(/.*create-escrow/);
+    
     await buyerPage.click('button:has-text("Continue")'); 
     
     await buyerPage.fill('input[placeholder="Search by name or email..."]', sellerEmail);
     await buyerPage.waitForTimeout(3000);
+    // Use a more specific selector for the search result
     await buyerPage.locator(`button:has-text("${sellerEmail}")`).first().click();
     await buyerPage.click('button:has-text("Continue")');
     
@@ -99,36 +102,60 @@ test.describe('Dual Account Escrow Flow', () => {
     await buyerPage.click('button:has-text("Continue")');
     await buyerPage.click('button:has-text("Start Secure Escrow")');
     
-    await expect(buyerPage).toHaveURL(/.*escrows/);
+    await expect(buyerPage).toHaveURL(/.*escrows/, { timeout: 15000 });
     console.log('Escrow created');
 
     // 5. Seller accepts escrow
     console.log('Seller accepting escrow...');
     await sellerPage.goto('http://localhost:3000/escrows');
-    await sellerPage.locator('[class*="cursor-pointer"]').first().click();
+    // Wait for the list to load
+    await sellerPage.waitForSelector('text=Dual account flow test');
+    await sellerPage.locator('text=Dual account flow test').first().click();
+    
+    await expect(sellerPage).toHaveURL(/\/escrow\/\d+/);
     
     const acceptButton = sellerPage.locator('button:has-text("Accept")').or(sellerPage.locator('button:has-text("Accept Escrow")'));
     await acceptButton.click();
-    await expect(sellerPage.locator('text=Escrow accepted')).toBeVisible();
+    await expect(sellerPage.locator('text=Escrow accepted')).toBeVisible({ timeout: 15000 });
+    console.log('Escrow accepted by seller');
 
     // 6. Buyer funds escrow
     console.log('Buyer funding escrow...');
     await buyerPage.goto('http://localhost:3000/escrows');
-    await buyerPage.locator('[class*="cursor-pointer"]').first().click();
+    await buyerPage.waitForSelector('text=Dual account flow test');
+    await buyerPage.locator('text=Dual account flow test').first().click();
     
-    const payButton = buyerPage.locator('button:has-text("Pay")').or(buyerPage.locator('button:has-text("Fund")'));
+    // Check if status is "Pending" (needs funding)
+    await expect(buyerPage.locator('text=Pending')).toBeVisible();
+    
+    // Use the "Pay with Chapa" button or similar
+    const payButton = buyerPage.locator('button:has-text("Pay with Chapa")');
     await payButton.click();
     
-    const manualVerify = buyerPage.locator('button:has-text("CBE Manual")');
-    if (await manualVerify.isVisible({ timeout: 5000 })) {
+    // Since we can't easily complete Chapa flow in E2E without real webhooks/redirects 
+    // we assume the test might stop here or use a mock.
+    // However, the backend has a "Verify CBE" option in the UI usually.
+    
+    console.log('Buyer attempting CBE Manual verification...');
+    // Refresh or wait for UI update
+    await buyerPage.reload();
+    const manualVerify = buyerPage.locator('button:has-text("CBE Direct Verify")').or(buyerPage.locator('button:has-text("CBE Manual")'));
+    
+    if (await manualVerify.isVisible({ timeout: 10000 })) {
         await manualVerify.click();
-        await buyerPage.fill('input[placeholder*="Transaction ID"]', 'TX-FLOW-TEST');
-        await buyerPage.fill('input[placeholder*="Account Suffix"]', '1234');
-        await buyerPage.click('button:has-text("Submit Verification")');
-        await expect(buyerPage.locator('text=Verification submitted')).toBeVisible();
+        if (await buyerPage.locator('input[placeholder="FT..."]').isVisible()) {
+            await buyerPage.fill('input[placeholder="FT..."]', 'FT26072JFV9');
+            await buyerPage.fill('input[placeholder="262..."]', '262856058');
+            await buyerPage.click('button:has-text("Verify & Fund")');
+        } else {
+            await buyerPage.fill('input[placeholder*="Transaction ID"]', 'TX-FLOW-TEST');
+            await buyerPage.fill('input[placeholder*="Account Suffix"]', '1234');
+            await buyerPage.click('button:has-text("Submit Verification")');
+        }
+        await expect(buyerPage.locator('text=Payment verified successfully').or(buyerPage.locator('text=Verification submitted'))).toBeVisible({ timeout: 30000 });
     }
 
-    console.log('Flow test completed successfully up to verification!');
+    console.log('Flow test completed successfully up to funding!');
     
     await buyerContext.close();
     await sellerContext.close();

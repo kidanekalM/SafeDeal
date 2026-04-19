@@ -6,7 +6,7 @@ import {
   Shield, DollarSign, 
   Search, Check, FileText, 
   ChevronLeft, Trash2,
-  ListChecks, Gavel
+  ListChecks, Gavel, Scale
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -53,7 +53,6 @@ const CreateEscrow = () => {
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [selectedBuyer, setSelectedBuyer] = useState<SearchUser | null>(null);
   const [selectedSeller, setSelectedSeller] = useState<SearchUser | null>(null);
-  const [selectedCounterparty, setSelectedCounterparty] = useState<SearchUser | null>(null);
 
   const {
     register,

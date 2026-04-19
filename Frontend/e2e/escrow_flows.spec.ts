@@ -30,7 +30,7 @@ test.describe('Escrow Creation Flows', () => {
     // Actual login is better if backend is up
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', password);
-    await page.click('button:has-text("Login")');
+    await page.click('button[type="submit"]:has-text("Sign In")');
     await expect(page).toHaveURL(/.*dashboard/);
   });
 

@@ -20,7 +20,7 @@ test.describe('CBE Verification E2E Flow', () => {
     await page.goto('/login');
     await page.fill('input[type="email"]', buyerEmail);
     await page.fill('input[type="password"]', password);
-    await page.click('button:has-text("Login")');
+    await page.click('button[type="submit"]:has-text("Sign In")');
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
   });
 

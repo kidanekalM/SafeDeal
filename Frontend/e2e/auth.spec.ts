@@ -71,7 +71,7 @@ test.describe.serial('Authentication', () => {
     await page.fill('input[type="email"]', randomEmail);
     await page.fill('input[type="password"]', password);
     
-    await page.click('button:has-text("Login")');
+    await page.click('button[type="submit"]:has-text("Sign In")');
 
     // Should redirect to dashboard
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
@@ -83,11 +83,11 @@ test.describe.serial('Authentication', () => {
     await page.goto('/login');
     await page.fill('input[type="email"]', randomEmail);
     await page.fill('input[type="password"]', password);
-    await page.click('button:has-text("Login")');
+    await page.click('button[type="submit"]:has-text("Sign In")');
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
     // Logout
-    await page.click('button:has-text("Sign out")');
+    await page.getByRole('button', { name: 'Sign out' }).first().click();
     await expect(page).toHaveURL(/.*login/, { timeout: 10000 });
   });
 });

@@ -112,7 +112,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
 
       // Should redirect to dashboard
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
@@ -123,7 +123,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', sellerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
 
       // Should redirect to dashboard
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
@@ -139,7 +139,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to create escrow
@@ -182,7 +182,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to escrows list
@@ -197,7 +197,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to escrows list
@@ -224,7 +224,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to create escrow
@@ -283,7 +283,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', sellerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to escrows list
@@ -318,7 +318,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to escrow details
@@ -345,7 +345,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', sellerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to escrow details
@@ -377,7 +377,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Navigate to escrow details
@@ -443,7 +443,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Go to escrows page
@@ -501,7 +501,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Click notification bell
@@ -523,7 +523,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.goto('/login');
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
-      await page.click('button:has-text("Login")');
+      await page.click('button[type="submit"]:has-text("Sign In")');
       await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
       // Logout
@@ -569,7 +569,7 @@ test.describe('Single-User Escrow Flow', () => {
     // 2. Login
     await page.fill('input[type="email"]', testEmail);
     await page.fill('input[type="password"]', password);
-    await page.click('button:has-text("Login")');
+    await page.click('button[type="submit"]:has-text("Sign In")');
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
     // 3. View Dashboard

@@ -154,53 +154,53 @@ export const escrowApi = {
 
     // GET Fetch-escrow
     getById: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.get(`/v1/escrows/${id}`),
+        api.get(`/api/v1/escrows/${id}`),
 
     // POST Accept-escrow
     accept: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/v1/escrows/${id}/accept`),
+        api.post(`/api/v1/escrows/${id}/accept`),
 
     // POST Confirm-receipt
     confirmReceipt: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/v1/escrows/${id}/confirm-receipt`),
+        api.post(`/api/v1/escrows/${id}/confirm-receipt`),
 
     // POST Dispute
     dispute: (id: number, reason: string): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/v1/escrows/dispute/${id}`, { reason }),
+        api.post(`/api/v1/escrows/dispute/${id}`, { reason }),
 
     // POST Cancel
     cancel: (id: number): Promise<AxiosResponse<void>> =>
-        api.post(`/v1/escrows/${id}/cancel`),
+        api.post(`/api/v1/escrows/${id}/cancel`),
 
     // POST Upload-receipt
     uploadReceipt: (id: number, receiptUrl: string): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/v1/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
+        api.post(`/api/v1/escrows/${id}/receipt`, { receipt_url: receiptUrl }),
 
     // POST Verify-CBE
     verifyCBE: (id: number, transactionId: string, accountSuffix: string): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/v1/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
+        api.post(`/api/v1/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
 
     update: (id: number, data: { amount?: number; conditions?: string }): Promise<AxiosResponse<Escrow>> => 
-        api.put(`/v1/escrows/${id}`, data),
+        api.put(`/api/v1/escrows/${id}`, data),
     
     lock: (id: number): Promise<AxiosResponse<Escrow>> => 
-        api.post(`/v1/escrows/${id}/lock`),
+        api.post(`/api/v1/escrows/${id}/lock`),
 
     // GET Dispute (if available)
     getDispute: (id: number): Promise<AxiosResponse<any>> =>
-        api.get(`/v1/escrows/dispute/${id}`),
+        api.get(`/api/v1/escrows/dispute/${id}`),
     resolveDispute: (id: number, action: 'release' | 'refund', note: string): Promise<AxiosResponse<any>> =>
-        api.post(`/v1/escrows/dispute/${id}/resolve`, { action, note }),
+        api.post(`/api/v1/escrows/dispute/${id}/resolve`, { action, note }),
     getStatusHistory: (id: number): Promise<AxiosResponse<any[]>> =>
-        api.get(`/v1/escrows/${id}/status-history`),
+        api.get(`/api/v1/escrows/${id}/status-history`),
 
     downloadFinalAgreement: (id: number): Promise<AxiosResponse<any>> =>
-        api.get(`/v1/escrows/${id}/final-agreement`, { responseType: 'blob' }),
+        api.get(`/api/v1/escrows/${id}/final-agreement`, { responseType: 'blob' }),
 
     requestAIDecision: (id: number): Promise<AxiosResponse<any>> =>
-        api.post(`/v1/escrows/dispute/${id}/ai-decision`),
+        api.post(`/api/v1/escrows/dispute/${id}/ai-decision`),
     refund: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/v1/escrows/${id}/refund`),
+        api.post(`/api/v1/escrows/${id}/refund`),
 
     // Helper function to get multiple escrows by IDs
     getMultipleByIds: async (ids: number[]): Promise<Escrow[]> => {
@@ -216,13 +216,13 @@ export const escrowApi = {
 // NEW: Milestone API - matches backend milestone_handler.go
 export const milestoneApi = {
   getByEscrow: (escrowId: number): Promise<AxiosResponse<Milestone[]>> =>
-    api.get(`/v1/escrows/${escrowId}/milestones`),
+    api.get(`/api/v1/escrows/${escrowId}/milestones`),
 
   create: (data: CreateMilestoneRequest): Promise<AxiosResponse<Milestone>> =>
     api.post('/api/v1/milestones', data),
 
   getById: (id: number): Promise<AxiosResponse<Milestone>> =>
-    api.get(`/api/milestones/${id}`),
+    api.get(`/api/v1/milestones/${id}`),
 
   update: (id: number, data: Partial<CreateMilestoneRequest>): Promise<AxiosResponse<Milestone>> =>
     api.put(`/api/milestones/${id}`, data),
@@ -242,7 +242,7 @@ export const paymentApi = {
     // POST Payment
     initiateEscrowPayment: async (escrowId: number, paymentMethod: 'Chapa' | 'Transfer' = 'Chapa'): Promise<AxiosResponse<EscrowPayment>> => {
         // Fetch escrow to get amount if needed
-        const escrowResp = await api.get(`/v1/escrows/${escrowId}`);
+        const escrowResp = await api.get(`/api/v1/escrows/${escrowId}`);
         const amount = escrowResp?.data?.amount;
         const profileRaw = localStorage.getItem('user_profile');
         let email = '';

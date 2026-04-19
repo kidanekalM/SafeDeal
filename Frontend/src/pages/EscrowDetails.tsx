@@ -64,11 +64,9 @@ const EscrowDetails = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editConditions, setEditConditions] = useState("");
   const [editAmount, setEditAmount] = useState<number>(0);
-  const [receiptUrl, setReceiptUrl] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
@@ -189,27 +187,6 @@ const EscrowDetails = () => {
       toast.success(t('pages.terms_locked', "Locked!"));
       fetchEscrowDetails();
     } catch (error) { toast.error(t('pages.terms_lock_failed', "Failed lock")); }
-  };
-
-  const handleUploadReceipt = async () => {
-    if (!receiptUrl) return;
-    try {
-      await escrowApi.uploadReceipt(Number(id), receiptUrl);
-      toast.success(t('pages.receipt_submitted', "Submitted!"));
-      setShowReceiptModal(false);
-      fetchEscrowDetails();
-    } catch (error) { toast.error(t('pages.receipt_upload_failed', "Failed upload")); }
-  };
-
-  const handleRequestAIDecision = async () => {
-    try {
-      toast.loading(t('pages.ai_analyzing', "AI is analyzing chat and terms..."), { id: 'ai-loading' });
-      await escrowApi.requestAIDecision(Number(id));
-      toast.success(t('pages.ai_decision_ready', "AI has provided a suggestion!"), { id: 'ai-loading' });
-      fetchEscrowDetails();
-    } catch (error) {
-      toast.error(t('pages.ai_failed', "AI arbitration failed"), { id: 'ai-loading' });
-    }
   };
 
   useEffect(() => { if (id) fetchEscrowDetails(); }, [id]);
@@ -455,16 +432,10 @@ const EscrowDetails = () => {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {isBuyer && escrow.status === "Pending" && (
-                  <>
-                    <button onClick={handleInitiatePayment} className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
-                      <Zap size={28} className="group-hover:scale-110 transition-transform" />
-                      <span className="font-black uppercase tracking-widest text-xs">{t('components.pay_with_chapa', 'Pay with Chapa')}</span>
-                    </button>
-                    <button onClick={() => setShowReceiptModal(true)} className="btn btn-outline border-gray-200 btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 hover:bg-gray-50">
-                      <FileText size={28} className="text-gray-400" />
-                      <span className="font-black uppercase tracking-widest text-xs text-gray-600">{t('pages.bank_transfer', 'Bank Transfer')}</span>
-                    </button>
-                  </>
+                  <button onClick={handleInitiatePayment} className="sm:col-span-2 btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
+                    <Zap size={28} className="group-hover:scale-110 transition-transform" />
+                    <span className="font-black uppercase tracking-widest text-xs">{t('components.pay_with_chapa', 'Pay with Chapa')}</span>
+                  </button>
                 )}
                 
                 {isSeller && !escrow.active && escrow.status === "Funded" && (
