@@ -127,7 +127,7 @@ export const userApi = {
     }),
   
   searchUsers: (query: string): Promise<AxiosResponse<{ data: { users: SearchUser[]; pagination: any; invited?: boolean }; message: string }>> =>
-    api.get(`/api/search?q=${encodeURIComponent(query)}`),
+    api.get(`/api/v1/search?q=${encodeURIComponent(query)}`),
 
   getContacts: (): Promise<AxiosResponse<{ contacts: SearchUser[]; total: number }>> => 
     api.get('/api/v1/escrows/contacts'),
@@ -156,13 +156,13 @@ export const escrowApi = {
     getById: (id: number): Promise<AxiosResponse<Escrow>> =>
         api.get(`/api/v1/escrows/${id}`),
 
-    // POST Accept-escrow
+    // PUT Accept-escrow
     accept: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/v1/escrows/${id}/accept`),
+        api.put(`/api/v1/escrows/${id}/accept`),
 
-    // POST Confirm-receipt
+    // PUT Confirm-receipt
     confirmReceipt: (id: number): Promise<AxiosResponse<Escrow>> =>
-        api.post(`/api/v1/escrows/${id}/confirm-receipt`),
+        api.put(`/api/v1/escrows/${id}/confirm-receipt`),
 
     // POST Dispute
     dispute: (id: number, reason: string): Promise<AxiosResponse<Escrow>> =>

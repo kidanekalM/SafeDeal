@@ -150,7 +150,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('button:has-text("Continue")');
 
       // Step 2: Parties - Search for seller
-      await page.fill('input[placeholder="Search by name or email..."]', 'Seller');
+      await page.fill('input[placeholder="Search seller by email..."]', 'Seller');
       await page.waitForTimeout(2000); // Wait for search results
       await page.waitForSelector('button:has-text("Seller")', { timeout: 5000 });
       await page.locator('button:has-text("Seller")').first().click();
@@ -236,7 +236,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('button:has-text("Continue")');
 
       // Step 2: Select counterparty
-      await page.fill('input[placeholder="Search by name or email..."]', 'test');
+      await page.fill('input[placeholder="Search seller by email..."]', 'test');
       await page.waitForSelector('button:has-text("test")', { timeout: 5000 });
       await page.locator('button:has-text("test")').first().click();
       await page.click('button:has-text("Continue")');

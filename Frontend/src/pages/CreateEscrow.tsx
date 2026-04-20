@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
-import api, { userApi } from '../lib/api';
+import api, { userApi, escrowApi } from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -57,7 +57,7 @@ const CreateEscrow = () => {
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting, isValid },
+    formState: { isSubmitting, isValid, errors: formErrors },
     watch,
     setValue,
     control,
@@ -74,6 +74,12 @@ const CreateEscrow = () => {
       dispute_resolution: 'AI Arbitration via SafeDeal',
     }
   });
+
+  useEffect(() => {
+    if (Object.keys(formErrors).length > 0) {
+      console.log("DEBUG: Form Errors:", JSON.stringify(formErrors));
+    }
+  }, [formErrors]);
 
   const { fields, append, remove } = useFieldArray({ control, name: 'milestones' });
 
@@ -225,7 +231,7 @@ const CreateEscrow = () => {
         else if (data.seller_email) payload.seller_email = data.seller_email;
       }
       
-      await api.post(`/api/escrows`, payload);
+      await escrowApi.create(payload as any);
       toast.success(t('pages.escrow_created_success', 'Created!')); 
       navigate('/escrows');
     } catch (error: any) {

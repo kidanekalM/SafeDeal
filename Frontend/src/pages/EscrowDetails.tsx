@@ -65,6 +65,10 @@ const EscrowDetails = () => {
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCBEModal, setShowCBEModal] = useState(false);
+  const [cbeTransactionId, setCbeTransactionId] = useState("");
+  const [cbeAccountSuffix, setCbeAccountSuffix] = useState("");
+  const [isVerifyingCBE, setIsVerifyingCBE] = useState(false);
   const [editConditions, setEditConditions] = useState("");
   const [editAmount, setEditAmount] = useState<number>(0);
   const [disputeReason, setDisputeReason] = useState("");
@@ -75,9 +79,9 @@ const EscrowDetails = () => {
   const [loadingMilestones, setLoadingMilestones] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
 
-  const isBuyer = user?.id === escrow?.buyer_id;
-  const isSeller = user?.id === escrow?.seller_id;
-  const isMediator = user?.id === escrow?.mediator_id;
+  const isBuyer = Number(user?.id) === Number(escrow?.buyer_id);
+  const isSeller = Number(user?.id) === Number(escrow?.seller_id);
+  const isMediator = Number(user?.id) === Number(escrow?.mediator_id);
 
   const fetchEscrowDetails = async (retryCount = 0) => {
     if (!id) return;
@@ -85,21 +89,33 @@ const EscrowDetails = () => {
       toast.error(t('pages.backend_issues', "🚫 Backend is experiencing issues."));
       return;
     }
-    if (isBackendBusy) return;
     const escrowId = parseInt(id);
     if (isNaN(escrowId)) return;
-    setIsBackendBusy(true);
-    setTimeout(() => setIsBackendBusy(false), 2000);
     if (retryCount === 0) setIsLoading(true);
     try {
       const response = await escrowApi.getById(escrowId);
       const rawData = response.data as any;
+      console.log("DEBUG: Escrow Data:", JSON.stringify({ 
+        status: rawData.status || rawData.Status, 
+        active: rawData.active !== undefined ? rawData.active : rawData.Active,
+        user_id: user?.id,
+        escrow_seller_id: rawData.seller_id || rawData.SellerID,
+        isSeller: Number(user?.id) === Number(rawData.seller_id || rawData.SellerID)
+      }));
       setEscrow({
         ...rawData,
         id: rawData.id || rawData.ID,
+        buyer_id: rawData.buyer_id || rawData.BuyerID,
+        seller_id: rawData.seller_id || rawData.SellerID,
+        mediator_id: rawData.mediator_id || rawData.MediatorID,
+        amount: rawData.amount || rawData.Amount,
+        platform_fee: rawData.platform_fee || rawData.PlatformFee,
+        status: rawData.status || rawData.Status,
         active: rawData.active !== undefined ? rawData.active : rawData.Active,
+        is_locked: rawData.is_locked !== undefined ? rawData.is_locked : rawData.IsLocked,
         created_at: rawData.created_at || rawData.CreatedAt,
         updated_at: rawData.updated_at || rawData.UpdatedAt,
+        blockchain_tx_hash: rawData.blockchain_tx_hash || rawData.BlockchainTxHash,
       });
       setErrorCount(0);
       
@@ -189,17 +205,35 @@ const EscrowDetails = () => {
     } catch (error) { toast.error(t('pages.terms_lock_failed', "Failed lock")); }
   };
 
+  const handleCBEVerify = async () => {
+    if (!cbeTransactionId || !cbeAccountSuffix) {
+      toast.error(t('pages.fill_all_fields', "Please fill all fields"));
+      return;
+    }
+    setIsVerifyingCBE(true);
+    try {
+      await escrowApi.verifyCBE(Number(id), cbeTransactionId, cbeAccountSuffix);
+      toast.success(t('pages.payment_verified_success', "Payment verified successfully!"));
+      setShowCBEModal(false);
+      fetchEscrowDetails();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || t('pages.verification_failed', "Verification failed"));
+    } finally {
+      setIsVerifyingCBE(false);
+    }
+  };
+
   useEffect(() => { if (id) fetchEscrowDetails(); }, [id]);
 
   useEffect(() => {
-    if (escrow?.id && !loadingMilestones) {
+    if (escrow?.id) {
       setLoadingMilestones(true);
       milestoneApi.getByEscrow(escrow.id)
         .then((res) => setMilestones(res.data))
         .catch(() => {})
         .finally(() => setLoadingMilestones(false));
     }
-  }, [escrow?.id, loadingMilestones]);
+  }, [escrow?.id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -432,10 +466,16 @@ const EscrowDetails = () => {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {isBuyer && escrow.status === "Pending" && (
-                  <button onClick={handleInitiatePayment} className="sm:col-span-2 btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
-                    <Zap size={28} className="group-hover:scale-110 transition-transform" />
-                    <span className="font-black uppercase tracking-widest text-xs">{t('components.pay_with_chapa', 'Pay with Chapa')}</span>
-                  </button>
+                  <>
+                    <button onClick={handleInitiatePayment} className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
+                      <Zap size={28} className="group-hover:scale-110 transition-transform" />
+                      <span className="font-black uppercase tracking-widest text-xs">{t('components.pay_with_chapa', 'Pay with Chapa')}</span>
+                    </button>
+                    <button onClick={() => setShowCBEModal(true)} className="btn btn-outline border-gray-200 btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 hover:bg-gray-50">
+                      <Shield size={28} className="text-primary-600" />
+                      <span className="font-black uppercase tracking-widest text-xs text-gray-600">{t('pages.cbe_direct_verify', 'CBE Direct Verify')}</span>
+                    </button>
+                  </>
                 )}
                 
                 {isSeller && !escrow.active && escrow.status === "Funded" && (
@@ -645,6 +685,36 @@ const EscrowDetails = () => {
                   <button onClick={() => setShowEditModal(false)} className="flex-1 btn btn-ghost h-14 rounded-2xl font-bold">{t('pages.discard_changes', 'Discard')}</button>
                   <button onClick={handleEditSubmit} className="flex-1 btn btn-primary h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary-500/20">{t('pages.apply_revisions', 'Apply Revisions')}</button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showCBEModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-md no-print">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                <Shield size={32} />
+              </div>
+              <h3 className="text-3xl font-black text-gray-900 mb-2">{t('pages.cbe_verification', 'CBE Verification')}</h3>
+              <p className="text-gray-500 mb-8">{t('pages.cbe_verify_desc', 'Enter the transaction ID and your account suffix to verify payment.')}</p>
+              
+              <div className="space-y-4 mb-8">
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Transaction ID</label>
+                  <input type="text" value={cbeTransactionId} onChange={e => setCbeTransactionId(e.target.value)} className="input w-full h-14 rounded-2xl" placeholder="FT..." />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Account Suffix</label>
+                  <input type="text" value={cbeAccountSuffix} onChange={e => setCbeAccountSuffix(e.target.value)} className="input w-full h-14 rounded-2xl" placeholder="262..." />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setShowCBEModal(false)} className="flex-1 btn btn-ghost h-14 rounded-2xl font-bold">{t('pages.cancel', 'Cancel')}</button>
+                <button onClick={handleCBEVerify} disabled={isVerifyingCBE} className="flex-1 btn btn-primary h-14 rounded-2xl font-black uppercase tracking-widest">
+                  {isVerifyingCBE ? t('pages.verifying', 'Verifying...') : t('pages.verify_and_fund', 'Verify & Fund')}
+                </button>
               </div>
             </motion.div>
           </div>

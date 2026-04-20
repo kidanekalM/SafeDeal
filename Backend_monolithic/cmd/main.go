@@ -28,13 +28,7 @@ func main() {
 	// Middlewares
 	app.Use(logger.New())
 	
-	// Rate Limiter: 100 requests per minute
-	app.Use(limiter.New(limiter.Config{
-		Max:        100,
-		Expiration: 1 * time.Minute,
-	}))
-
-	// CORS middleware - based on your original setup
+	// CORS middleware - move BEFORE rate limiter so 429s have CORS headers
 	allowedOrigins := []string{
 		"https://safe-deal.vercel.app",
 		"https://elida-necktieless-unaspiringly.ngrok-free.dev",
@@ -49,6 +43,12 @@ func main() {
 		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-User-ID,ngrok-skip-browser-warning",
 		AllowCredentials: true,
+	}))
+
+	// Rate Limiter: Increased for E2E testing
+	app.Use(limiter.New(limiter.Config{
+		Max:        1000,
+		Expiration: 1 * time.Minute,
 	}))
 
 	// Initialize database

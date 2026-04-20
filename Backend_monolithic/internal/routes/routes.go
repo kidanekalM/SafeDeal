@@ -129,8 +129,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	v1.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
 
 	// Search routes - for finding users
-	v1.Get("/search", sc.UserHandler.GetAllUsers)        // Endpoint for getting all users
-	v1.Get("/search/:query", sc.UserHandler.SearchUsers) // Endpoint for searching users by query
+	v1.Get("/search", sc.UserHandler.SearchUsers)        // Combined endpoint for getting all or searching users
 
 	// Milestone routes
 	v1.Post("/milestones", sc.MilestoneHandler.CreateMilestone)
