@@ -416,8 +416,8 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only seller can accept escrow"})
 	}
 
-	if escrow.Status != "Pending" {
-		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in pending state"})
+	if escrow.Status != "Pending" && escrow.Status != "Funded" {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in a state that can be accepted"})
 	}
 
 	if err := h.setEscrowStatus(&escrow, userID, "Funded", "Accepted by seller", "", ""); err != nil {

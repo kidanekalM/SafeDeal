@@ -35,14 +35,14 @@ test.describe('Escrow Creation Flows', () => {
   });
 
   test('should complete the Quick Escrow flow', async ({ page }) => {
-    await page.click('text=Start New Deal');
+    await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     await expect(page).toHaveURL(/.*create-escrow/);
 
     // Step 1: Role & Type (Quick Escrow is default)
     await page.click('button:has-text("Continue")');
 
     // Step 2: Parties
-    await page.fill('input[placeholder="Search by name or email..."]', 'ai@gmail.com');
+    await page.fill('input[placeholder="Search seller by email..."]', 'ai@gmail.com');
     await page.waitForSelector('button:has-text("AI")', { timeout: 5000 });
     await page.locator('button:has-text("AI")').first().click();
     
@@ -56,25 +56,27 @@ test.describe('Escrow Creation Flows', () => {
     await page.click('button:has-text("Continue")');
 
     // Step 4: Finalize
-    await expect(page.locator('text=Quick Escrow Terms')).toBeVisible();
-    await page.click('button:has-text("Start Secure Escrow")');
+    await expect(page.locator('text=750 ETB')).toBeVisible();
+    await page.click('button:has-text("Start Deal")');
 
     // Should redirect to escrows list
     await expect(page).toHaveURL(/.*escrows/);
-    await expect(page.locator('text=Escrow created successfully')).toBeVisible();
+    await expect(page.locator('text=Created!')).toBeVisible();
   });
 
   test('should complete the Detailed flow', async ({ page }) => {
     test.slow();
-    await page.click('text=Start New Deal');
+    await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     
     // Step 1: Role & Type
     // Select Detailed
-    await page.click('text=Detailed');
+    await page.locator('label').filter({ hasText: /^Detailed$/ }).click();
+    // Optional: wait for it to be selected (might be a slight delay)
+    await page.waitForTimeout(500); 
     await page.click('button:has-text("Continue")');
 
     // Step 2: Parties
-    await page.fill('input[placeholder="Search by name or email..."]', 'ai@gmail.com');
+    await page.fill('input[placeholder="Search seller by email..."]', 'ai@gmail.com');
     await page.waitForSelector('button:has-text("AI")', { timeout: 5000 });
     await page.locator('button:has-text("AI")').first().click();
     await page.click('button:has-text("Continue")');
@@ -87,13 +89,13 @@ test.describe('Escrow Creation Flows', () => {
 
     // Step 4: Milestones
     // First milestone is added by default
-    await page.fill('input[placeholder="Milestone Title"]', 'Design Phase');
-    await page.fill('input[placeholder="Amount"]', '1000');
+    await page.getByPlaceholder('Title').first().fill('Design Phase');
+    await page.getByPlaceholder('Amount').first().fill('1000');
     
     // Add second milestone
     await page.click('button:has-text("Add")');
-    await page.locator('input[placeholder="Milestone Title"]').nth(1).fill('Development Phase');
-    await page.locator('input[placeholder="Amount"]').nth(1).fill('2000');
+    await page.getByPlaceholder('Title').nth(1).fill('Development Phase');
+    await page.getByPlaceholder('Amount').nth(1).fill('2000');
     
     // Check total
     await expect(page.locator('text=3,000 ETB')).toBeVisible();
@@ -101,12 +103,12 @@ test.describe('Escrow Creation Flows', () => {
 
     // Step 5: Finalize
     await expect(page.locator('text=3,000 ETB')).toBeVisible();
-    await expect(page.locator('text=Comprehensive Escrow Terms')).toBeVisible();
+    await expect(page.locator('text=Agreement Preview')).toBeVisible();
     
-    await page.click('button:has-text("Start Secure Escrow")');
+    await page.click('button:has-text("Start Deal")');
 
     // Should redirect to escrows list
     await expect(page).toHaveURL(/.*escrows/);
-    await expect(page.locator('text=Escrow created successfully')).toBeVisible();
+    await expect(page.locator('text=Created!')).toBeVisible();
   });
 });

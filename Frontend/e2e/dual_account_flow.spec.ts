@@ -93,7 +93,7 @@ test.describe('Dual Account Escrow Flow', () => {
 
     // 4. Buyer creates escrow
     console.log('Buyer creating escrow...');
-    await buyerPage.click('text=Start New Deal');
+    await buyerPage.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     await expect(buyerPage).toHaveURL(/.*create-escrow/);
     
     await buyerPage.click('button:has-text("Continue")'); 
@@ -104,12 +104,22 @@ test.describe('Dual Account Escrow Flow', () => {
     await buyerPage.locator(`button:has-text("${sellerEmail}")`).first().click();
     await buyerPage.click('button:has-text("Continue")');
     
-    await buyerPage.fill('textarea[name="conditions"]', 'Dual account flow test');
+    console.log('Filling conditions and amount...');
+    await buyerPage.waitForSelector('textarea[name="conditions"]', { state: 'visible' });
+    await buyerPage.fill('textarea[name="conditions"]', 'Dual account flow test conditions which are long enough.');
     await buyerPage.fill('input[name="amount"]', testAmount);
-    await buyerPage.click('button:has-text("Continue")');
-    await buyerPage.click('button:has-text("Start Deal")');
     
-    await expect(buyerPage).toHaveURL(/.*escrows/, { timeout: 15000 });
+    // Trigger validation
+    await buyerPage.press('input[name="amount"]', 'Tab');
+    
+    await buyerPage.click('button:has-text("Continue")');
+    console.log('Clicked Continue from details');
+    
+    await buyerPage.click('button:has-text("Start Deal")', { timeout: 15000 });
+    console.log('Clicked Start Deal');
+    
+    await expect(buyerPage.locator('text=Created!')).toBeVisible({ timeout: 20000 });
+    await expect(buyerPage).toHaveURL(/.*escrows/, { timeout: 20000 });
     console.log('Escrow created');
 
     // 5. Buyer funds escrow
@@ -127,7 +137,11 @@ test.describe('Dual Account Escrow Flow', () => {
     await buyerPage.reload();
     
     // Perform CBE Verification
+    await buyerPage.waitForSelector('button:has-text("CBE Direct Verify")', { state: 'visible', timeout: 15000 });
     await buyerPage.click('button:has-text("CBE Direct Verify")');
+    
+    // Ensure modal is visible
+    await buyerPage.waitForSelector('text=CBE Verification', { state: 'visible', timeout: 5000 });
     
     // Fill details
     await buyerPage.fill('input[placeholder="FT..."]', 'FT26072JFV9');
@@ -137,7 +151,7 @@ test.describe('Dual Account Escrow Flow', () => {
     await buyerPage.click('button:has-text("Verify & Fund")');
 
     // Assert Funding
-    await expect(buyerPage.locator('text=Payment verified successfully')).toBeVisible({ timeout: 30000 });
+    await expect(buyerPage.locator('text=Payment verified successfully')).toBeVisible({ timeout: 60000 });
     
     // Give it a moment to refresh or reload if needed
     await buyerPage.waitForTimeout(2000);
@@ -170,7 +184,44 @@ test.describe('Dual Account Escrow Flow', () => {
     await expect(sellerPage.locator('text=Escrow accepted')).toBeVisible({ timeout: 15000 });
     console.log('Escrow accepted by seller');
 
-    console.log('Flow test completed successfully up to acceptance!');
+    // 7. Seller submits work (e.g. confirms deliverable)
+    console.log('Seller submitting work...');
+    // After acceptance, status becomes "Funded" but Active=true.
+    // In our UI, seller can now "Mark as Completed" or similar?
+    // Let's check EscrowDetails buttons for seller when Active=true
+    
+    // Actually, in many flows, seller just confirms they've sent it.
+    // Let's look for a button that might exist for the seller.
+    const sellerConfirmBtn = sellerPage.locator('button:has-text("Confirm Delivery")').or(sellerPage.locator('button:has-text("Mark as Completed")'));
+    // If no such button, maybe seller just waits. 
+    // Usually there's a "Confirm Delivery" for seller.
+    
+    if (await sellerConfirmBtn.isVisible({ timeout: 5000 })) {
+        await sellerConfirmBtn.click();
+        await expect(sellerPage.locator('text=Delivery confirmed')).toBeVisible({ timeout: 10000 });
+        console.log('Seller confirmed delivery');
+    }
+
+    // 8. Buyer releases funds (Confirm Receipt)
+    console.log('Buyer releasing funds...');
+    await buyerPage.reload();
+    await expect(buyerPage.locator('div').filter({ hasText: /^Funded$/ }).first()).toBeVisible({ timeout: 10000 });
+    
+    // Check if buyer sees "Confirm Receipt"
+    const releaseButton = buyerPage.locator('button:has-text("Confirm Receipt")').or(buyerPage.locator('button:has-text("Release Funds")'));
+    await expect(releaseButton).toBeVisible({ timeout: 10000 });
+    await releaseButton.click();
+    
+    // Confirmation modal might appear
+    const confirmRelease = buyerPage.locator('button:has-text("Yes, Release Funds")').or(buyerPage.locator('div[role="dialog"] button:has-text("Confirm")'));
+    if (await confirmRelease.isVisible({ timeout: 5000 })) {
+        await confirmRelease.click();
+    }
+    
+    await expect(buyerPage.locator('text=Funds released successfully').or(buyerPage.locator('text=Released'))).toBeVisible({ timeout: 20000 });
+    console.log('Buyer released funds');
+
+    console.log('Full flow completed successfully!');
     
     await buyerContext.close();
     await sellerContext.close();

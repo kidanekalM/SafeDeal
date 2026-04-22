@@ -26,12 +26,12 @@ test.describe('CBE Verification E2E Flow', () => {
 
   test('should fund escrow via CBE Direct Verify', async ({ page }) => {
     // 1. Create a new escrow
-    await page.click('text=Start New Deal');
+    await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     await expect(page).toHaveURL(/.*create-escrow/);
     await page.click('button:has-text("Continue")'); // Role & Type
     
     // Select counterparty
-    await page.fill('input[placeholder="Search by name or email..."]', 'ai@gmail.com');
+    await page.fill('input[placeholder="Search seller by email..."]', 'ai@gmail.com');
     await page.waitForTimeout(2000);
     await page.locator('button:has-text("AI")').first().click();
     await expect(page.locator('button >> .lucide-trash2').first()).toBeVisible({ timeout: 5000 });
@@ -41,7 +41,7 @@ test.describe('CBE Verification E2E Flow', () => {
     await page.fill('textarea[name="conditions"]', 'CBE Verification Flow Test - Scraped Receipt');
     await page.fill('input[name="amount"]', '100'); // Match receipt amount
     await page.click('button:has-text("Continue")');
-    await page.click('button:has-text("Start Secure Escrow")');
+    await page.click('button:has-text("Start Deal")');
 
     // 2. Navigate to Escrow Details
     await expect(page).toHaveURL(/.*escrows/);

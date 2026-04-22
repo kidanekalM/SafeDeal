@@ -83,8 +83,8 @@ test.describe('Production parity escrow flow', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([
-          { id: 1, from_status: '', to_status: 'Pending', reason: 'Escrow created' },
-          { id: 2, from_status: 'Pending', to_status: 'Disputed', reason: 'Dispute created' },
+          { id: 1, status: 'Start -> Pending', created_at: new Date().toISOString() },
+          { id: 2, status: 'Pending -> Disputed', created_at: new Date().toISOString() },
         ]),
       });
     });
@@ -113,12 +113,12 @@ test.describe('Production parity escrow flow', () => {
   test('renders status timeline and supports dispute resolution + final agreement export', async ({ page }) => {
     await page.goto('/escrow/1');
 
-    await expect(page.getByText('Status Timeline (Audit)')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Activity Log' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Start -> Pending')).toBeVisible();
     await expect(page.getByText('Dispute Resolution')).toBeVisible();
 
     await page.getByPlaceholder('Resolution note').fill('Resolved by admin after evidence review');
-    await page.getByRole('button', { name: 'Resolve: Release' }).click();
+    await page.getByRole('button', { name: 'Resolve: release' }).click();
 
     await expect(page.getByText('Dispute resolved')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Download Finalized Agreement' })).toBeVisible();

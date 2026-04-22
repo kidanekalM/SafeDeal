@@ -99,8 +99,10 @@ const EscrowDetails = () => {
         status: rawData.status || rawData.Status, 
         active: rawData.active !== undefined ? rawData.active : rawData.Active,
         user_id: user?.id,
+        escrow_buyer_id: rawData.buyer_id || rawData.BuyerID,
         escrow_seller_id: rawData.seller_id || rawData.SellerID,
-        isSeller: Number(user?.id) === Number(rawData.seller_id || rawData.SellerID)
+        isSeller: Number(user?.id) === Number(rawData.seller_id || rawData.SellerID),
+        isBuyer: Number(user?.id) === Number(rawData.buyer_id || rawData.BuyerID)
       }));
       setEscrow({
         ...rawData,

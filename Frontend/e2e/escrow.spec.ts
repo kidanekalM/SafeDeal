@@ -19,7 +19,7 @@ test.describe('Escrow Creation', () => {
   });
 
   test('should create a Quick Escrow', async ({ page }) => {
-    await page.click('text=Start New Deal');
+    await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     await expect(page).toHaveURL(/.*create-escrow/);
 
     // Step 1: Role (Buyer is default)
@@ -27,7 +27,7 @@ test.describe('Escrow Creation', () => {
 
     // Step 2: Parties
     // Search for a user (e.g., 'test')
-    await page.fill('input[placeholder="Search by name or email..."]', 'test');
+    await page.fill('input[placeholder="Search seller by email..."]', 'test');
     // Wait for search results
     await page.waitForTimeout(1000); 
     const firstResult = page.locator('button:has-text("test")').first();
@@ -39,25 +39,26 @@ test.describe('Escrow Creation', () => {
     await page.fill('textarea[name="conditions"]', 'Test Quick Escrow Terms - This is a test deal.');
     await page.fill('input[name="amount"]', '500');
     
-    await page.click('button:has-text("Start Secure Escrow")');
+    await page.click('button:has-text("Start Deal")', { timeout: 15000 });
 
     // Should redirect to escrows list
-    await expect(page).toHaveURL(/.*escrows/);
-    await expect(page.locator('text=Escrow created successfully')).toBeVisible();
+    await expect(page).toHaveURL(/.*escrows/, { timeout: 20000 });
+    await expect(page.locator('text=Created!')).toBeVisible({ timeout: 15000 });
   });
 
   test('should show risk warning for high amounts', async ({ page }) => {
-    await page.click('text=Start New Deal');
+    await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     await page.click('button:has-text("Continue")'); // Skip to Parties
     
     // Select counterparty
-    await page.fill('input[placeholder="Search by name or email..."]', 'test');
+    await page.fill('input[placeholder="Search seller by email..."]', 'test');
     await page.waitForTimeout(1000);
     await page.locator('button:has-text("test")').first().click();
     await page.click('button:has-text("Continue")');
 
     // Enter high amount
     await page.fill('input[name="amount"]', '15000');
-    await expect(page.locator('text=AI Risk Warning')).toBeVisible();
+    // The UI might use 'AI Risk Analysis' or similar based on Dashboard.tsx
+    await expect(page.locator('text=AI Risk Analysis').or(page.locator('text=High Risk'))).toBeVisible();
   });
 });

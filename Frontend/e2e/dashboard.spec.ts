@@ -20,15 +20,15 @@ test.describe('Dashboard', () => {
   });
 
   test('should display stats and welcome message', async ({ page }) => {
-    await expect(page.locator('text=Welcome')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible();
     
     // Check if stats grid exists
-    const statsGrid = page.locator('.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4');
+    const statsGrid = page.locator('.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-4');
     await expect(statsGrid).toBeVisible();
   });
 
   test('should navigate to create escrow page', async ({ page }) => {
-    await page.click('text=Start New Deal');
+    await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
     await expect(page).toHaveURL(/.*create-escrow/);
     await expect(page.locator('text=New SafeDeal')).toBeVisible();
   });

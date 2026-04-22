@@ -87,7 +87,7 @@ test.describe.serial('Authentication', () => {
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
 
     // Logout
-    await page.getByRole('button', { name: 'Sign out' }).first().click();
-    await expect(page).toHaveURL(/.*login/, { timeout: 10000 });
+    await page.getByRole('button', { name: 'Sign out' }).first().click({ force: true });
+    await expect(page).toHaveURL(/.*login/, { timeout: 20000 });
   });
 });

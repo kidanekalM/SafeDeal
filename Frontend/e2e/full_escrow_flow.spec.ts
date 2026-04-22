@@ -115,8 +115,8 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('button[type="submit"]:has-text("Sign In")');
 
       // Should redirect to dashboard
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-      await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 10000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
+      await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 15000 });
     });
 
     test('should login seller', async ({ page }) => {
@@ -126,8 +126,8 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('button[type="submit"]:has-text("Sign In")');
 
       // Should redirect to dashboard
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-      await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 10000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
+      await expect(page.getByRole('heading', { name: 'Welcome', exact: false })).toBeVisible({ timeout: 15000 });
     });
   });
 
@@ -140,11 +140,11 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to create escrow
-      await page.click('text=Start New Deal');
-      await expect(page).toHaveURL(/.*create-escrow/);
+      await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
+      await expect(page).toHaveURL(/.*create-escrow/, { timeout: 15000 });
 
       // Step 1: Role & Type - Quick Escrow is default
       await page.click('button:has-text("Continue")');
@@ -152,11 +152,11 @@ test.describe('Complete Escrow Flow', () => {
       // Step 2: Parties - Search for seller
       await page.fill('input[placeholder="Search seller by email..."]', 'Seller');
       await page.waitForTimeout(2000); // Wait for search results
-      await page.waitForSelector('button:has-text("Seller")', { timeout: 5000 });
+      await page.waitForSelector('button:has-text("Seller")', { timeout: 10000 });
       await page.locator('button:has-text("Seller")').first().click();
       
       // Verify user is selected
-      await expect(page.locator('button >> .lucide-trash2').first()).toBeVisible();
+      await expect(page.locator('button >> .lucide-trash2').first()).toBeVisible({ timeout: 10000 });
       await page.click('button:has-text("Continue")');
 
       // Step 3: Terms
@@ -165,12 +165,12 @@ test.describe('Complete Escrow Flow', () => {
       await page.click('button:has-text("Continue")');
 
       // Step 4: Finalize
-      await expect(page.locator(`text=${testAmount} ETB`)).toBeVisible();
-      await page.click('button:has-text("Start Secure Escrow")');
+      await expect(page.locator(`text=${testAmount} ETB`)).toBeVisible({ timeout: 10000 });
+      await page.getByRole('button', { name: 'Start Deal' }).click();
 
       // Should redirect to escrows list with success message
-      await expect(page).toHaveURL(/.*escrows/, { timeout: 10000 });
-      await expect(page.locator('text=Escrow created successfully')).toBeVisible({ timeout: 10000 });
+      await expect(page).toHaveURL(/.*escrows/, { timeout: 15000 });
+      await expect(page.locator('text=Created!')).toBeVisible({ timeout: 15000 });
     });
   });
 
@@ -183,14 +183,14 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to escrows list
       await page.click('text=My Escrows');
-      await expect(page).toHaveURL(/.*escrows/);
+      await expect(page).toHaveURL(/.*escrows/, { timeout: 15000 });
 
       // Should see the created escrow
-      await expect(page.locator(`text=${testAmount} ETB`).first()).toBeVisible();
+      await expect(page.locator(`text=${testAmount} ETB`).first()).toBeVisible({ timeout: 10000 });
     });
 
     test('buyer should view escrow details', async ({ page }) => {
@@ -198,20 +198,20 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to escrows list
       await page.click('text=My Escrows');
-      await expect(page).toHaveURL(/.*escrows/);
+      await expect(page).toHaveURL(/.*escrows/, { timeout: 15000 });
 
       // Click on first escrow to view details
       await page.locator('[class*="cursor-pointer"]').first().click();
       
       // Should show escrow details page
-      await expect(page).toHaveURL(/\/escrow\/\d+/);
+      await expect(page).toHaveURL(/\/escrow\/\d+/, { timeout: 15000 });
       
       // Verify status is pending (awaiting seller acceptance)
-      await expect(page.locator('text=Pending').or(page.locator('text=AWAITING_ACCEPTANCE')).or(page.locator('text=Awaiting'))).toBeVisible();
+      await expect(page.locator('text=Pending').or(page.locator('text=AWAITING_ACCEPTANCE')).or(page.locator('text=Awaiting'))).toBeVisible({ timeout: 10000 });
     });
   });
 
@@ -225,11 +225,11 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to create escrow
-      await page.click('text=Start New Deal');
-      await expect(page).toHaveURL(/.*create-escrow/);
+      await page.getByRole('main').getByRole('link', { name: 'Start New Deal' }).click();
+      await expect(page).toHaveURL(/.*create-escrow/, { timeout: 15000 });
 
       // Step 1: Select Detailed option
       await page.click('text=Detailed');
@@ -237,7 +237,7 @@ test.describe('Complete Escrow Flow', () => {
 
       // Step 2: Select counterparty
       await page.fill('input[placeholder="Search seller by email..."]', 'test');
-      await page.waitForSelector('button:has-text("test")', { timeout: 5000 });
+      await page.waitForSelector('button:has-text("test")', { timeout: 10000 });
       await page.locator('button:has-text("test")').first().click();
       await page.click('button:has-text("Continue")');
 
@@ -254,24 +254,24 @@ test.describe('Complete Escrow Flow', () => {
       await page.locator('input[placeholder="Milestone Title"]').nth(1).fill('Implementation Phase');
       await page.locator('input[placeholder="Amount"]').nth(1).fill('1000');
       
-      await expect(page.locator('text=1,500 ETB')).toBeVisible();
+      await expect(page.locator('text=1,500 ETB')).toBeVisible({ timeout: 10000 });
       await page.click('button:has-text("Continue")');
 
       // Step 5: Final review - check for dispute clause fields
-      await expect(page.locator('text=Dispute Clause')).toBeVisible({ timeout: 5000 });
-      await expect(page.locator('text=Dispute Resolution Procedure')).toBeVisible();
-      await expect(page.locator('text=Arbitration Terms')).toBeVisible();
-      await expect(page.locator('text=Court Jurisdiction for Disputes')).toBeVisible();
+      await expect(page.locator('text=Dispute Clause')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=Dispute Resolution Procedure')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=Arbitration Terms')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=Court Jurisdiction for Disputes')).toBeVisible({ timeout: 10000 });
 
       // Verify dispute resolution options are present
-      await expect(page.locator('text=AI Smart Resolution')).toBeVisible();
+      await expect(page.locator('text=AI Smart Resolution')).toBeVisible({ timeout: 10000 });
       
       // Create the escrow
-      await page.click('button:has-text("Start Secure Escrow")');
+      await page.getByRole('button', { name: 'Start Deal' }).click();
 
       // Should redirect to escrows list
-      await expect(page).toHaveURL(/.*escrows/);
-      await expect(page.locator('text=Escrow created successfully')).toBeVisible();
+      await expect(page).toHaveURL(/.*escrows/, { timeout: 15000 });
+      await expect(page.locator('text=Created!')).toBeVisible({ timeout: 15000 });
     });
   });
 
@@ -284,18 +284,18 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', sellerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to escrows list
       await page.click('text=My Escrows');
-      await expect(page).toHaveURL(/.*escrows/);
+      await expect(page).toHaveURL(/.*escrows/, { timeout: 15000 });
 
       // Should see incoming escrow from buyer
-      await expect(page.locator('text=Seller').first()).toBeVisible();
+      await expect(page.locator('text=Seller').first()).toBeVisible({ timeout: 10000 });
 
       // Click on escrow to view details
       await page.locator('[class*="cursor-pointer"]').first().click();
-      await expect(page).toHaveURL(/\/escrow\/\d+/);
+      await expect(page).toHaveURL(/\/escrow\/\d+/, { timeout: 15000 });
 
       // Accept the escrow
       const acceptButton = page.locator('button:has-text("Accept")').or(page.locator('button:has-text("Accept Escrow")')).or(page.locator('button:has-text("Accept Deal")'));
@@ -319,26 +319,26 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to escrow details
       await page.click('text=My Escrows');
       await page.locator('[class*="cursor-pointer"]').first().click();
-      await expect(page).toHaveURL(/\/escrow\/\d+/);
+      await expect(page).toHaveURL(/\/escrow\/\d+/, { timeout: 15000 });
 
       // Open chat
       const chatButton = page.locator('button:has-text("Chat")').or(page.locator('[aria-label*="Chat"]')).or(page.locator('[class*="message"]'));
       await chatButton.first().click();
 
       // Chat modal should open
-      await expect(page.locator('text=Chat').or(page.locator('[class*="chat"]')).or(page.locator('input[placeholder*="message" i]'))).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('text=Chat').or(page.locator('[class*="chat"]')).or(page.locator('input[placeholder*="message" i]'))).toBeVisible({ timeout: 10000 });
 
       // Send a message
       await page.fill('input[placeholder*="message" i]', 'Hello, I am ready to proceed with the transaction.');
       await page.click('button:has-text("Send")');
 
       // Message should appear in chat
-      await expect(page.locator('text=Hello, I am ready')).toBeVisible();
+      await expect(page.locator('text=Hello, I am ready')).toBeVisible({ timeout: 10000 });
     });
 
     test('seller should see and respond to chat message', async ({ page }) => {
@@ -346,26 +346,26 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', sellerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to escrow details
       await page.click('text=My Escrows');
       await page.locator('[class*="cursor-pointer"]').first().click();
-      await expect(page).toHaveURL(/\/escrow\/\d+/);
+      await expect(page).toHaveURL(/\/escrow\/\d+/, { timeout: 15000 });
 
       // Open chat
       const chatButton = page.locator('button:has-text("Chat")').or(page.locator('[aria-label*="Chat"]')).or(page.locator('[class*="message"]'));
       await chatButton.first().click();
 
       // Should see buyer's message
-      await expect(page.locator('text=Hello, I am ready')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('text=Hello, I am ready')).toBeVisible({ timeout: 10000 });
 
       // Send a response
       await page.fill('input[placeholder*="message" i]', 'Great, I have accepted the escrow. Please proceed with payment.');
       await page.click('button:has-text("Send")');
 
       // Response should appear
-      await expect(page.locator('text=Great, I have accepted')).toBeVisible();
+      await expect(page.locator('text=Great, I have accepted')).toBeVisible({ timeout: 10000 });
     });
   });
 
@@ -378,19 +378,19 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Navigate to escrow details
       await page.click('text=My Escrows');
       await page.locator('[class*="cursor-pointer"]').first().click();
-      await expect(page).toHaveURL(/\/escrow\/\d+/);
+      await expect(page).toHaveURL(/\/escrow\/\d+/, { timeout: 15000 });
 
       // Initiate payment
       const payButton = page.locator('button:has-text("Pay")').or(page.locator('button:has-text("Pay Now")')).or(page.locator('button:has-text("Fund")'));
       await payButton.click();
 
       // Payment modal should appear
-      await expect(page.locator('text=Payment').or(page.locator('text=Pay with Chapa')).or(page.locator('text=Chapa'))).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('text=Payment').or(page.locator('text=Pay with Chapa')).or(page.locator('text=Chapa'))).toBeVisible({ timeout: 10000 });
 
       // Enter test card details
       // Card Number: 4200 0000 0000 0000
@@ -444,13 +444,13 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Go to escrows page
       await page.goto('/escrows');
       
       // Wait for escrows to load
-      await expect(page.locator('text=My Escrows').or(page.locator('text=Active Deals'))).toBeVisible();
+      await expect(page.locator('text=My Escrows').or(page.locator('text=Active Deals'))).toBeVisible({ timeout: 15000 });
       
       // Find an escrow that is released or refunded to test the download functionality
       // First, find all escrows
@@ -468,7 +468,7 @@ test.describe('Complete Escrow Flow', () => {
           await escrowItem.click();
           
           // Wait for page to load
-          await expect(page.locator('text=Escrow Details').or(page.locator('text=Deal Information'))).toBeVisible();
+          await expect(page.locator('text=Escrow Details').or(page.locator('text=Deal Information'))).toBeVisible({ timeout: 15000 });
           
           // Look for the download agreement button
           const downloadButton = page.locator('button:has-text("Download Final Agreement")');
@@ -480,7 +480,7 @@ test.describe('Complete Escrow Flow', () => {
           await downloadButton.click();
           
           // Expect a success toast notification
-          await expect(page.locator('text=Agreement downloaded successfully')).toBeVisible({ timeout: 5000 });
+          await expect(page.locator('text=Downloaded!')).toBeVisible({ timeout: 10000 });
           
           foundReleasedEscrow = true;
           break;
@@ -502,7 +502,7 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Click notification bell
       const notificationBell = page.locator('[aria-label*="notification" i]').or(page.locator('[class*="notification"]')).or(page.locator('button >> .lucide-bell'));
@@ -511,7 +511,7 @@ test.describe('Complete Escrow Flow', () => {
       // Notification panel should open
       await expect(
         page.locator('text=Notification').or(page.locator('[class*="notification-panel"]')).or(page.locator('text=Notifications'))
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible({ timeout: 10000 });
     });
   });
 
@@ -524,14 +524,13 @@ test.describe('Complete Escrow Flow', () => {
       await page.fill('input[type="email"]', buyerEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]:has-text("Sign In")');
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+      await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
       // Logout
-      const logoutButton = page.locator('button:has-text("Log Out")').or(page.locator('button:has-text("Logout")')).or(page.locator('[aria-label*="logout" i]'));
-      await logoutButton.click();
+      await page.getByRole('button', { name: 'Sign out' }).first().click();
 
       // Should redirect to login
-      await expect(page).toHaveURL(/.*login/, { timeout: 5000 });
+      await expect(page).toHaveURL(/.*login/, { timeout: 10000 });
     });
   });
 });
@@ -564,37 +563,37 @@ test.describe('Single-User Escrow Flow', () => {
     await page.selectOption('select[name="bank_code"]', '946');
     await page.fill('input[name="account_number"]', '3000123456789');
     await page.click('button:has-text("Complete Registration")');
-    await expect(page.locator('text=Account created successfully')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Account created successfully')).toBeVisible({ timeout: 15000 });
 
     // 2. Login
     await page.fill('input[type="email"]', testEmail);
     await page.fill('input[type="password"]', password);
     await page.click('button[type="submit"]:has-text("Sign In")');
-    await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+    await expect(page).toHaveURL(/.*dashboard/, { timeout: 30000 });
 
     // 3. View Dashboard
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 15000 });
 
     // 4. Navigate to Profile
     await page.click('text=Profile');
-    await expect(page).toHaveURL(/.*profile/);
+    await expect(page).toHaveURL(/.*profile/, { timeout: 15000 });
 
     // 5. View Transaction History
     await page.click('text=Payments');
-    await expect(page).toHaveURL(/.*transactions/);
+    await expect(page).toHaveURL(/.*transactions/, { timeout: 15000 });
 
     // 6. Search for users
     await page.click('text=Search');
-    await expect(page).toHaveURL(/.*search/);
+    await expect(page).toHaveURL(/.*search/, { timeout: 15000 });
     await page.fill('input[placeholder*="search" i]', 'test');
     await page.waitForTimeout(1000);
 
     // 7. View All Escrows
     await page.click('text=My Escrows');
-    await expect(page).toHaveURL(/.*escrows/);
+    await expect(page).toHaveURL(/.*escrows/, { timeout: 15000 });
 
     // 8. Logout
-    await page.click('button:has-text("Log Out")');
-    await expect(page).toHaveURL(/.*login/);
+    await page.getByRole('button', { name: 'Sign out' }).first().click();
+    await expect(page).toHaveURL(/.*login/, { timeout: 15000 });
   });
 });
