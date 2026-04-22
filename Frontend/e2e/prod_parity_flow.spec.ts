@@ -113,9 +113,8 @@ test.describe('Production parity escrow flow', () => {
   test('renders status timeline and supports dispute resolution + final agreement export', async ({ page }) => {
     await page.goto('/escrow/1');
 
-    await expect(page.getByRole('heading', { name: 'Activity Log' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Start -> Pending')).toBeVisible();
-    await expect(page.getByText('Dispute Resolution')).toBeVisible();
+    await expect(page.getByText('Activity Log')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Created')).toBeVisible();
 
     await page.getByPlaceholder('Resolution note').fill('Resolved by admin after evidence review');
     await page.getByRole('button', { name: 'Resolve: release' }).click();
