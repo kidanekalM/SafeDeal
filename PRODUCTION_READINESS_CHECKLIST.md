@@ -29,7 +29,7 @@
 - Add alerting for repeated auth refresh failures and payment verification failures.
 - Capture structured logs for state transitions and dispute actions.
 
-## Security Checks
+## Security a
 - Validate endpoint authorization for buyer/seller/admin-only actions.
 - Validate input sanitization on dispute reason/evidence and agreement fields.
 - Validate idempotency expectations for verify/refund/dispute resolution operations.
