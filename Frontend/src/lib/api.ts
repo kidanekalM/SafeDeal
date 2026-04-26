@@ -225,16 +225,16 @@ export const milestoneApi = {
     api.get(`/api/v1/milestones/${id}`),
 
   update: (id: number, data: Partial<CreateMilestoneRequest>): Promise<AxiosResponse<Milestone>> =>
-    api.put(`/api/milestones/${id}`, data),
+    api.put(`/api/v1/milestones/${id}`, data),
 
   submit: (id: number): Promise<AxiosResponse<{message: string, milestone: Milestone}>> =>
-    api.put(`/api/milestones/${id}/submit`),
+    api.put(`/api/v1/milestones/${id}/submit`),
 
   approve: (id: number): Promise<AxiosResponse<{message: string, milestone: Milestone}>> =>
-    api.put(`/api/milestones/${id}/approve`),
+    api.put(`/api/v1/milestones/${id}/approve`),
 
   reject: (id: number): Promise<AxiosResponse<{message: string, milestone: Milestone}>> =>
-    api.put(`/api/milestones/${id}/reject`),
+    api.put(`/api/v1/milestones/${id}/reject`),
 };
 
 // Payment API - Based on backend endpoints

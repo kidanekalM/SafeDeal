@@ -272,7 +272,7 @@ func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 	}
 
 	// Log to blockchain for audit trail (court compliance)
-	if h.BlockChainClient != nil {
+	if h.BlockChainClient != nil && h.BlockChainClient.IsConnected() {
 		escrowID := big.NewInt(int64(milestone.EscrowID))
 		milestoneID := big.NewInt(int64(milestone.ID))
 		tx, err := h.BlockChainClient.LogMilestoneSubmitted(escrowID, milestoneID)
@@ -332,7 +332,7 @@ func (h *MilestoneHandler) ApproveMilestone(c *fiber.Ctx) error {
 	milestone.ApprovedAt = &now
 	
 	// Log APPROVAL to blockchain (court critical)
-	if h.BlockChainClient != nil {
+	if h.BlockChainClient != nil && h.BlockChainClient.IsConnected() {
 		escrowID := big.NewInt(int64(milestone.EscrowID))
 		milestoneID := big.NewInt(int64(milestone.ID))
 		tx, err := h.BlockChainClient.LogMilestoneApproved(escrowID, milestoneID)
@@ -385,7 +385,7 @@ func (h *MilestoneHandler) RejectMilestone(c *fiber.Ctx) error {
 	milestone.Status = models.MilestoneRejected
 	
 	// Log REJECTION to blockchain
-	if h.BlockChainClient != nil {
+	if h.BlockChainClient != nil && h.BlockChainClient.IsConnected() {
 		escrowID := big.NewInt(int64(milestone.EscrowID))
 		milestoneID := big.NewInt(int64(milestone.ID))
 		tx, err := h.BlockChainClient.LogMilestoneRejected(escrowID, milestoneID)

@@ -129,6 +129,7 @@ const Layout = ({ children }: LayoutProps) => {
               </Link>
               <button
                 onClick={handleLogout}
+                data-testid="logout-button"
                 className="hidden md:flex p-2 text-gray-400 hover:text-red-600 transition-colors"
                 aria-label={t('components.sign_out', 'Sign out')}
                 title={t('components.sign_out', 'Sign out')}
@@ -145,10 +146,12 @@ const Layout = ({ children }: LayoutProps) => {
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
+              const testId = item.href === '/escrows' ? 'nav-escrows' : item.href === '/transactions' ? 'nav-transactions' : undefined;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
+                  data-testid={testId}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center ${
                     active
                       ? 'bg-white text-primary-700 shadow-sm border border-primary-200'

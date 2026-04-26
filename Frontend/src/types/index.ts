@@ -75,6 +75,10 @@ export interface Escrow {
     blockchain_escrow_id?: number;
     active: boolean;
     is_locked: boolean;
+    snapshot?: string;
+    contract_hash?: string;
+    buyer_signature?: string;
+    seller_signature?: string;
     created_at: string;
     updated_at: string;
     buyer?: User;

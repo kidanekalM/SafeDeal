@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math/big"
 	"os"
@@ -19,84 +18,74 @@ import (
 )
 
 type Client struct {
-	Contract *contracts.Contracts
-	Client   *ethclient.Client
-	Auth     *bind.TransactOpts
+	Contract  *contracts.Contracts
+	Client    *ethclient.Client
+	Auth      *bind.TransactOpts
+	connected bool
+}
+
+func (c *Client) IsConnected() bool {
+	return c.connected
 }
 
 func NewClient() (*Client, error) {
 	url := os.Getenv("ETHEREUM_NODE_URL")
-	if url == "" {
-		log.Print("empty ETHEREUM_NODE_URL")
-		return nil, fmt.Errorf("ETHEREUM_NODE_URL is not set")
-	}
-
 	privateKeyStr := os.Getenv("PRIVATE_KEY")
-	if privateKeyStr == "" {
-		log.Print("empty PRIVATE_KEY")
-		return nil, fmt.Errorf("PRIVATE_KEY is not set")
+	chainIDStr := os.Getenv("CHAIN_ID")
+	contractAddressStr := os.Getenv("CONTRACT_ADDRESS")
+
+	if url == "" || privateKeyStr == "" || chainIDStr == "" || contractAddressStr == "" {
+		log.Println("Blockchain config missing. Running without blockchain anchoring.")
+		return &Client{connected: false}, nil
 	}
 
-	chainIDStr := os.Getenv("CHAIN_ID")
-	if chainIDStr == "" {
-		log.Print("empty CHAIN_ID")
-		return nil, fmt.Errorf("CHAIN_ID is not set")
-	}
 	chainID, err := strconv.ParseInt(chainIDStr, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid CHAIN_ID: %v", err)
+		log.Printf("Invalid CHAIN_ID: %v. Running without blockchain.", err)
+		return &Client{connected: false}, nil
 	}
 
-	contractAddressStr := os.Getenv("CONTRACT_ADDRESS")
-	if contractAddressStr == "" {
-		log.Print("empty CONTRACT_ADDRESS")
-		return nil, fmt.Errorf("CONTRACT_ADDRESS is not set")
-	}
 	contractAddress := common.HexToAddress(contractAddressStr)
 
 	client, err := ethclient.Dial(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to Ethereum: %v", err)
+		log.Printf("Blockchain RPC unavailable: %v. Running without blockchain.", err)
+		return &Client{connected: false}, nil
 	}
 
 	// Verify connection
 	_, err = client.ChainID(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("failed to reach Ethereum network: %v", err)
+		log.Printf("Failed to reach Ethereum network: %v. Running without blockchain.", err)
+		return &Client{connected: false}, nil
 	}
 
 	// Load private key
 	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(privateKeyStr, "0x"))
 	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %v", err)
+		log.Printf("Invalid private key: %v. Running without blockchain.", err)
+		return &Client{connected: false}, nil
 	}
 
 	// Create transactor
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(chainID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create transactor: %v", err)
+		log.Printf("Failed to create transactor: %v. Running without blockchain.", err)
+		return &Client{connected: false}, nil
 	}
 
 	// Load contract
 	contract, err := contracts.NewContracts(contractAddress, client)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load contract at %s: %v", contractAddressStr, err)
-	}
-
-	// Verify contract is responsive
-	_, err = contract.NextId(&bind.CallOpts{Context: context.Background()})
-	if err != nil {
-		return nil, fmt.Errorf("contract not responding (wrong address or network): %v", err)
-	}
-
-	if contract == nil {
-		return nil, fmt.Errorf("contract is nil after NewContracts")
+		log.Printf("Failed to load contract at %s: %v. Running without blockchain.", contractAddressStr, err)
+		return &Client{connected: false}, nil
 	}
 
 	return &Client{
-		Contract: contract,
-		Auth:     auth,
-		Client:   client,
+		Contract:  contract,
+		Auth:      auth,
+		Client:    client,
+		connected: true,
 	}, nil
 }
 

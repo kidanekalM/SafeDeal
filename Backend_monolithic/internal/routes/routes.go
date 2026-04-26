@@ -27,10 +27,7 @@ import (
 
 	func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
 	authService := auth.NewService(db)
-	blockchainClient, err := blockchain.NewClient() // Actual implementation
-	if err != nil {
-		panic(err) // Handle error appropriately in production
-	}
+	blockchainClient, _ := blockchain.NewClient() // Graceful degradation handled inside NewClient
 
 	notificationHandler := handlers.NewNotificationHandler(db, authService)
 	milestoneHandler := handlers.NewMilestoneHandler(db, blockchainClient)

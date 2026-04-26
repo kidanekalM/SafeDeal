@@ -246,7 +246,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	}
 
 	// Interact with blockchain to create the escrow
-	if h.BlockchainClient != nil {
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
 		buyerAddr := common.HexToAddress(buyerUser.WalletAddress)   // Buyer is the user creating the escrow
 		sellerAddr := common.HexToAddress(sellerUser.WalletAddress) // Seller is the fetched user
 		amount := big.NewInt(int64(req.Amount))
@@ -445,7 +445,7 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 	}
 
 	// Interact with blockchain to fund the escrow
-	if h.BlockchainClient != nil {
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
 		escrowID := big.NewInt(int64(escrow.ID))
 
 		tx, err := h.BlockchainClient.ConfirmPayment(escrowID)
@@ -508,7 +508,7 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 	}
 
 	// Interact with blockchain to finalize escrow
-	if h.BlockchainClient != nil {
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
 		escrowID := big.NewInt(int64(escrow.ID))
 
 		tx, err := h.BlockchainClient.FinalizeEscrow(escrowID)
@@ -906,12 +906,42 @@ func (h *EscrowHandler) LockEscrow(c *fiber.Ctx) error {
 	}
 
 	var escrow models.Escrow
-	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+	if err := h.DB.Preload("Milestones").First(&escrow, uint(id)).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
 	}
 
 	if escrow.BuyerID != userID && escrow.SellerID != userID {
 		return c.Status(403).JSON(fiber.Map{"error": "Only participants can lock escrow"})
+	}
+
+	if escrow.IsLocked {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow is already locked"})
+	}
+
+	// Generate snapshot
+	snapshotData := map[string]interface{}{
+		"id":          escrow.ID,
+		"buyer_id":    escrow.BuyerID,
+		"seller_id":   escrow.SellerID,
+		"amount":      escrow.Amount,
+		"conditions":  escrow.Conditions,
+		"milestones":  escrow.Milestones,
+		"timestamp":   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	snapshotJSON, _ := json.Marshal(snapshotData)
+	escrow.Snapshot = string(snapshotJSON)
+
+	// Generate Hash
+	hash := crypto.Keccak256Hash(snapshotJSON)
+	escrow.ContractHash = hash.Hex()
+
+	// Simple signatures (for now, in a real app these would be cryptographic from user private keys)
+	signature := fmt.Sprintf("sig:%s:%d:%s", escrow.ContractHash, userID, time.Now().UTC().Format(time.RFC3339))
+	if userID == escrow.BuyerID {
+		escrow.BuyerSignature = signature
+	} else {
+		escrow.SellerSignature = signature
 	}
 
 	escrow.IsLocked = true
@@ -997,23 +1027,57 @@ func (h *EscrowHandler) ResolveDispute(c *fiber.Ctx) error {
 	if escrow.Status != "Disputed" {
 		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not disputed"})
 	}
-	escrow.ResolvedByID = &userID
-	escrow.ResolutionNote = req.Note
-	escrow.DisputeStatus = "Resolved"
-	if req.Action == "refund" {
-		if err := h.setEscrowStatus(&escrow, userID, "Refunded", "Dispute resolved with refund", "", req.Note); err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": "Could not resolve dispute"})
+
+	err = h.DB.Transaction(func(tx *gorm.DB) error {
+		escrow.ResolvedByID = &userID
+		escrow.ResolutionNote = req.Note
+		escrow.DisputeStatus = "Resolved"
+
+		nextStatus := "Released"
+		reason := "Dispute resolved with release"
+		delta := 3.0
+		if req.Action == "refund" {
+			nextStatus = "Refunded"
+			reason = "Dispute resolved with refund"
+			delta = -5.0
 		}
-		h.adjustTrustScore(escrow.SellerID, -5)
-	} else {
-		if err := h.setEscrowStatus(&escrow, userID, "Released", "Dispute resolved with release", "", req.Note); err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": "Could not resolve dispute"})
+
+		prev := escrow.Status
+		escrow.Status = nextStatus
+		if err := tx.Save(&escrow).Error; err != nil {
+			return err
 		}
-		h.adjustTrustScore(escrow.SellerID, 3)
+
+		// Record status event
+		if err := tx.Create(&models.EscrowStatusEvent{
+			EscrowID:   escrow.ID,
+			ActorID:    userID,
+			FromStatus: prev,
+			ToStatus:   nextStatus,
+			Reason:     reason,
+			Metadata:   req.Note,
+		}).Error; err != nil {
+			return err
+		}
+
+		// Adjust trust score
+		var user models.User
+		if err := tx.First(&user, escrow.SellerID).Error; err == nil {
+			nextScore := user.TrustScore + delta
+			if nextScore < 0 { nextScore = 0 }
+			if nextScore > 100 { nextScore = 100 }
+			if err := tx.Model(&user).Update("trust_score", nextScore).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not resolve dispute: " + err.Error()})
 	}
-	if err := h.DB.Save(&escrow).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not save resolution"})
-	}
+
 	return c.JSON(fiber.Map{"message": "Dispute resolved", "data": escrow})
 }
 
@@ -1173,4 +1237,29 @@ Output your response as JSON: {"decision": "RELEASE" or "REFUND", "justification
 	})
 }
 
-// CancelEscrow continues...
+func (h *EscrowHandler) isValidTransition(fromStatus, toStatus string) bool {
+	allowedTransitions := map[string][]string{
+		"Pending":   {"Active", "Funded", "Canceled"}, // For the main workflow
+		"Active":    {"Locked", "Canceled"},
+		"Locked":    {"Funded", "Canceled"},
+		"Funded":    {"Released", "Disputed", "Verifying"},
+		"Verifying": {"Funded", "Released"},
+		"Disputed":  {"Completed", "Refunded"},
+		"Released":  {"Completed"},
+		"Canceled":  {}, // Usually terminal
+		"Completed": {}, // Terminal
+		"Refunded":  {}, // Terminal
+	}
+
+	allowed, exists := allowedTransitions[fromStatus]
+	if !exists {
+		return false
+	}
+
+	for _, status := range allowed {
+		if status == toStatus {
+			return true
+		}
+	}
+	return false
+}

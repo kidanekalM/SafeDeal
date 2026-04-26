@@ -123,7 +123,7 @@ const Dashboard = () => {
               </div>
               <p className="text-teal-50 opacity-90 max-w-md">{t('pages.your_secure_gateway_to_trust_based_transactions', 'Your secure gateway to trust-based transactions is active and protected.')}</p>
               <div className="mt-8 flex gap-4">
-                <Link to="/create-escrow" className="bg-white text-[#014d46] px-6 py-3 rounded-2xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">
+                <Link to="/create-escrow" data-testid="create-escrow-button" className="bg-white text-[#014d46] px-6 py-3 rounded-2xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">
                   <Zap size={18} /> {t('pages.start_new_deal', 'Start New Deal')}
                 </Link>
                 <button onClick={() => loadData()} className="bg-teal-800/30 text-white px-6 py-3 rounded-2xl font-bold hover:bg-teal-800/50 transition-all flex items-center gap-2 border border-teal-400/30">

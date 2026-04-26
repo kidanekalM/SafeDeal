@@ -197,12 +197,12 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.email')}</label>
-              <input {...register("email", { required: "Email is required" })} type="email" className="input w-full" />
+              <input {...register("email", { required: "Email is required" })} type="email" className="input w-full" data-testid="email-input" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.password')}</label>
               <div className="relative">
-                <input {...register("password", { required: "Required" })} type={showPassword ? "text" : "password"} className="input w-full pr-10" />
+                <input {...register("password", { required: "Required" })} type={showPassword ? "text" : "password"} className="input w-full pr-10" data-testid="password-input" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -218,13 +218,13 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
           )}
           
           {isLogin ? (
-            <button type="submit" disabled={isLoading} className="btn btn-primary btn-md w-full">
+            <button type="submit" disabled={isLoading} className="btn btn-primary btn-md w-full" data-testid="login-button">
               {isLoading ? t('components.loading') : t('components.sign_in')}
             </button>
           ) : regStep === 1 ? (
             <button type="button" onClick={nextStep} className="btn btn-primary btn-md w-full">{t('components.next_payout_details')}</button>
           ) : (
-            <button type="submit" disabled={isLoading} className="btn btn-primary btn-md flex-[2]">
+            <button type="submit" disabled={isLoading} className="btn btn-primary btn-md flex-[2]" data-testid="register-button">
               {isLoading ? t('components.creating') : t('components.complete_registration')}
             </button>
           )}

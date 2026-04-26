@@ -45,9 +45,9 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// Rate Limiter: Increased for E2E testing
+	// Rate Limiter: Reduced for production
 	app.Use(limiter.New(limiter.Config{
-		Max:        1000,
+		Max:        100,
 		Expiration: 1 * time.Minute,
 	}))
 

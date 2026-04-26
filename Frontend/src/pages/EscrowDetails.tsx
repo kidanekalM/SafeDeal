@@ -365,6 +365,41 @@ const EscrowDetails = () => {
                   </div>
                 </div>
 
+                {/* Legal-Grade Verification (Snapshot & Hash) */}
+                {escrow.is_locked && escrow.contract_hash && (
+                  <div className="p-8 bg-blue-50 border-2 border-blue-100 rounded-[2rem] space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-600 rounded-lg">
+                        <Scale size={20} className="text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-blue-900">{t('pages.verifiable_agreement', 'Legal-Grade Verifiable Agreement')}</h3>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-white/50 rounded-2xl border border-blue-200">
+                        <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1 block">{t('pages.agreement_hash', 'Digital Fingerprint (SHA-256)')}</label>
+                        <code className="text-xs text-blue-800 break-all font-mono font-bold">{escrow.contract_hash}</code>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className={`p-4 rounded-2xl border flex items-center gap-3 ${escrow.buyer_signature ? 'bg-green-100 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-400'}`}>
+                          {escrow.buyer_signature ? <CheckCircle size={18} /> : <Clock size={18} />}
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest">{t('pages.buyer_signed', 'Buyer Signed')}</p>
+                            <p className="text-[9px] truncate max-w-[150px]">{escrow.buyer_signature || t('pages.pending', 'Pending')}</p>
+                          </div>
+                        </div>
+                        <div className={`p-4 rounded-2xl border flex items-center gap-3 ${escrow.seller_signature ? 'bg-green-100 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-400'}`}>
+                          {escrow.seller_signature ? <CheckCircle size={18} /> : <Clock size={18} />}
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest">{t('pages.seller_signed', 'Seller Signed')}</p>
+                            <p className="text-[9px] truncate max-w-[150px]">{escrow.seller_signature || t('pages.pending', 'Pending')}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Milestones */}
                 {milestones.length > 0 && (
                   <div>
