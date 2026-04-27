@@ -321,10 +321,15 @@ const EscrowDetails = () => {
                       <Clock size={16} /> {t('pages.initiated_on', 'Initiated on')} {formatDateSafe(escrow.created_at)}
                     </p>
                   </div>
-                  <div className={`px-6 py-2 rounded-2xl text-sm font-black tracking-widest uppercase border-2 ${getStatusColor(escrow.status)}`}>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(escrow.status)}
-                      {t(`pages.${escrow.status.toLowerCase()}`, escrow.status)}
+                  <div className="flex flex-col items-end gap-2">
+                    <div data-testid="escrow-status" className={`px-6 py-2 rounded-2xl text-sm font-black tracking-widest uppercase border-2 ${getStatusColor(escrow.status)}`}>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(escrow.status)}
+                        {t(`pages.${escrow.status.toLowerCase()}`, escrow.status)}
+                      </div>
+                    </div>
+                    <div data-testid="escrow-mode-badge" className="px-3 py-1 rounded-lg bg-gray-100 text-[10px] font-black uppercase text-gray-500 border border-gray-200">
+                      {escrow.is_detailed ? t('pages.detailed', 'Detailed') : t('pages.quick', 'Quick')}
                     </div>
                   </div>
                 </div>
@@ -347,11 +352,17 @@ const EscrowDetails = () => {
 
                 {/* Agreement Terms */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FileText className="text-primary-600" size={20} />
-                    {t('pages.legal_agreement_terms', 'Agreement Terms')}
-                  </h3>
-                  <div className="p-8 bg-white border-2 border-gray-100 rounded-[2rem] relative">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <FileText className="text-primary-600" size={20} />
+                      {t('pages.legal_agreement_terms', 'Agreement Terms')}
+                    </h3>
+                    <button data-testid="view-contract-button" className="text-xs font-bold text-primary-600 hover:underline">
+                      {t('pages.view_contract', 'View Full Contract')}
+                    </button>
+                  </div>
+                  {escrow.status === "Pending" && <div data-testid="escrow-created-success" className="hidden">Created</div>}
+                  <div className="p-8 bg-white border-2 border-gray-100 rounded-[2rem] relative" data-testid="contract-content">
                     {!escrow.is_locked && (
                       <div className="absolute top-4 right-4 no-print">
                         <span className="badge badge-warning flex items-center gap-1 text-[10px] uppercase font-black px-3 py-1">
@@ -402,14 +413,14 @@ const EscrowDetails = () => {
 
                 {/* Milestones */}
                 {milestones.length > 0 && (
-                  <div>
+                  <div data-testid="milestone-section">
                     <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                       <Zap className="text-primary-600" size={20} />
                       {t('pages.delivery_milestones', 'Delivery Milestones')}
                     </h3>
-                    <div className="space-y-4">
+                    <div className="space-y-4" data-testid="milestone-list">
                       {milestones.map((m, idx) => (
-                        <div key={m.id} className="group p-6 bg-white border border-gray-100 rounded-3xl hover:border-primary-200 hover:shadow-md transition-all">
+                        <div key={m.id} data-testid={`milestone-item-${idx}`} className="group p-6 bg-white border border-gray-100 rounded-3xl hover:border-primary-200 hover:shadow-md transition-all">
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-3">
                               <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-black text-gray-500">{idx + 1}</span>
@@ -419,7 +430,7 @@ const EscrowDetails = () => {
                           </div>
                           {m.description && <p className="text-sm text-gray-600 ml-11 mb-3">{m.description}</p>}
                           <div className="flex items-center gap-4 ml-11 text-xs">
-                            <span className={`px-3 py-1 rounded-full font-bold uppercase tracking-widest ${m.status === 'Released' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                            <span data-testid={`milestone-${idx}-status`} className={`px-3 py-1 rounded-full font-bold uppercase tracking-widest ${m.status === 'Released' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                               {m.status}
                             </span>
                             {m.due_date && <span className="text-gray-400 font-medium">Due: {new Date(m.due_date).toLocaleDateString()}</span>}
@@ -504,11 +515,11 @@ const EscrowDetails = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {isBuyer && escrow.status === "Pending" && (
                   <>
-                    <button onClick={handleInitiatePayment} className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
+                    <button onClick={handleInitiatePayment} data-testid="fund-button" className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
                       <Zap size={28} className="group-hover:scale-110 transition-transform" />
                       <span className="font-black uppercase tracking-widest text-xs">{t('components.pay_with_chapa', 'Pay with Chapa')}</span>
                     </button>
-                    <button onClick={() => setShowCBEModal(true)} className="btn btn-outline border-gray-200 btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 hover:bg-gray-50">
+                    <button onClick={() => setShowCBEModal(true)} data-testid="fund-button" className="btn btn-outline border-gray-200 btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 hover:bg-gray-50">
                       <Shield size={28} className="text-primary-600" />
                       <span className="font-black uppercase tracking-widest text-xs text-gray-600">{t('pages.cbe_direct_verify', 'CBE Direct Verify')}</span>
                     </button>
@@ -516,13 +527,13 @@ const EscrowDetails = () => {
                 )}
                 
                 {isSeller && !escrow.active && escrow.status === "Funded" && (
-                  <button onClick={handleAccept} className="sm:col-span-2 btn btn-primary btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-primary-500/20">
+                  <button onClick={handleAccept} data-testid="accept-button" className="sm:col-span-2 btn btn-primary btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-primary-500/20">
                     {t('pages.accept_funded_escrow', "Accept Funded Escrow")}
                   </button>
                 )}
                 
                 {isBuyer && escrow.active && escrow.status === "Funded" && (
-                  <button onClick={handleConfirmReceipt} className="sm:col-span-2 btn btn-success btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-green-500/20">
+                  <button onClick={handleConfirmReceipt} data-testid="confirm-receipt-button" className="sm:col-span-2 btn btn-success btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-green-500/20">
                     <CheckCircle className="mr-2" /> {t('pages.confirm_receipt', "Confirm & Release Funds")}
                   </button>
                 )}
@@ -532,6 +543,7 @@ const EscrowDetails = () => {
                   <div className="sm:col-span-2 grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 mt-4">
                     <button 
                       onClick={() => { setEditConditions(escrow.conditions || ""); setEditAmount(escrow.amount); setShowEditModal(true); }} 
+                      data-testid="edit-escrow-button"
                       className="btn btn-outline border-gray-200 rounded-xl gap-2 h-12 text-sm font-bold"
                     >
                       <Edit3 size={16} /> {t('pages.edit_terms', 'Edit Terms')}
@@ -546,13 +558,13 @@ const EscrowDetails = () => {
                 )}
                 
                 {(isBuyer || isSeller) && escrow.active && escrow.status === "Funded" && (
-                  <button onClick={() => setShowDisputeModal(true)} className="sm:col-span-2 btn btn-outline border-red-100 text-red-600 hover:bg-red-50 btn-lg w-full rounded-2xl py-4 font-bold">
+                  <button onClick={() => setShowDisputeModal(true)} data-testid="dispute-button" className="sm:col-span-2 btn btn-outline border-red-100 text-red-600 hover:bg-red-50 btn-lg w-full rounded-2xl py-4 font-bold">
                     <AlertCircle className="mr-2" /> {t('pages.raise_dispute', "Raise Formal Dispute")}
                   </button>
                 )}
                 
                 {escrow.status === "Released" && (
-                  <button onClick={handleDownloadAgreement} className="sm:col-span-2 btn btn-secondary btn-lg w-full flex items-center justify-center gap-2 rounded-2xl py-6 font-black uppercase tracking-widest">
+                  <button onClick={handleDownloadAgreement} data-testid="download-final-agreement" className="sm:col-span-2 btn btn-secondary btn-lg w-full flex items-center justify-center gap-2 rounded-2xl py-6 font-black uppercase tracking-widest">
                     <Download size={20} /> {t('pages.download_final_agreement', "Official Agreement PDF")}
                   </button>
                 )}

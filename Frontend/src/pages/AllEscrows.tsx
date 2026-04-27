@@ -212,44 +212,55 @@ const AllEscrows = () => {
         {/* Escrows List */}
         {!isLoading && !error && filteredEscrows.length > 0 && (
           <div className="space-y-4">
-            {filteredEscrows.map((escrow) => (
-              <motion.div
-                key={escrow.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="card p-4 sm:p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={`p-3 rounded-full ${getStatusColor(escrow.status)}`}
-                    >
-                      {getStatusIcon(escrow.status)}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {t('pages.escrow_id', 'Escrow')} #{escrow.id}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {t('pages.created', 'Created')} {formatRelativeTime(escrow.created_at)}
-                      </p>
-                      {escrow.conditions && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                          {escrow.conditions}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-left sm:text-right">
-                    <p className="text-xl font-bold text-gray-900">
-                      {formatCurrency(escrow.amount)}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-2 flex-wrap gap-y-2">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                          escrow.status
-                        )}`}
+            {filteredEscrows.map((escrow, idx) => {
+              const isQuick = !escrow.milestones || escrow.milestones.length === 0;
+              const isPending = escrow.status === 'Pending';
+              const isActive = escrow.status === 'Funded';
+              
+              let statusTestId = undefined;
+              if (isQuick && isPending) statusTestId = 'escrow-card-quick-pending';
+              else if (isActive) statusTestId = 'escrow-card-status-active';
+
+              return (
+                <motion.div
+                  key={escrow.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  data-testid={`escrow-card-${idx}`}
+                  className="card p-4 sm:p-6 hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`p-3 rounded-full ${getStatusColor(escrow.status)}`}
                       >
+                        {getStatusIcon(escrow.status)}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {t('pages.escrow_id', 'Escrow')} #{escrow.id}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {t('pages.created', 'Created')} {formatRelativeTime(escrow.created_at)}
+                        </p>
+                        {escrow.conditions && (
+                          <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                            {escrow.conditions}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <p className="text-xl font-bold text-gray-900">
+                        {formatCurrency(escrow.amount)}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-2 flex-wrap gap-y-2">
+                        <span
+                          data-testid={statusTestId}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                            escrow.status
+                          )}`}
+                        >
                         {getStatusIcon(escrow.status)}
                         <span className="ml-1">{t(`pages.${escrow.status.toLowerCase()}`, escrow.status)}</span>
                       </span>

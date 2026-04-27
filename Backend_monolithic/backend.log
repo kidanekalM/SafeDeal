@@ -1,36 +1,4 @@
 Successfully connected to PostgreSQL database
 Server starting on port 8081
-
- ┌───────────────────────────────────────────────────┐ 
- │                   Fiber v2.52.0                   │ 
- │               http://127.0.0.1:8081               │ 
- │       (bound on host 0.0.0.0 and port 8081)       │ 
- │                                                   │ 
- │ Handlers ............ 66  Processes ........... 1 │ 
- │ Prefork ....... Disabled  PID ............. 76644 │ 
- └───────────────────────────────────────────────────┘ 
-
-00:26:38 | 204 |     535.347µs | 127.0.0.1 | OPTIONS | /api/register | -
-00:26:38 | 401 |    2.995002ms | 127.0.0.1 | POST | /api/register | -
-00:26:38 | 204 |       12.82µs | 127.0.0.1 | OPTIONS | /refresh-token | -
-00:26:38 | 401 |     960.609µs | 127.0.0.1 | POST | /refresh-token | -
-00:26:44 | 204 |      19.688µs | 127.0.0.1 | OPTIONS | /api/register | -
-00:26:44 | 401 |    1.550357ms | 127.0.0.1 | POST | /api/register | -
-00:26:44 | 204 |      12.612µs | 127.0.0.1 | OPTIONS | /refresh-token | -
-00:26:44 | 401 |      23.809µs | 127.0.0.1 | POST | /refresh-token | -
-22:24:01 | 204 |     107.591µs | 127.0.0.1 | OPTIONS | /api/register | -
-22:24:01 | 401 |     440.878µs | 127.0.0.1 | POST | /api/register | -
-22:24:01 | 204 |      12.703µs | 127.0.0.1 | OPTIONS | /refresh-token | -
-22:24:01 | 401 |      32.664µs | 127.0.0.1 | POST | /refresh-token | -
-22:24:05 | 204 |      11.913µs | 127.0.0.1 | OPTIONS | /api/register | -
-22:24:05 | 401 |      66.029µs | 127.0.0.1 | POST | /api/register | -
-22:24:05 | 204 |       29.42µs | 127.0.0.1 | OPTIONS | /refresh-token | -
-22:24:05 | 401 |      17.909µs | 127.0.0.1 | POST | /refresh-token | -
-22:30:18 | 204 |      80.672µs | 127.0.0.1 | OPTIONS | /api/register | -
-22:30:18 | 401 |     173.007µs | 127.0.0.1 | POST | /api/register | -
-22:30:18 | 204 |      30.888µs | 127.0.0.1 | OPTIONS | /refresh-token | -
-22:30:18 | 401 |      23.459µs | 127.0.0.1 | POST | /refresh-token | -
-22:30:22 | 204 |      14.248µs | 127.0.0.1 | OPTIONS | /api/register | -
-22:30:22 | 401 |        67.1µs | 127.0.0.1 | POST | /api/register | -
-22:30:22 | 204 |        19.8µs | 127.0.0.1 | OPTIONS | /refresh-token | -
-22:30:23 | 401 |      20.634µs | 127.0.0.1 | POST | /refresh-token | -
+2026/04/26 21:52:12 failed to listen: listen tcp4 :8081: bind: address already in use
+exit status 1

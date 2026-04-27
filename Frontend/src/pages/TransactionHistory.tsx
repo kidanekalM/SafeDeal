@@ -203,7 +203,7 @@ const TransactionHistory = () => {
 
         {/* Transactions List */}
         {!isLoading && !error && filteredTransactions.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-4" data-testid="transaction-list">
             {filteredTransactions.map((transaction) => (
               <motion.div
                 key={transaction.id}

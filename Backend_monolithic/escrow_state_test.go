@@ -1,12 +1,6 @@
 package main
 
 import (
-	"backend_monolithic/internal/handlers"
-	"backend_monolithic/internal/auth"
-	"backend_monolithic/internal/blockchain"
-	"backend_monolithic/internal/rabbitmq"
-	"backend_monolithic/internal/models"
-	"gorm.io/gorm"
 	"testing"
 )
 

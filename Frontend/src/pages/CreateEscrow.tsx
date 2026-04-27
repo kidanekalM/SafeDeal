@@ -27,6 +27,7 @@ const MilestoneSchema = z.object({
 const CreateEscrowSchema = z.object({
   creator_role: z.enum(['seller', 'buyer', 'mediator'], { required_error: 'Role is required' }),
   isDetailed: z.boolean().default(false),
+  title: z.string().min(3, 'Title is required').optional(),
   counterparty_id: z.number().optional(),
   counterparty_email: z.string().optional(),
   buyer_id: z.number().optional(),
@@ -197,7 +198,8 @@ const CreateEscrow = () => {
       const payload: any = { 
         creator_role: data.creator_role, 
         amount: Number(data.amount), 
-        conditions: data.conditions 
+        conditions: data.conditions,
+        title: data.title
       };
       
       if (data.isDetailed) {
@@ -255,7 +257,11 @@ const CreateEscrow = () => {
           </div>
           <div className="grid grid-cols-2 gap-4 border-t pt-8">
             {[false, true].map(m => (
-              <label key={m.toString()} className={`p-5 border-2 rounded-2xl cursor-pointer transition-all ${isDetailed === m ? 'border-[#014d46] bg-[#e6f7f4]' : 'border-gray-100'}`}>
+              <label 
+                key={m.toString()} 
+                data-testid={m ? 'detailed-mode-option' : 'quick-mode-option'}
+                className={`p-5 border-2 rounded-2xl cursor-pointer transition-all ${isDetailed === m ? 'border-[#014d46] bg-[#e6f7f4]' : 'border-gray-100'}`}
+              >
                 <input type="radio" checked={isDetailed === m} onChange={() => setValue('isDetailed', m)} className="sr-only" />
                 <span className="font-bold block">{m ? t('pages.ultra_comprehensive', 'Detailed') : t('pages.quick_escrow', 'Quick')}</span>
               </label>
@@ -284,6 +290,7 @@ const CreateEscrow = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input 
                       type="text" 
+                      data-testid={isDetailed ? "buyer-email" : "quick-buyer-email"}
                       placeholder={t('pages.search_buyer_placeholder', 'Search buyer by email...')} 
                       className="input w-full h-14 rounded-2xl pl-12 bg-white" 
                       onChange={e => {
@@ -333,6 +340,7 @@ const CreateEscrow = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input 
                       type="text" 
+                      data-testid={isDetailed ? "seller-email" : "quick-seller-email"}
                       placeholder={t('pages.search_seller_placeholder', 'Search seller by email...')} 
                       className="input w-full h-14 rounded-2xl pl-12 bg-white" 
                       onChange={e => {
@@ -371,10 +379,20 @@ const CreateEscrow = () => {
           
           <div className="space-y-6">
             <div>
+              <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 block">{t('pages.agreement_title', 'Title')}</label>
+              <input 
+                type="text"
+                {...register('title')} 
+                data-testid={isDetailed ? "escrow-title" : "quick-title"}
+                className="w-full p-4 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all mb-4" 
+                placeholder={t('pages.title_placeholder', 'e.g. Website Redesign')} 
+              />
+
               <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 block">{t('pages.agreement_conditions', 'Conditions')}</label>
               <textarea 
-                rows={6} 
+                rows={4} 
                 {...register('conditions')} 
+                data-testid={isDetailed ? "escrow-description" : "quick-condition"}
                 className="w-full p-5 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all" 
                 placeholder={t('pages.terms_placeholder', 'Enter the conditions of your agreement...')} 
               />
@@ -418,6 +436,7 @@ const CreateEscrow = () => {
                 <input 
                   type="number" 
                   {...register('amount')} 
+                  data-testid={isDetailed ? "escrow-amount" : "quick-amount"}
                   readOnly={isDetailed}
                   className={`input pl-12 h-14 rounded-2xl text-xl font-bold w-full ${isDetailed ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`} 
                   placeholder="0.00" 
@@ -439,6 +458,7 @@ const CreateEscrow = () => {
             <button 
               type="button" 
               onClick={() => append({ title: '', amount: 0, description: '' })} 
+              data-testid="add-milestone"
               className="btn btn-primary btn-sm rounded-xl"
             >
               + {t('pages.add', 'Add')}
@@ -450,6 +470,7 @@ const CreateEscrow = () => {
                 <input 
                   placeholder={t('pages.milestone_title', 'Title')} 
                   {...register(`milestones.${i}.title`)} 
+                  data-testid={`milestone-name-${i}`}
                   className="w-full mb-2 font-bold border-b outline-none focus:border-[#014d46]" 
                 />
                 <textarea 
@@ -462,6 +483,7 @@ const CreateEscrow = () => {
                   type="number" 
                   placeholder={t('pages.milestone_amount', 'Amount')} 
                   {...register(`milestones.${i}.amount`)} 
+                  data-testid={`milestone-amount-${i}`}
                   className="w-full text-sm outline-none" 
                 />
                 {fields.length > 1 && (
@@ -559,13 +581,14 @@ const CreateEscrow = () => {
           </AnimatePresence>
         </div>
         <div className="mt-12 flex justify-between items-center px-4">
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest" data-testid="step-indicator">
             {t('pages.step_indicator', 'Step')} {step + 1} / {steps.length}
           </div>
           <div className="flex gap-4">
             {step < steps.length - 1 ? (
               <button 
                 onClick={nextStep} 
+                data-testid="next-step"
                 className="btn btn-primary px-8 h-14 rounded-2xl font-bold uppercase shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 group"
               >
                 {t('pages.continue', 'Continue')} 
@@ -575,6 +598,7 @@ const CreateEscrow = () => {
               <button 
                 onClick={handleSubmit(onSubmit)} 
                 disabled={isSubmitting || !isValid} 
+                data-testid={isDetailed ? "create-escrow-submit" : "create-quick-submit"}
                 className="btn btn-primary px-8 h-14 rounded-2xl font-bold uppercase shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
               >
                 {isSubmitting ? t('pages.launching', 'Launching...') : t('pages.start_secure_escrow_btn', 'Start Deal')}
