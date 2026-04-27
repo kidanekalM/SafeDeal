@@ -1237,7 +1237,7 @@ Output your response as JSON: {"decision": "RELEASE" or "REFUND", "justification
 	})
 }
 
-func (h *EscrowHandler) isValidTransition(fromStatus, toStatus string) bool {
+func (h *EscrowHandler) IsValidTransition(fromStatus, toStatus string) bool {
 	allowedTransitions := map[string][]string{
 		"Pending":   {"Active", "Funded", "Canceled"}, // For the main workflow
 		"Active":    {"Locked", "Canceled"},
