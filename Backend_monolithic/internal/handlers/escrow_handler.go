@@ -712,6 +712,10 @@ func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only buyer can verify payment"})
 	}
 
+	if escrow.Status == "Funded" || escrow.Status == "Active" {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow is already funded", "data-testid": "already-funded-error"})
+	}
+
 	// 1. Check if this transaction ID has already been used (except for test ID)
 	var existingEscrow models.Escrow
 	if req.TransactionID != "FT26072JFV9" {
