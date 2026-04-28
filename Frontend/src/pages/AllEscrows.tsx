@@ -261,26 +261,27 @@ const AllEscrows = () => {
                             escrow.status
                           )}`}
                         >
-                        {getStatusIcon(escrow.status)}
-                        <span className="ml-1">{t(`pages.${escrow.status.toLowerCase()}`, escrow.status)}</span>
-                      </span>
-                      {escrow.milestones && escrow.milestones.length > 0 && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          {escrow.milestones.length} {t('pages.milestones', 'Milestones')}
+                          {getStatusIcon(escrow.status)}
+                          <span className="ml-1">{t(`pages.${escrow.status.toLowerCase()}`, escrow.status)}</span>
                         </span>
-                      )}
+                        {escrow.milestones && escrow.milestones.length > 0 && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            {escrow.milestones.length} {t('pages.milestones', 'Milestones')}
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        to={`/escrow/${escrow.id}`}
+                        className="btn btn-outline btn-sm mt-3 w-full sm:w-auto"
+                      >
+                        {t('pages.view_details', 'View Details')}
+                      </Link>
                     </div>
-                    <Link
-                      to={`/escrow/${escrow.id}`}
-                      className="btn btn-outline btn-sm mt-3 w-full sm:w-auto"
-                    >
-                      {t('pages.view_details', 'View Details')}
-                    </Link>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
 

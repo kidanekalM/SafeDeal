@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
-import api, { userApi, escrowApi } from '../lib/api';
+import { userApi, escrowApi } from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';

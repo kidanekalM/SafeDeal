@@ -74,9 +74,7 @@ const EscrowDetails = () => {
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
-  const [isBackendBusy, setIsBackendBusy] = useState(false);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [loadingMilestones, setLoadingMilestones] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
 
   const isBuyer = Number(user?.id) === Number(escrow?.buyer_id);
@@ -229,11 +227,9 @@ const EscrowDetails = () => {
 
   useEffect(() => {
     if (escrow?.id) {
-      setLoadingMilestones(true);
       milestoneApi.getByEscrow(escrow.id)
         .then((res) => setMilestones(res.data))
-        .catch(() => {})
-        .finally(() => setLoadingMilestones(false));
+        .catch(() => {});
     }
   }, [escrow?.id]);
 
