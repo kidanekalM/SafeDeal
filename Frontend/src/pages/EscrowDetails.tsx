@@ -113,6 +113,7 @@ const EscrowDetails = () => {
         status: rawData.status || rawData.Status,
         active: rawData.active !== undefined ? rawData.active : rawData.Active,
         is_locked: rawData.is_locked !== undefined ? rawData.is_locked : rawData.IsLocked,
+        is_detailed: rawData.is_detailed !== undefined ? rawData.is_detailed : rawData.IsDetailed,
         created_at: rawData.created_at || rawData.CreatedAt,
         updated_at: rawData.updated_at || rawData.UpdatedAt,
         blockchain_tx_hash: rawData.blockchain_tx_hash || rawData.BlockchainTxHash,
