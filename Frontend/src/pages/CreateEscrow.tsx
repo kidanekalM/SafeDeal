@@ -46,13 +46,6 @@ const CreateEscrowSchema = z.object({
 
 type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
 
-const SearchUserSchema = z.object({
-  id: z.number(),
-  first_name: z.string(),
-  last_name: z.string(),
-  email: z.string().optional(),
-});
-
 const ErrorMessage = ({ error }: { error?: { message?: string } }) => {
   if (!error) return null;
   return <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-tight">{error.message}</p>;

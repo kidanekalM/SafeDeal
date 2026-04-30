@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, 
   Plus, 
-  User, 
   LogOut, 
   Lock,
   Bell,
