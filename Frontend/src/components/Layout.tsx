@@ -50,7 +50,6 @@ const Layout = ({ children }: LayoutProps) => {
       { name: t('pages.start_new_deal', 'Start Deal'), href: '/create-escrow', icon: Plus },
       { name: t('pages.directory', 'Directory'), href: '/search', icon: Search },
       { name: t('pages.payments', 'Payments'), href: '/transactions', icon: CreditCard },
-      { name: t('pages.profile', 'Profile'), href: '/profile', icon: User },
     ];
     
       

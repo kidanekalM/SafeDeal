@@ -10,3 +10,36 @@ Server starting on port 8081
  │ Prefork ....... Disabled  PID ............. 61459 │ 
  └───────────────────────────────────────────────────┘ 
 
+20:45:05 | 101 |   42.546115ms | 127.0.0.1 | GET | /api/notifications/ws | -
+20:45:05 | 204 |    7.680607ms | 127.0.0.1 | OPTIONS | /api/refresh-token | -
+20:45:05 | 204 |   12.879861ms | 127.0.0.1 | OPTIONS | /api/refresh-token | -
+20:45:05 | 101 |    5.792469ms | 127.0.0.1 | GET | /api/notifications/ws | -
+2026/04/30 20:45:06 invalid token: token is expired by 357h15m20.135495s
+2026/04/30 20:45:06 invalid token: token is expired by 357h15m20.135576s
+20:45:05 | 401 |   31.392349ms | 127.0.0.1 | POST | /api/refresh-token | -
+20:45:05 | 401 |    26.91352ms | 127.0.0.1 | POST | /api/refresh-token | -
+20:45:05 | 204 |      13.093µs | 127.0.0.1 | OPTIONS | /api/v1/profile | -
+2026/04/30 20:45:06 JWTMiddleware: Invalid token for GET /api/v1/profile: token is expired by 357h15m20.286408s
+20:45:05 | 401 |    1.362638ms | 127.0.0.1 | GET | /api/v1/profile | -
+20:45:05 | 204 |      95.022µs | 127.0.0.1 | OPTIONS | /api/v1/profile | -
+2026/04/30 20:45:06 JWTMiddleware: Invalid token for GET /api/v1/profile: token is expired by 357h15m20.290335s
+20:45:05 | 401 |     137.456µs | 127.0.0.1 | GET | /api/v1/profile | -
+20:45:06 | 401 |      25.431µs | 127.0.0.1 | POST | /api/refresh-token | -
+20:45:10 | 204 |       9.541µs | 127.0.0.1 | OPTIONS | /api/login | -
+2026/04/30 20:45:10 Login attempt for email: kid2@gmail.com
+
+2026/04/30 20:45:11 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/auth/service.go:72 [35;1mrecord not found
+[0m[33m[381.046ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'kid2@gmail.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/30 20:45:11 Login: User not found: kid2@gmail.com
+20:45:10 | 401 |  391.129342ms | 127.0.0.1 | POST | /api/login | -
+20:45:10 | 204 |      25.245µs | 127.0.0.1 | OPTIONS | /api/refresh-token | -
+20:45:10 | 401 |       25.74µs | 127.0.0.1 | POST | /api/refresh-token | -
+20:45:29 | 204 |      65.613µs | 127.0.0.1 | OPTIONS | /api/login | -
+2026/04/30 20:45:30 Login attempt for email: kid2@gmail.com
+
+2026/04/30 20:45:30 [31;1m/Users/kidanekal/Desktop/code/SafeDeal/Backend_monolithic/internal/auth/service.go:72 [35;1mrecord not found
+[0m[33m[219.553ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE email = 'kid2@gmail.com' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2026/04/30 20:45:30 Login: User not found: kid2@gmail.com
+20:45:29 | 401 |  226.524822ms | 127.0.0.1 | POST | /api/login | -
+20:45:29 | 204 |      24.201µs | 127.0.0.1 | OPTIONS | /api/refresh-token | -
+20:45:29 | 401 |      49.299µs | 127.0.0.1 | POST | /api/refresh-token | -

@@ -13,6 +13,11 @@ interface AuthFormProps {
   initialMode?: "login" | "register";
 }
 
+const ErrorMessage = ({ error }: { error?: { message?: string } }) => {
+  if (!error) return null;
+  return <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-tight">{error.message}</p>;
+};
+
 const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
   const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
@@ -144,17 +149,18 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.first_name')}</label>
                 <input {...register("first_name", { required: "First name is required" })} className="input w-full" />
-                {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name.message}</p>}
+                <ErrorMessage error={errors.first_name} />
               </div>
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.last_name')}</label>
                 <input {...register("last_name", { required: "Last name is required" })} className="input w-full" />
-                {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name.message}</p>}
+                <ErrorMessage error={errors.last_name} />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.profession')}</label>
               <input {...register("profession", { required: "Profession is required" })} className="input w-full" placeholder="e.g., Designer" />
+              <ErrorMessage error={errors.profession} />
             </div>
           </>
         )}
@@ -168,6 +174,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('components.account_holder_name')}</label>
               <input {...register("account_name", { required: "Account name is required" })} className="input w-full" />
+              <ErrorMessage error={errors.account_name} />
             </div>
             
             <div className="grid grid-cols-1 gap-4">
@@ -181,13 +188,14 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
                     </option>
                   ))}
                 </select>
-                {errors.bank_code && <p className="text-red-500 text-xs mt-1">{errors.bank_code.message}</p>}
+                <ErrorMessage error={errors.bank_code} />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('components.account_number')}</label>
               <input {...register("account_number", { required: "Required" })} className="input w-full" />
+              <ErrorMessage error={errors.account_number} />
             </div>
           </div>
         )}
@@ -198,6 +206,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.email')}</label>
               <input {...register("email", { required: "Email is required" })} type="email" className="input w-full" data-testid="email-input" />
+              <ErrorMessage error={errors.email} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.password')}</label>
@@ -207,6 +216,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              <ErrorMessage error={errors.password} />
             </div>
           </>
         )}

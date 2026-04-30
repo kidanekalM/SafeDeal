@@ -46,6 +46,18 @@ const CreateEscrowSchema = z.object({
 
 type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
 
+const SearchUserSchema = z.object({
+  id: z.number(),
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.string().optional(),
+});
+
+const ErrorMessage = ({ error }: { error?: { message?: string } }) => {
+  if (!error) return null;
+  return <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-tight">{error.message}</p>;
+};
+
 const CreateEscrow = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -109,7 +121,7 @@ const CreateEscrow = () => {
   }, [milestones, isDetailed, amount, setValue, append]);
 
   const handleSearch = async (term: string) => {
-    if (term.length < 3) { setSearchResults([]); return; }
+    if (term.length < 1) { setSearchResults([]); return; }
     try {
       const response = await userApi.searchUsers(term);
       // Check if an invitation was sent (indicates the email doesn't exist but was invited)
@@ -180,17 +192,21 @@ const CreateEscrow = () => {
       // Validation passed if we reach here
       setStep(s => Math.min(s + 1, steps.length - 1));
       return;
-    } else if (currentStepId === 'details') fieldsToValidate = ['amount', 'conditions'];
-    else if (currentStepId === 'milestones') {
+    } else if (currentStepId === 'details') {
+        fieldsToValidate = isDetailed ? ['conditions', 'title'] : ['amount', 'conditions', 'title'];
+    } else if (currentStepId === 'milestones') {
       const total = milestones.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
       if (total <= 0) { 
-        toast.error(t('pages.milestones_amount_error', 'Invalid total')); 
+        toast.error(t('pages.milestones_amount_error', 'Invalid total milestone amount')); 
         return; 
       }
       fieldsToValidate = ['milestones'];
     }
     const isStepValid = await trigger(fieldsToValidate as any);
     if (isStepValid) setStep(s => Math.min(s + 1, steps.length - 1));
+    else {
+        toast.error(t('common.fix_errors', 'Please fix validation errors before continuing'));
+    }
   };
 
   const onSubmit = async (data: CreateEscrowForm) => {
@@ -295,7 +311,7 @@ const CreateEscrow = () => {
                       className="input w-full h-14 rounded-2xl pl-12 bg-white" 
                       onChange={e => {
                         const val = e.target.value;
-                        if (val.length >= 3) {
+                        if (val.length >= 1) {
                           handleSearch(val).then(() => {
                             // Automatically add if it looks like an email and no exact match found yet?
                             // For now let search handle it
@@ -345,7 +361,7 @@ const CreateEscrow = () => {
                       className="input w-full h-14 rounded-2xl pl-12 bg-white" 
                       onChange={e => {
                         const val = e.target.value;
-                        if (val.length >= 3) {
+                        if (val.length >= 1) {
                           handleSearch(val);
                         } else {
                           setSearchResults([]);
@@ -384,18 +400,22 @@ const CreateEscrow = () => {
                 type="text"
                 {...register('title')} 
                 data-testid={isDetailed ? "escrow-title" : "quick-title"}
-                className="w-full p-4 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all mb-4" 
+                className="w-full p-4 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all mb-1" 
                 placeholder={t('pages.title_placeholder', 'e.g. Website Redesign')} 
               />
+              <ErrorMessage error={formErrors.title} />
 
-              <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 block">{t('pages.agreement_conditions', 'Conditions')}</label>
-              <textarea 
-                rows={4} 
-                {...register('conditions')} 
-                data-testid={isDetailed ? "escrow-description" : "quick-condition"}
-                className="w-full p-5 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all" 
-                placeholder={t('pages.terms_placeholder', 'Enter the conditions of your agreement...')} 
-              />
+              <div className="mt-4">
+                <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 block">{t('pages.agreement_conditions', 'Conditions')}</label>
+                <textarea 
+                  rows={4} 
+                  {...register('conditions')} 
+                  data-testid={isDetailed ? "escrow-description" : "quick-condition"}
+                  className="w-full p-5 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all" 
+                  placeholder={t('pages.terms_placeholder', 'Enter the conditions of your agreement...')} 
+                />
+                <ErrorMessage error={formErrors.conditions} />
+              </div>
             </div>
 
             {isDetailed && (
@@ -442,6 +462,7 @@ const CreateEscrow = () => {
                   placeholder="0.00" 
                 />
               </div>
+              <ErrorMessage error={formErrors.amount} />
               {isDetailed && (
                 <p className="text-[10px] text-center mt-2 text-gray-400 font-bold uppercase tracking-tighter">
                   {t('pages.auto_synced_with_milestones', 'Auto-synced with milestones')}
@@ -473,19 +494,34 @@ const CreateEscrow = () => {
                   data-testid={`milestone-name-${i}`}
                   className="w-full mb-2 font-bold border-b outline-none focus:border-[#014d46]" 
                 />
+                <ErrorMessage error={formErrors.milestones?.[i]?.title} />
                 <textarea 
                   placeholder={t('pages.milestone_description', 'Description')} 
                   {...register(`milestones.${i}.description`)} 
                   className="w-full mb-2 text-sm outline-none border-b resize-none" 
                   rows={2}
                 />
-                <input 
-                  type="number" 
-                  placeholder={t('pages.milestone_amount', 'Amount')} 
-                  {...register(`milestones.${i}.amount`)} 
-                  data-testid={`milestone-amount-${i}`}
-                  className="w-full text-sm outline-none" 
-                />
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">{t('pages.amount', 'Amount')}</label>
+                    <input 
+                      type="number" 
+                      placeholder={t('pages.milestone_amount', 'Amount')} 
+                      {...register(`milestones.${i}.amount`)} 
+                      data-testid={`milestone-amount-${i}`}
+                      className="w-full text-sm outline-none font-bold text-[#014d46]" 
+                    />
+                    <ErrorMessage error={formErrors.milestones?.[i]?.amount} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">{t('pages.due_date', 'Due Date')}</label>
+                    <input 
+                      type="date" 
+                      {...register(`milestones.${i}.due_date`)} 
+                      className="w-full text-sm outline-none" 
+                    />
+                  </div>
+                </div>
                 {fields.length > 1 && (
                   <button 
                     type="button" 
