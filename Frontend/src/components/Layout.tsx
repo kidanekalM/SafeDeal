@@ -120,11 +120,15 @@ const Layout = ({ children }: LayoutProps) => {
                   </span>
                 )}
               </button>
-              <Link to="/profile" className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200">
+              <button 
+                onClick={handleLogout}
+                className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-colors"
+                aria-label={t('components.sign_out', 'Sign out')}
+              >
                 <span className="text-sm font-medium text-primary-700">
                   {user?.first_name?.[0]}{user?.last_name?.[0]}
                 </span>
-              </Link>
+              </button>
               <button
                 onClick={handleLogout}
                 data-testid="logout-button"

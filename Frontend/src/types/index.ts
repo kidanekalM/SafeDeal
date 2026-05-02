@@ -73,6 +73,7 @@ export interface Escrow {
     receipt_url?: string;
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
+    title?: string;
     active: boolean;
     is_locked: boolean;
     is_detailed: boolean;

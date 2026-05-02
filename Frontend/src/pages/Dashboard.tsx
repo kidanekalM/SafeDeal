@@ -172,8 +172,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="text-sm font-black text-gray-900">{action.status === 'Pending' ? t('pages.payment_needed', 'Payment Needed') : t('pages.acceptance_needed', 'Acceptance Needed')}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase">{t('pages.escrow_id', 'Escrow')} #{action.id} • {formatCurrency(action.amount)}</p>
-                    </div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase">{action.title || `${t('pages.escrow_id', 'Escrow')} #${action.id}`} • {formatCurrency(action.amount)}</p>                    </div>
                   </div>
                   <ArrowRight size={20} className="text-orange-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
                 </Link>
@@ -223,7 +222,7 @@ const Dashboard = () => {
                       <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl ${getStatusColor(escrow.status)}`}>{getStatusIcon(escrow.status)}</div>
                         <div>
-                          <p className="font-black text-gray-900 text-sm">{t('pages.escrow_id', 'Escrow')} #{escrow.id}</p>
+                          <p className="font-black text-gray-900 text-sm">{escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}</p>
                           <p className="text-[10px] font-bold text-gray-400 uppercase">{formatRelativeTime(escrow.created_at)}</p>
                         </div>
                       </div>

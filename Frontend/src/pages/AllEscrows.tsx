@@ -85,6 +85,7 @@ const AllEscrows = () => {
         const matchesSearch = !term
           ? true
           : escrow.id.toString().includes(term) ||
+            escrow.title?.toLowerCase().includes(term) ||
             escrow.amount.toString().includes(term) ||
             (escrow.conditions || '').toLowerCase().includes(term);
         const matchesStatus = statusFilter === 'all' || escrow.status === statusFilter;
@@ -213,6 +214,7 @@ const AllEscrows = () => {
         {!isLoading && !error && filteredEscrows.length > 0 && (
           <div className="space-y-4">
             {filteredEscrows.map((escrow, idx) => {
+              console.log("Escrow object:", escrow);
               const isQuick = !escrow.milestones || escrow.milestones.length === 0;
               const isPending = escrow.status === 'Pending';
               const isActive = escrow.status === 'Funded';
@@ -238,10 +240,10 @@ const AllEscrows = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {t('pages.escrow_id', 'Escrow')} #{escrow.id}
+                          {escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {t('pages.created', 'Created')} {formatRelativeTime(escrow.created_at)}
+                          {escrow.created_at ? `${t('pages.created', 'Created')} ${formatRelativeTime(escrow.created_at)}` : `${t('pages.created', 'Created')} N/A`}
                         </p>
                         {escrow.conditions && (
                           <p className="text-sm text-gray-500 mt-1 line-clamp-2">

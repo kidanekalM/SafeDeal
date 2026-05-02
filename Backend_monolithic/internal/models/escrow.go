@@ -11,6 +11,7 @@ type Escrow struct {
 	Amount             uint        `json:"amount" validate:"required,gt=0"`
 	PlatformFee        uint        `json:"platform_fee"`
 	Status             string      `json:"status" gorm:"default:'Pending'" validate:"oneof=Pending Verifying Funded Active Released Disputed Canceled Refunded"`
+	Title              string      `json:"title,omitempty"`
 	Conditions         string      `json:"conditions,omitempty"`
 	BlockchainTxHash   string      `json:"blockchain_tx_hash,omitempty"`
 	BlockchainEscrowID uint        `json:"blockchain_escrow_id,omitempty"`

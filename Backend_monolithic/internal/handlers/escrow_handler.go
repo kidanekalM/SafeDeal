@@ -95,6 +95,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		SellerID          uint               `json:"seller_id"` // Removed validate:"required" since we might receive email instead
 		MediatorID        *uint              `json:"mediator_id,omitempty"`
 		Amount            uint               `json:"amount" validate:"required,gt=0"`
+		Title             string             `json:"title"`
 		Conditions        string             `json:"conditions"`
 		Jurisdiction      string             `json:"jurisdiction"`
 		GoverningLaw      string             `json:"governing_law"`
@@ -169,6 +170,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		MediatorID:        req.MediatorID,
 		Amount:            req.Amount,
 		PlatformFee:       fee,
+		Title:             req.Title,
 		Conditions:        req.Conditions,
 		Jurisdiction:      req.Jurisdiction,
 		GoverningLaw:      req.GoverningLaw,
