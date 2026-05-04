@@ -1,0 +1,65 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e7]:
+      - link "SafeDeal" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e11]
+        - generic [ref=e14]: SafeDeal
+      - heading "Start New Deal" [level=1] [ref=e15]
+      - generic [ref=e16]:
+        - button "Notifications" [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Sign out" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: BT
+        - button "Sign out" [ref=e23] [cursor=pointer]:
+          - img [ref=e24]
+    - navigation [ref=e28]:
+      - generic [ref=e29]:
+        - link "Dashboard" [ref=e30] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e31]
+          - generic [ref=e36]: Dashboard
+        - link "My Escrows" [ref=e37] [cursor=pointer]:
+          - /url: /escrows
+          - img [ref=e38]
+          - generic [ref=e41]: My Escrows
+        - link "Start New Deal" [ref=e42] [cursor=pointer]:
+          - /url: /create-escrow
+          - img [ref=e43]
+          - generic [ref=e46]: Start New Deal
+        - link "Directory" [ref=e47] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e48]
+          - generic [ref=e51]: Directory
+        - link "Payments" [ref=e52] [cursor=pointer]:
+          - /url: /transactions
+          - img [ref=e53]
+          - generic [ref=e56]: Payments
+  - main [ref=e57]:
+    - generic [ref=e58]:
+      - button [ref=e60] [cursor=pointer]:
+        - img [ref=e61]
+      - generic [ref=e67]:
+        - heading "Agreement Terms" [level=2] [ref=e68]
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - generic [ref=e71]: Title
+            - textbox "e.g. Website Redesign" [ref=e72]
+            - generic [ref=e73]:
+              - generic [ref=e74]: Agreement Conditions
+              - textbox "Enter the conditions of your agreement..." [ref=e75]: Dual account flow test conditions which are long enough.
+          - generic [ref=e76]:
+            - generic [ref=e77]: Total Amount
+            - generic [ref=e78]:
+              - img [ref=e79]
+              - spinbutton [ref=e82]: "500"
+      - generic [ref=e83]:
+        - generic [ref=e84]: Step 3 / 4
+        - button "Continue →" [active] [ref=e86] [cursor=pointer]:
+          - text: Continue
+          - generic [ref=e87]: →
+  - button "🔍 Show Debug" [ref=e89] [cursor=pointer]
+```

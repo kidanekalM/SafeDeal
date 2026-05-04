@@ -1,0 +1,206 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e7]:
+      - link "SafeDeal" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e11]
+        - generic [ref=e14]: SafeDeal
+      - heading "Dashboard" [level=1] [ref=e15]
+      - generic [ref=e16]:
+        - button "Notifications" [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Sign out" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: TA
+        - button "Sign out" [ref=e23] [cursor=pointer]:
+          - img [ref=e24]
+    - navigation [ref=e28]:
+      - generic [ref=e29]:
+        - link "Dashboard" [ref=e30] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e31]
+          - generic [ref=e36]: Dashboard
+        - link "My Escrows" [ref=e37] [cursor=pointer]:
+          - /url: /escrows
+          - img [ref=e38]
+          - generic [ref=e41]: My Escrows
+        - link "Start New Deal" [ref=e42] [cursor=pointer]:
+          - /url: /create-escrow
+          - img [ref=e43]
+          - generic [ref=e46]: Start New Deal
+        - link "Directory" [ref=e47] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e48]
+          - generic [ref=e51]: Directory
+        - link "Payments" [ref=e52] [cursor=pointer]:
+          - /url: /transactions
+          - img [ref=e53]
+          - generic [ref=e56]: Payments
+  - main [ref=e57]:
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - heading "Welcome, Test!" [level=2] [ref=e63]
+              - generic "Verified User" [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e68]: Verified
+            - paragraph [ref=e69]: Your secure gateway to trust-based transactions is active and protected.
+            - generic [ref=e70]:
+              - link "Start New Deal" [ref=e71] [cursor=pointer]:
+                - /url: /create-escrow
+                - img [ref=e72]
+                - text: Start New Deal
+              - button "Refresh" [ref=e74] [cursor=pointer]:
+                - img [ref=e75]
+                - text: Refresh
+          - img [ref=e80]
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - img [ref=e84]
+            - generic [ref=e87]:
+              - generic [ref=e88]: "65"
+              - generic [ref=e89]: Trust Score
+          - heading "Verified Professional" [level=4] [ref=e90]:
+            - img [ref=e91]
+            - text: Verified Professional
+          - paragraph [ref=e94]: Level 1 Member
+      - generic [ref=e95]:
+        - heading "Action Required" [level=3] [ref=e96]:
+          - img [ref=e97]
+          - text: Action Required
+        - generic [ref=e100]:
+          - 'link "Payment Needed Escrow ID #45 • ETB 750.00" [ref=e101] [cursor=pointer]':
+            - /url: /escrow/45
+            - generic [ref=e102]:
+              - img [ref=e104]
+              - generic [ref=e107]:
+                - paragraph [ref=e108]: Payment Needed
+                - paragraph [ref=e109]: "Escrow ID #45 • ETB 750.00"
+            - img [ref=e110]
+          - 'link "Payment Needed Escrow ID #47 • ETB 100.00" [ref=e113] [cursor=pointer]':
+            - /url: /escrow/47
+            - generic [ref=e114]:
+              - img [ref=e116]
+              - generic [ref=e119]:
+                - paragraph [ref=e120]: Payment Needed
+                - paragraph [ref=e121]: "Escrow ID #47 • ETB 100.00"
+            - img [ref=e122]
+          - 'link "Payment Needed Escrow ID #49 • ETB 750.00" [ref=e125] [cursor=pointer]':
+            - /url: /escrow/49
+            - generic [ref=e126]:
+              - img [ref=e128]
+              - generic [ref=e131]:
+                - paragraph [ref=e132]: Payment Needed
+                - paragraph [ref=e133]: "Escrow ID #49 • ETB 750.00"
+            - img [ref=e134]
+          - 'link "Payment Needed Escrow ID #51 • ETB 100.00" [ref=e137] [cursor=pointer]':
+            - /url: /escrow/51
+            - generic [ref=e138]:
+              - img [ref=e140]
+              - generic [ref=e143]:
+                - paragraph [ref=e144]: Payment Needed
+                - paragraph [ref=e145]: "Escrow ID #51 • ETB 100.00"
+            - img [ref=e146]
+          - 'link "Payment Needed Escrow ID #52 • ETB 750.00" [ref=e149] [cursor=pointer]':
+            - /url: /escrow/52
+            - generic [ref=e150]:
+              - img [ref=e152]
+              - generic [ref=e155]:
+                - paragraph [ref=e156]: Payment Needed
+                - paragraph [ref=e157]: "Escrow ID #52 • ETB 750.00"
+            - img [ref=e158]
+      - generic [ref=e161]:
+        - generic [ref=e162]:
+          - img [ref=e165]
+          - paragraph [ref=e167]: Active Deals
+          - paragraph [ref=e168]: "5"
+        - generic [ref=e169]:
+          - img [ref=e172]
+          - paragraph [ref=e175]: Completed
+          - paragraph [ref=e176]: "0"
+        - generic [ref=e177]:
+          - img [ref=e180]
+          - paragraph [ref=e183]: Total Volume
+          - paragraph [ref=e184]: ETB 2,450.00
+        - generic [ref=e185]:
+          - img [ref=e188]
+          - paragraph [ref=e192]: Disputed
+          - paragraph [ref=e193]: "0"
+      - generic [ref=e194]:
+        - generic [ref=e195]:
+          - generic [ref=e196]:
+            - heading "Recent Transactions" [level=3] [ref=e197]
+            - link "View All History" [ref=e198] [cursor=pointer]:
+              - /url: /escrows
+          - generic [ref=e200]:
+            - 'link "Escrow ID #45 N/A ETB 750.00 Pending" [ref=e201] [cursor=pointer]':
+              - /url: /escrow/45
+              - generic [ref=e202]:
+                - img [ref=e204]
+                - generic [ref=e207]:
+                  - paragraph [ref=e208]: "Escrow ID #45"
+                  - paragraph [ref=e209]: N/A
+              - generic [ref=e210]:
+                - paragraph [ref=e211]: ETB 750.00
+                - paragraph [ref=e212]: Pending
+            - 'link "Escrow ID #47 N/A ETB 100.00 Pending" [ref=e213] [cursor=pointer]':
+              - /url: /escrow/47
+              - generic [ref=e214]:
+                - img [ref=e216]
+                - generic [ref=e219]:
+                  - paragraph [ref=e220]: "Escrow ID #47"
+                  - paragraph [ref=e221]: N/A
+              - generic [ref=e222]:
+                - paragraph [ref=e223]: ETB 100.00
+                - paragraph [ref=e224]: Pending
+            - 'link "Escrow ID #49 N/A ETB 750.00 Pending" [ref=e225] [cursor=pointer]':
+              - /url: /escrow/49
+              - generic [ref=e226]:
+                - img [ref=e228]
+                - generic [ref=e231]:
+                  - paragraph [ref=e232]: "Escrow ID #49"
+                  - paragraph [ref=e233]: N/A
+              - generic [ref=e234]:
+                - paragraph [ref=e235]: ETB 750.00
+                - paragraph [ref=e236]: Pending
+            - 'link "Escrow ID #51 N/A ETB 100.00 Pending" [ref=e237] [cursor=pointer]':
+              - /url: /escrow/51
+              - generic [ref=e238]:
+                - img [ref=e240]
+                - generic [ref=e243]:
+                  - paragraph [ref=e244]: "Escrow ID #51"
+                  - paragraph [ref=e245]: N/A
+              - generic [ref=e246]:
+                - paragraph [ref=e247]: ETB 100.00
+                - paragraph [ref=e248]: Pending
+            - 'link "Escrow ID #52 N/A ETB 750.00 Pending" [ref=e249] [cursor=pointer]':
+              - /url: /escrow/52
+              - generic [ref=e250]:
+                - img [ref=e252]
+                - generic [ref=e255]:
+                  - paragraph [ref=e256]: "Escrow ID #52"
+                  - paragraph [ref=e257]: N/A
+              - generic [ref=e258]:
+                - paragraph [ref=e259]: ETB 750.00
+                - paragraph [ref=e260]: Pending
+        - generic [ref=e261]:
+          - heading "SafeDeal Hub" [level=3] [ref=e262]
+          - generic [ref=e263]:
+            - generic [ref=e264]:
+              - img [ref=e265]
+              - heading "Become a Top-Rated Provider" [level=4] [ref=e268]
+              - paragraph [ref=e269]: Complete deals without disputes to increase your trust score and unlock lower fees.
+              - button "Learn More" [ref=e270] [cursor=pointer]
+            - img [ref=e271]
+          - generic [ref=e274]:
+            - heading "Security Overview" [level=4] [ref=e275]
+            - generic [ref=e276]:
+              - paragraph [ref=e279]: Encrypted Private Keys
+              - paragraph [ref=e282]: Blockchain Audit Logging
+              - paragraph [ref=e285]: AI Dispute Resolution Active
+  - button "🔍 Show Debug" [ref=e287] [cursor=pointer]
+```

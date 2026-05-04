@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const SELLER = { email: 'simple_seller@test.com', password: 'Test123!' };
 const BUYER = { email: 'simple_buyer@test.com', password: 'Test123!' };
-const BASE = 'http://localhost:5173';
+const BASE = 'http://localhost:3000';
 
 async function login(page, email: string, password: string) {
   await page.goto(`${BASE}/auth`);

@@ -24,6 +24,7 @@ type ServiceContainer struct {
 	BlockChainClient    *blockchain.Client
 	MilestoneHandler    *handlers.MilestoneHandler
 	Mailer              *mailer.Mailer
+	RatingsHandler      *handlers.RatingsHandler
 }
 
 func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
@@ -32,7 +33,9 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 
 	notificationHandler := handlers.NewNotificationHandler(db, authService)
 	milestoneHandler := handlers.NewMilestoneHandler(db, blockchainClient)
-	mail := mailer.NewMailer() // Instantiate the mailer
+	authSvc := authService  // Reuse auth service for ratings
+	ratingsHandler := handlers.NewRatingsHandler(db, authSvc)
+	mail := mailer.NewMailer()
 
 	return &ServiceContainer{
 		DB:                  db,
@@ -44,7 +47,8 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		NotificationHandler: notificationHandler,
 		MilestoneHandler:    milestoneHandler,
 		BlockChainClient:    blockchainClient,
-		Mailer:              mail, // Add the mailer instance
+		Mailer:              mail,
+		RatingsHandler:      ratingsHandler,
 	}
 }
 
@@ -138,6 +142,11 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	v1.Put("/milestones/:id/approve", sc.MilestoneHandler.ApproveMilestone)
 	v1.Put("/milestones/:id/reject", sc.MilestoneHandler.RejectMilestone)
 
+	// Ratings routes
+	v1.Post("/ratings/:escrowId", sc.RatingsHandler.CreateReview)
+	v1.Get("/ratings/:userId", sc.RatingsHandler.GetUserReviews)
+	v1.Get("/ratings/:userId/stats", sc.RatingsHandler.GetUserReviewStats)
+
 	// Payment routes
 	v1.Post("/payments/initiate", sc.PaymentHandler.InitiatePayment)
 	v1.Get("/payments/transactions", sc.PaymentHandler.GetTransactions)
@@ -147,3 +156,4 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 func (sc *ServiceContainer) GetDB() *gorm.DB {
 	return sc.DB
 }
+
