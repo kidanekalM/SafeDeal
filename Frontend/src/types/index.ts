@@ -77,6 +77,7 @@ export interface Escrow {
     active: boolean;
     is_locked: boolean;
     is_detailed: boolean;
+    CreatedAt?: string;
     snapshot?: string;
     contract_hash?: string;
     buyer_signature?: string;

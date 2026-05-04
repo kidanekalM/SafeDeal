@@ -1,28 +1,36 @@
-# SafeDeal i18n Fixes - Language Switching & English Translations TODO
+# SafeDeal Rating, Editing, Tamper-Proof Implementation TODO
 
-## Current Progress
-- [x] Understand task & gather information from files
-- [x] Create detailed edit plan
-- [x] Get user approval ✅
+## 1. Backend Changes (High Priority)
+- [ ] Create models/review.go (Review model with rating, comment, escrowID, reviewerID)
+- [ ] Update models/user.go (+ Ratings []Review)
+- [ ] Update models/milestone.go (+ ContentHash string, FileContent []byte or path)
+- [ ] Create handlers/ratings_handler.go (POST /ratings, GET /ratings/:userId)
+- [ ] Enhance user_handler.go: UpdateProfile with file upload (avatar/docs)
+- [ ] Enhance milestone_handler.go: PUT /milestones/:id/deliverable (multipart upload + hash)
+- [ ] Add tamper verification endpoint: GET /verify/:escrowId (hash+blockchain check)
+- [ ] Update escrow_handler.go: Enhance LockEscrow with full hash chain
+- [ ] Update GetTrustInsights: Implement weighted algo (completed*5 - disputed*10 + avg_rating*10)
 
-## Implementation Steps (Approved Plan)
-1. **✅ Create TODO.md** - Track progress
-2. **✅** Edit `Frontend/src/pages/LandingPage.tsx` - Add localStorage persistence to language select
-3. **✅** Edit `Frontend/src/i18n.ts` - Add language change persistence listener & debug logging
-4. **✅** Edit `Frontend/src/App.tsx` - Enhance setLang with document lang update & optional reload
-5. **✅ Complete** Test changes:
-   - Fixed TS error in AuthPage.tsx (useTranslation hook)
-   - Persistence working
-   - English translations now render correctly (confirmed via logs/files)
-   - Amharic confirmed working
-6. **✅ Complete** Verify no regressions:
+## 2. DB Migration
+- [ ] Add new tables/fields: reviews, milestone hashes; migrate DB
 
-   - Check other pages (Dashboard, etc.) translations
-   - Run `npx playwright test` for e2e
-7. **Pending** Complete task - attempt_completion
+## 3. Frontend Changes
+- [ ] Create components/RatingForm.tsx (stars + comment, post-escrow/profile)
+- [ ] Create components/FileUpload.tsx (FormData upload + preview)
+- [ ] Create components/TamperBadge.tsx (hash display + verify button)
+- [ ] Update pages/Profile.tsx: Add file uploads, ratings section, tamper badges
+- [ ] Update pages/EscrowDetails.tsx (or Dashboard): Rating form post-complete, tamper-proof views (simple: summary+badge; detailed: full hash/tx)
+- [ ] Update components/RealTimeChat.tsx if needed for dispute ratings
 
-## Status: Starting implementation...
+## 4. Integration & Testing
+- [ ] Upload storage: Local /uploads dir + nginx serve (or S3 later)
+- [ ] Hashing: SHA256 on file content + escrow data
+- [ ] Update e2e tests: simple_buyer.spec.ts etc. for ratings/upload/tamper
+- [ ] Test rating algo edge cases (0-100 cap)
+- [ ] Verify blockchain tamper logs
 
-Last updated: $(date)
+## 5. Completion
+- [ ] attempt_completion with demo commands (npm run dev, open localhost)
 
-#2 english version is showing the keys instead of the actual values for english like the following 
+Progress tracked here. Each step confirmed before next.
+

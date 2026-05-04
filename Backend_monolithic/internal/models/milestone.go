@@ -5,12 +5,12 @@ import "gorm.io/gorm"
 type MilestoneStatus string
 
 const (
-	MilestonePending    MilestoneStatus = "Pending"
-	MilestoneFunded     MilestoneStatus = "Funded"
-	MilestoneSubmitted  MilestoneStatus = "Submitted"
-	MilestoneApproved   MilestoneStatus = "Approved"
-	MilestoneRejected   MilestoneStatus = "Rejected"
-	MilestoneReleased   MilestoneStatus = "Released"
+	MilestonePending   MilestoneStatus = "Pending"
+	MilestoneFunded    MilestoneStatus = "Funded"
+	MilestoneSubmitted MilestoneStatus = "Submitted"
+	MilestoneApproved  MilestoneStatus = "Approved"
+	MilestoneRejected  MilestoneStatus = "Rejected"
+	MilestoneReleased  MilestoneStatus = "Released"
 )
 
 type Milestone struct {
@@ -27,6 +27,8 @@ type Milestone struct {
 	SubmittedAt    *string         `json:"submitted_at,omitempty"`
 	ApprovedAt     *string         `json:"approved_at,omitempty"`
 	DeliverableURL *string         `json:"deliverable_url,omitempty"`
+	ContentHash    string          `json:"content_hash,omitempty"` // SHA256 of uploaded deliverable
+	FilePath       string          `json:"file_path,omitempty"`    // Local storage path
 
 	// Associations
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`

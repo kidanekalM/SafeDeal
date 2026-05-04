@@ -9,10 +9,11 @@ import (
 	"backend_monolithic/internal/handlers"
 	"backend_monolithic/internal/rabbitmq"
 	"backend_monolithic/pkg/mailer"
-	"gorm.io/gorm"
-	)
 
-	type ServiceContainer struct {
+	"gorm.io/gorm"
+)
+
+type ServiceContainer struct {
 	DB                  *gorm.DB
 	AuthService         *auth.Service
 	UserHandler         *handlers.UserHandler
@@ -23,9 +24,9 @@ import (
 	BlockChainClient    *blockchain.Client
 	MilestoneHandler    *handlers.MilestoneHandler
 	Mailer              *mailer.Mailer
-	}
+}
 
-	func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
+func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceContainer {
 	authService := auth.NewService(db)
 	blockchainClient, _ := blockchain.NewClient() // Graceful degradation handled inside NewClient
 
@@ -45,7 +46,7 @@ import (
 		BlockChainClient:    blockchainClient,
 		Mailer:              mail, // Add the mailer instance
 	}
-	}
+}
 
 func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	// Root API group
@@ -56,7 +57,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	api.Post("/login", sc.UserHandler.Login)
 	api.Get("/activate", sc.UserHandler.ActivateAccount)
 	api.Post("/refresh-token", sc.UserHandler.RefreshToken)
-	
+
 	// WebSocket routes (no middleware)
 	api.Get("/chat/ws/:id", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
@@ -95,7 +96,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	v1 := api.Group("/v1", sc.AuthService.JWTMiddleware)
 
 	// User routes
-	v1.Get("/profile", sc.UserHandler.GetProfile)            // GET request to fetch profile
+	v1.Get("/profile", sc.UserHandler.GetProfile) // GET request to fetch profile
 	v1.Get("/profile/trust-insights", sc.UserHandler.GetTrustInsights)
 	v1.Patch("/updateprofile", sc.UserHandler.UpdateProfile) // PATCH request to update profile (as expected by frontend)
 	v1.Get("/profile/bank-details", sc.UserHandler.GetBankDetails)
@@ -126,7 +127,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 	v1.Get("/escrows/contacts", sc.EscrowHandler.GetEscrowContacts)
 
 	// Search routes - for finding users
-	v1.Get("/search", sc.UserHandler.SearchUsers)        // Combined endpoint for getting all or searching users
+	v1.Get("/search", sc.UserHandler.SearchUsers) // Combined endpoint for getting all or searching users
 
 	// Milestone routes
 	v1.Post("/milestones", sc.MilestoneHandler.CreateMilestone)

@@ -243,7 +243,7 @@ const AllEscrows = () => {
                           {escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {escrow.created_at ? `${t('pages.created', 'Created')} ${formatRelativeTime(escrow.created_at)}` : `${t('pages.created', 'Created')} N/A`}
+                          {formatRelativeTime(escrow.created_at || escrow.CreatedAt || new Date().toISOString())}
                         </p>
                         {escrow.conditions && (
                           <p className="text-sm text-gray-500 mt-1 line-clamp-2">
