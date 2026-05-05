@@ -43,23 +43,16 @@
       - button [ref=e60] [cursor=pointer]:
         - img [ref=e61]
       - generic [ref=e67]:
-        - heading "Agreement Terms" [level=2] [ref=e68]
-        - generic [ref=e69]:
-          - generic [ref=e70]:
-            - generic [ref=e71]: Title
-            - textbox "e.g. Website Redesign" [ref=e72]
-            - generic [ref=e73]:
-              - generic [ref=e74]: Agreement Conditions
-              - textbox "Enter the conditions of your agreement..." [ref=e75]: Test Quick Escrow Terms - This is a test deal.
-          - generic [ref=e76]:
-            - generic [ref=e77]: Total Amount
-            - generic [ref=e78]:
-              - img [ref=e79]
-              - spinbutton [active] [ref=e82]: "500"
-      - generic [ref=e83]:
-        - generic [ref=e84]: Step 3 / 4
-        - button "Continue →" [ref=e86] [cursor=pointer]:
+        - heading "Counterparties" [level=2] [ref=e68]
+        - generic [ref=e70]:
+          - text: Seller
+          - generic [ref=e71]:
+            - img [ref=e72]
+            - textbox "Search seller by email..." [active] [ref=e75]: test
+      - generic [ref=e76]:
+        - generic [ref=e77]: Step 2 / 4
+        - button "Continue →" [ref=e79] [cursor=pointer]:
           - text: Continue
-          - generic [ref=e87]: →
-  - button "🔍 Show Debug" [ref=e89] [cursor=pointer]
+          - generic [ref=e80]: →
+  - button "🔍 Show Debug" [ref=e82] [cursor=pointer]
 ```

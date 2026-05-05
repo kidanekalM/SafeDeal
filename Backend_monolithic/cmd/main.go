@@ -55,7 +55,6 @@ func main() {
 
 	// Initialize database
 	db := configs.InitDB()
-
 	// Auto-migrate escrow-related models
 	if err := db.AutoMigrate(
 		&models.User{},

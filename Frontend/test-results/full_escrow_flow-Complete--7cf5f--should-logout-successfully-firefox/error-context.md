@@ -18,7 +18,7 @@
       - generic [ref=e25]:
         - generic [ref=e26]:
           - generic [ref=e27]: Email
-          - textbox [ref=e28]: buyer-1777981255615@test.com
+          - textbox [ref=e28]: buyer-1777990465884@test.com
         - generic [ref=e29]:
           - generic [ref=e30]: Password
           - generic [ref=e31]:

@@ -43,24 +43,16 @@
       - button [ref=e60] [cursor=pointer]:
         - img [ref=e61]
       - generic [ref=e67]:
-        - heading "Agreement Terms" [level=2] [ref=e68]
-        - generic [ref=e69]:
-          - generic [ref=e70]:
-            - generic [ref=e71]: Title
-            - textbox "e.g. Website Redesign" [ref=e72]
-            - paragraph [ref=e73]: Title is required
-            - generic [ref=e74]:
-              - generic [ref=e75]: Agreement Conditions
-              - textbox "Enter the conditions of your agreement..." [ref=e76]: Test escrow terms for automated testing flow.
-          - generic [ref=e77]:
-            - generic [ref=e78]: Total Amount
-            - generic [ref=e79]:
-              - img [ref=e80]
-              - spinbutton [ref=e83]: "500"
-      - generic [ref=e84]:
-        - generic [ref=e85]: Step 3 / 4
-        - button "Continue →" [active] [ref=e87] [cursor=pointer]:
+        - heading "Counterparties" [level=2] [ref=e68]
+        - generic [ref=e70]:
+          - text: Seller
+          - generic [ref=e71]:
+            - img [ref=e72]
+            - textbox "Search seller by email..." [active] [ref=e75]: Seller
+      - generic [ref=e76]:
+        - generic [ref=e77]: Step 2 / 4
+        - button "Continue →" [ref=e79] [cursor=pointer]:
           - text: Continue
-          - generic [ref=e88]: →
-  - button "🔍 Show Debug" [ref=e90] [cursor=pointer]
+          - generic [ref=e80]: →
+  - button "🔍 Show Debug" [ref=e82] [cursor=pointer]
 ```

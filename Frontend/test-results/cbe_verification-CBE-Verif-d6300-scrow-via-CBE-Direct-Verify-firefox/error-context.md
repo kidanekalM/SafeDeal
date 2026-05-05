@@ -2,65 +2,31 @@
 
 ```yaml
 - generic [ref=e4]:
-  - banner [ref=e5]:
-    - generic [ref=e7]:
-      - link "SafeDeal" [ref=e9] [cursor=pointer]:
-        - /url: /dashboard
-        - img [ref=e11]
-        - generic [ref=e14]: SafeDeal
-      - heading "Start New Deal" [level=1] [ref=e15]
-      - generic [ref=e16]:
-        - button "Notifications" [ref=e17] [cursor=pointer]:
-          - img [ref=e18]
-        - button "Sign out" [ref=e21] [cursor=pointer]:
-          - generic [ref=e22]: TA
-        - button "Sign out" [ref=e23] [cursor=pointer]:
-          - img [ref=e24]
-    - navigation [ref=e28]:
-      - generic [ref=e29]:
-        - link "Dashboard" [ref=e30] [cursor=pointer]:
-          - /url: /dashboard
-          - img [ref=e31]
-          - generic [ref=e36]: Dashboard
-        - link "My Escrows" [ref=e37] [cursor=pointer]:
-          - /url: /escrows
-          - img [ref=e38]
-          - generic [ref=e41]: My Escrows
-        - link "Start New Deal" [ref=e42] [cursor=pointer]:
-          - /url: /create-escrow
-          - img [ref=e43]
-          - generic [ref=e46]: Start New Deal
-        - link "Directory" [ref=e47] [cursor=pointer]:
-          - /url: /search
-          - img [ref=e48]
-          - generic [ref=e51]: Directory
-        - link "Payments" [ref=e52] [cursor=pointer]:
-          - /url: /transactions
-          - img [ref=e53]
-          - generic [ref=e56]: Payments
-  - main [ref=e57]:
-    - generic [ref=e58]:
-      - button [ref=e60] [cursor=pointer]:
-        - img [ref=e61]
-      - generic [ref=e67]:
-        - heading "Agreement Terms" [level=2] [ref=e68]
-        - generic [ref=e69]:
-          - generic [ref=e70]:
-            - generic [ref=e71]: Title
-            - textbox "e.g. Website Redesign" [ref=e72]
-            - paragraph [ref=e73]: Title is required
-            - generic [ref=e74]:
-              - generic [ref=e75]: Agreement Conditions
-              - textbox "Enter the conditions of your agreement..." [ref=e76]: CBE Verification Flow Test - Scraped Receipt
-          - generic [ref=e77]:
-            - generic [ref=e78]: Total Amount
-            - generic [ref=e79]:
-              - img [ref=e80]
-              - spinbutton [ref=e83]: "100"
-      - generic [ref=e84]:
-        - generic [ref=e85]: Step 3 / 4
-        - button "Continue →" [active] [ref=e87] [cursor=pointer]:
-          - text: Continue
-          - generic [ref=e88]: →
-  - button "🔍 Show Debug" [ref=e90] [cursor=pointer]
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - img [ref=e10]
+      - generic [ref=e12]: SafeDeal
+    - heading "Transfer with confidence" [level=1] [ref=e13]
+  - generic [ref=e15]:
+    - button "Back to Home" [ref=e16] [cursor=pointer]:
+      - img [ref=e17]
+      - generic [ref=e20]: Back to Home
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - button "Sign In" [ref=e23] [cursor=pointer]
+        - button "Sign Up" [ref=e24] [cursor=pointer]
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: Email
+          - textbox [ref=e28]: test-account@safedeal.com
+        - generic [ref=e29]:
+          - generic [ref=e30]: Password
+          - generic [ref=e31]:
+            - textbox [ref=e32]: Password123!
+            - button [ref=e33] [cursor=pointer]:
+              - img [ref=e34]
+        - button "Sign In" [ref=e38] [cursor=pointer]
+      - paragraph [ref=e39]:
+        - text: Don't have an account?
+        - button "Create new account" [ref=e40] [cursor=pointer]
 ```
