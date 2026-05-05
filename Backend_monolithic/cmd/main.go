@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"backend_monolithic/configs"
+	"backend_monolithic/internal/models"
 	"backend_monolithic/internal/rabbitmq"
 	"backend_monolithic/internal/routes"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -27,7 +29,7 @@ func main() {
 
 	// Middlewares
 	app.Use(logger.New())
-	
+
 	// CORS middleware - move BEFORE rate limiter so 429s have CORS headers
 	allowedOrigins := []string{
 		"https://safe-deal.vercel.app",
@@ -53,6 +55,22 @@ func main() {
 
 	// Initialize database
 	db := configs.InitDB()
+
+	// Auto-migrate escrow-related models
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.Escrow{},
+		&models.Milestone{},
+		&models.Message{},
+		&models.Notification{},
+		&models.Transaction{},
+		&models.Review{},
+		&models.EscrowStatusEvent{},
+		&models.BankDetails{},
+		&models.ActivationToken{},
+	); err != nil {
+		log.Printf("AutoMigrate models error: %v", err)
+	}
 
 	// Initialize RabbitMQ (mock implementation)
 	rabbitMQ, err := rabbitmq.NewProducer()

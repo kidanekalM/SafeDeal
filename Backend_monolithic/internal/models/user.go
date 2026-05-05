@@ -8,23 +8,24 @@ import (
 
 type User struct {
 	gorm.Model
-	ID                  uint     `json:"id" gorm:"primaryKey"`
-	FirstName           string   `json:"first_name" validate:"required,min=2,max=32"`
-	LastName            string   `json:"last_name" validate:"required,min=2,max=32"`
-	Email               string   `json:"email" gorm:"unique;not null" validate:"required,email"`
-	Password            string   `json:"-" validate:"required,min=8"`
-	Activated           bool     `json:"activated" gorm:"default:false"`
-	Profession          string   `json:"profession"`
-	WalletAddress       string   `json:"wallet_address,omitempty"`
-	EncryptedPrivateKey string   `json:"encrypted_private_key,omitempty"`
-	AccountName         string   `json:"account_name,omitempty"`
-	AccountNumber       string   `json:"account_number,omitempty"`
-	BankCode            int      `json:"bank_code,omitempty"`
-	BankName            string   `json:"bank_name,omitempty"`
-	ActivationCode      string   `json:"-"`
-	TrustScore          float64  `json:"trust_score" gorm:"default:65.0"`
-	Ratings             []Review `json:"ratings,omitempty" gorm:"foreignKey:RevieweeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	ReviewsGiven        []Review `json:"reviews_given,omitempty" gorm:"foreignKey:ReviewerID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	ID                  uint      `json:"id" gorm:"primaryKey"`
+	FirstName           string    `json:"first_name" validate:"required,min=2,max=32"`
+	LastName            string    `json:"last_name" validate:"required,min=2,max=32"`
+	Email               string    `json:"email" gorm:"unique;not null" validate:"required,email"`
+	Password            string    `json:"-" validate:"required,min=8"`
+	Activated           bool      `json:"activated" gorm:"default:false"`
+	Profession          string    `json:"profession"`
+	WalletAddress       string    `json:"wallet_address,omitempty"`
+	EncryptedPrivateKey string    `json:"encrypted_private_key,omitempty"`
+	AccountName         string    `json:"account_name,omitempty"`
+	AccountNumber       string    `json:"account_number,omitempty"`
+	BankCode            int       `json:"bank_code,omitempty"`
+	BankName            string    `json:"bank_name,omitempty"`
+	ActivationCode      string    `json:"-"`
+	TrustScore          float64   `json:"trust_score" gorm:"default:65.0"`
+	IsPatient           bool      `json:"is_patient" gorm:"default:false"` // [EXTENDED] Flag for FP module
+	Ratings             []Review  `json:"ratings,omitempty" gorm:"foreignKey:RevieweeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	ReviewsGiven        []Review  `json:"reviews_given,omitempty" gorm:"foreignKey:ReviewerID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 type BankDetails struct {

@@ -1,0 +1,85 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e7]:
+      - link "SafeDeal" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e11]
+        - generic [ref=e14]: SafeDeal
+      - heading "Start New Deal" [level=1] [ref=e15]
+      - generic [ref=e16]:
+        - button "Notifications" [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Sign out" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: TA
+        - button "Sign out" [ref=e23] [cursor=pointer]:
+          - img [ref=e24]
+    - navigation [ref=e28]:
+      - generic [ref=e29]:
+        - link "Dashboard" [ref=e30] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e31]
+          - generic [ref=e36]: Dashboard
+        - link "My Escrows" [ref=e37] [cursor=pointer]:
+          - /url: /escrows
+          - img [ref=e38]
+          - generic [ref=e41]: My Escrows
+        - link "Start New Deal" [ref=e42] [cursor=pointer]:
+          - /url: /create-escrow
+          - img [ref=e43]
+          - generic [ref=e46]: Start New Deal
+        - link "Directory" [ref=e47] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e48]
+          - generic [ref=e51]: Directory
+        - link "Payments" [ref=e52] [cursor=pointer]:
+          - /url: /transactions
+          - img [ref=e53]
+          - generic [ref=e56]: Payments
+  - main [ref=e57]:
+    - generic [ref=e58]:
+      - button [ref=e60] [cursor=pointer]:
+        - img [ref=e61]
+      - generic [ref=e67]:
+        - heading "Agreement Terms" [level=2] [ref=e68]
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - generic [ref=e71]: Title
+            - textbox "e.g. Website Redesign" [ref=e72]
+            - generic [ref=e73]:
+              - generic [ref=e74]: Agreement Conditions
+              - textbox "Enter the conditions of your agreement..." [ref=e75]
+          - generic [ref=e76]:
+            - heading "Legal Framework" [level=3] [ref=e78]:
+              - img [ref=e79]
+              - text: Legal Framework
+            - generic [ref=e85]:
+              - generic [ref=e86]: Jurisdiction
+              - combobox [ref=e87]:
+                - option "Ethiopia" [selected]
+                - option "Kenya"
+                - option "International"
+            - generic [ref=e88]:
+              - generic [ref=e89]: Governing Law
+              - textbox [ref=e90]: Commercial Code of Ethiopia
+            - generic [ref=e91]:
+              - generic [ref=e92]: Dispute Resolution
+              - combobox [ref=e93]:
+                - option "AI Smart Resolution" [selected]
+                - option "Formal Arbitration"
+                - option "Mediation"
+          - generic [ref=e94]:
+            - generic [ref=e95]: Total Amount
+            - generic [ref=e96]:
+              - img [ref=e97]
+              - spinbutton [ref=e100]
+            - paragraph [ref=e101]: Auto-synced with milestones
+      - generic [ref=e102]:
+        - generic [ref=e103]: Step 3 / 5
+        - button "Continue →" [active] [ref=e105] [cursor=pointer]:
+          - text: Continue
+          - generic [ref=e106]: →
+  - button "🔍 Show Debug" [ref=e108] [cursor=pointer]
+```

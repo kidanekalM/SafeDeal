@@ -1,14 +1,263 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e2]:
-  - generic [ref=e3]:
-    - heading "Unable to connect" [level=1] [ref=e5]
-    - paragraph [ref=e6]: Firefox can’t establish a connection to the server at localhost:5173.
-    - paragraph
-    - list [ref=e8]:
-      - listitem [ref=e9]: The site could be temporarily unavailable or too busy. Try again in a few moments.
-      - listitem [ref=e10]: If you are unable to load any pages, check your computer’s network connection.
-      - listitem [ref=e11]: If your computer or network is protected by a firewall or proxy, make sure that Nightly is permitted to access the web.
-  - button "Try Again" [active] [ref=e13]
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - heading "Choose your language" [level=2] [ref=e6]
+    - paragraph [ref=e7]: Please select a language
+    - generic [ref=e8]:
+      - button "English" [ref=e9] [cursor=pointer]
+      - button "Amharic" [ref=e10] [cursor=pointer]
+    - button "Continue without choosing" [ref=e11] [cursor=pointer]
+  - generic [ref=e12]:
+    - banner [ref=e13]:
+      - generic [ref=e15]:
+        - link "SafeDeal Logo" [ref=e16] [cursor=pointer]:
+          - /url: /
+          - img "SafeDeal Logo" [ref=e17]
+        - navigation [ref=e18]:
+          - link "Why SafeDeal" [ref=e19] [cursor=pointer]:
+            - /url: "#why-safedeal"
+          - link "How It Works" [ref=e20] [cursor=pointer]:
+            - /url: "#how-it-works"
+        - generic [ref=e21]:
+          - combobox "Language" [ref=e22]:
+            - option "English" [selected]
+            - option "Amharic"
+          - link "Sign In" [ref=e23] [cursor=pointer]:
+            - /url: /login?mode=login
+    - generic [ref=e28]:
+      - heading "Secure Escrow" [level=1] [ref=e29]
+      - heading "Made Simple" [level=2] [ref=e30]
+      - paragraph [ref=e31]: The trusted escrow platform. Secure your deals, and trade with confidence.
+      - link "Get Started" [ref=e32] [cursor=pointer]:
+        - /url: /login?mode=register
+      - generic [ref=e33]:
+        - img "Chapa" [ref=e34]
+        - generic [ref=e35]:
+          - img "Gemini1" [ref=e36]
+          - img "Gemini" [ref=e37]
+        - img "Ethereum" [ref=e38]
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - img [ref=e45]
+        - generic [ref=e48]: 1,458+
+        - generic [ref=e49]: Transactions
+      - generic [ref=e50]:
+        - img [ref=e52]
+        - generic [ref=e57]: 850+
+        - generic [ref=e58]: Active Users
+      - generic [ref=e59]:
+        - img [ref=e61]
+        - generic [ref=e63]: 100%
+        - generic [ref=e64]: Secure
+      - generic [ref=e65]:
+        - img [ref=e67]
+        - generic [ref=e71]: 24/7
+        - generic [ref=e72]: Available
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - heading "What is SafeDeal" [level=2] [ref=e76]
+        - paragraph [ref=e77]: Next generation escrow platform built on blockchain
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - img [ref=e81]
+          - heading "Secure" [level=3] [ref=e83]
+          - paragraph [ref=e84]: Military grade encryption protects every transaction
+        - generic [ref=e85]:
+          - img [ref=e87]
+          - heading "Fast" [level=3] [ref=e89]
+          - paragraph [ref=e90]: Instant transactions with automated smart contracts
+        - generic [ref=e91]:
+          - img [ref=e93]
+          - heading "Global" [level=3] [ref=e97]
+          - paragraph [ref=e98]: Trade with anyone anywhere in the world
+    - generic [ref=e100]:
+      - generic [ref=e101]:
+        - heading "See SafeDeal in action" [level=2] [ref=e102]
+        - paragraph [ref=e103]: Experience the future of secure transactions
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e107]:
+            - img [ref=e109]
+            - generic [ref=e112]:
+              - heading "Mobile First" [level=3] [ref=e113]
+              - paragraph [ref=e114]: Trade on the go
+          - generic [ref=e116]:
+            - img [ref=e118]
+            - generic [ref=e121]:
+              - heading "Instant Payments" [level=3] [ref=e122]
+              - paragraph [ref=e123]: Lightning fast transfers
+          - generic [ref=e125]:
+            - img [ref=e127]
+            - generic [ref=e130]:
+              - heading "Full Transparency" [level=3] [ref=e131]
+              - paragraph [ref=e132]: Track every step
+        - generic [ref=e139]:
+          - img [ref=e141]
+          - paragraph [ref=e143]: Secured by
+          - paragraph [ref=e144]: Blockchain Technology
+    - generic [ref=e146]:
+      - generic [ref=e147]:
+        - heading "How SafeDeal Works" [level=2] [ref=e148]
+        - paragraph [ref=e149]: Simple, secure, and transparent in 4 steps
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - generic [ref=e155]: "1"
+          - img [ref=e157]
+          - heading "Create a contract between parties" [level=3] [ref=e160]
+          - paragraph [ref=e161]: Set up your escrow agreement with clear terms and conditions for common buyer and seller.
+        - generic [ref=e162]:
+          - generic [ref=e164]: "2"
+          - img [ref=e166]
+          - heading "Buyer pays to the escrow" [level=3] [ref=e169]
+          - paragraph [ref=e170]: Funds are securely held in escrow until all conditions are met by both parties.
+        - generic [ref=e171]:
+          - generic [ref=e173]: "3"
+          - img [ref=e175]
+          - heading "Service or item gets delivered" [level=3] [ref=e178]
+          - paragraph [ref=e179]: Seller delivers the agreed service or product according to the contract terms.
+        - generic [ref=e180]:
+          - generic [ref=e182]: "4"
+          - img [ref=e184]
+          - heading "Client releases the payment" [level=3] [ref=e187]
+          - paragraph [ref=e188]: Once satisfied, buyer confirms delivery and funds are automatically released to seller.
+      - link "Start your first deal" [ref=e190] [cursor=pointer]:
+        - /url: /login?mode=register
+    - generic [ref=e192]:
+      - generic [ref=e194]:
+        - heading "Why choose SafeDeal" [level=2] [ref=e195]
+        - paragraph [ref=e196]: Join thousands who trust SafeDeal for secure transactions
+      - generic [ref=e197]:
+        - generic [ref=e198]:
+          - img [ref=e200]
+          - heading "Lightning Fast" [level=3] [ref=e202]
+          - paragraph [ref=e203]: Instant transactions and real-time updates
+        - generic [ref=e204]:
+          - img [ref=e206]
+          - heading "Bank-Level Security" [level=3] [ref=e208]
+          - paragraph [ref=e209]: Military-grade encryption and smart contracts
+        - generic [ref=e210]:
+          - img [ref=e212]
+          - heading "Trusted by Thousands" [level=3] [ref=e214]
+          - paragraph [ref=e215]: Join our growing community of satisfied users
+        - generic [ref=e216]:
+          - img [ref=e218]
+          - heading "24/7 Support" [level=3] [ref=e220]
+          - paragraph [ref=e221]: Get help whenever you need it
+    - generic [ref=e223]:
+      - generic [ref=e225]:
+        - heading "Loved by users worldwide" [level=2] [ref=e226]
+        - paragraph [ref=e227]: See what our community has to say about SafeDeal
+      - generic [ref=e228]:
+        - generic [ref=e229]:
+          - img [ref=e231]
+          - generic [ref=e237]:
+            - img [ref=e238]
+            - img [ref=e240]
+            - img [ref=e242]
+            - img [ref=e244]
+            - img [ref=e246]
+          - paragraph [ref=e248]: "\"SafeDeal gave me the confidence to work with international clients. Payments are secure and instant!\""
+          - generic [ref=e249]:
+            - img [ref=e251]
+            - generic [ref=e254]:
+              - paragraph [ref=e255]: Sarah Johnson
+              - paragraph [ref=e256]: Freelance Designer
+        - generic [ref=e257]:
+          - img [ref=e259]
+          - generic [ref=e265]:
+            - img [ref=e266]
+            - img [ref=e268]
+            - img [ref=e270]
+            - img [ref=e272]
+            - img [ref=e274]
+          - paragraph [ref=e276]: "\"The dispute resolution is fair and transparent. I've never felt more secure in my online transactions.\""
+          - generic [ref=e277]:
+            - img [ref=e279]
+            - generic [ref=e282]:
+              - paragraph [ref=e283]: Michael Chen
+              - paragraph [ref=e284]: E-commerce Seller
+        - generic [ref=e285]:
+          - img [ref=e287]
+          - generic [ref=e293]:
+            - img [ref=e294]
+            - img [ref=e296]
+            - img [ref=e298]
+            - img [ref=e300]
+            - img [ref=e302]
+          - paragraph [ref=e304]: "\"Simple, fast, and reliable. SafeDeal has become essential for my business operations.\""
+          - generic [ref=e305]:
+            - img [ref=e307]
+            - generic [ref=e310]:
+              - paragraph [ref=e311]: Emma Davis
+              - paragraph [ref=e312]: Digital Marketer
+    - generic [ref=e315]:
+      - heading "Ready to start trading safely" [level=2] [ref=e316]
+      - paragraph [ref=e317]: Join thousands of users who trust SafeDeal for secure, transparent transactions
+      - generic [ref=e318]:
+        - link "Get Started Free" [ref=e319] [cursor=pointer]:
+          - /url: /login?mode=register
+        - link "Learn More" [ref=e320] [cursor=pointer]:
+          - /url: /#how-it-works
+    - contentinfo [ref=e321]:
+      - generic [ref=e322]:
+        - generic [ref=e323]:
+          - generic [ref=e324]:
+            - generic [ref=e325]:
+              - img [ref=e327]
+              - generic [ref=e330]: SafeDeal
+            - paragraph [ref=e331]: The trusted escrow platform. Secure your deals, and trade with confidence.
+            - generic [ref=e332]:
+              - link [ref=e333] [cursor=pointer]:
+                - /url: "#"
+                - img [ref=e334]
+              - link [ref=e336] [cursor=pointer]:
+                - /url: "#"
+                - img [ref=e337]
+              - link [ref=e341] [cursor=pointer]:
+                - /url: "#"
+                - img [ref=e342]
+              - link [ref=e345] [cursor=pointer]:
+                - /url: "#"
+                - img [ref=e346]
+          - generic [ref=e349]:
+            - heading "Quick Links" [level=3] [ref=e350]
+            - list [ref=e351]:
+              - listitem [ref=e352]:
+                - link "How It Works" [ref=e353] [cursor=pointer]:
+                  - /url: "#how-it-works"
+              - listitem [ref=e354]:
+                - link "Why SafeDeal" [ref=e355] [cursor=pointer]:
+                  - /url: "#why-safedeal"
+              - listitem [ref=e356]:
+                - link "Get Started" [ref=e357] [cursor=pointer]:
+                  - /url: /login?mode=register
+              - listitem [ref=e358]:
+                - link "Sign In" [ref=e359] [cursor=pointer]:
+                  - /url: /login?mode=login
+          - generic [ref=e360]:
+            - heading "Support" [level=3] [ref=e361]
+            - list [ref=e362]:
+              - listitem [ref=e363]:
+                - link "Help Center" [ref=e364] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e365]:
+                - link "Contact us" [ref=e366] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e367]:
+                - link "Privacy Policy" [ref=e368] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e369]:
+                - link "Terms of Service" [ref=e370] [cursor=pointer]:
+                  - /url: "#"
+        - generic [ref=e372]:
+          - paragraph [ref=e373]: © 2024 SafeDeal. All rights reserved.
+          - generic [ref=e374]:
+            - generic [ref=e375]:
+              - img [ref=e376]
+              - generic [ref=e378]: Secured by Blockchain
+            - generic [ref=e379]:
+              - img [ref=e380]
+              - generic [ref=e384]: Available Worldwide
 ```

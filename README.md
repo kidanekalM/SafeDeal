@@ -1,105 +1,199 @@
-# SafeDeal - Blockchain-Powered Escrow System
+# SafeDeal - Crypto-Native Escrow Platform
 
-![Golang](https://img.shields.io/badge/Golang-00ADD8?style=for-the-badge&logo=go&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white)
-![Chapa](https://img.shields.io/badge/Chapa-4CAF50?style=for-the-badge&logo=stripe&logoColor=white)
-![Fiber](https://img.shields.io/badge/Fiber-007ACC?style=for-the-badge&logo=fastify&logoColor=white)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
-![Gorilla WebSocket](https://img.shields.io/badge/Gorilla%20WebSocket-00ADD8?style=for-the-badge&logo=go&logoColor=white)
-![Consul](https://img.shields.io/badge/Consul-00A9E0?style=for-the-badge&logo=consul&logoColor=white)
-![Ngrok](https://img.shields.io/badge/Ngrok-8A4FFF?style=for-the-badge&logo=ngrok&logoColor=white)
+SafeDeal is a blockchain-driven hybrid escrow platform designed to solve fund security and regulatory compliance challenges in cross-border/local high-trust transactions. The platform combines decentralized state verification with traditional payment methods to ensure security and transparency.
 
-## Table of Contents
-- [Description](#description)
-- [Features](#features)
-- [Architecture Overview](#architecture-overview)
-- [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
+## Core Architecture
 
+The platform follows a microservices architecture with event-driven communication via RabbitMQ, supporting a complete escrow lifecycle from creation to completion with dispute resolution.
 
-## Description
-SafeDeal is a hybrid escrow platform that combines the regulatory compliance of online payment systems with the transparency of blockchain technology. The system uses Chapa for Ethiopian Birr (ETB) transactions while leveraging Ethereum to maintain an immutable, auditable record of transaction states. This approach provides users with the familiarity of local payment methods and the security benefits of decentralized verification.
+### 1. Parties & Identity
 
-## Features
-- **Hybrid Payment Model**: ETB transactions through Chapa with blockchain state logging
-- **User Wallet Management**: Auto-generated Ethereum wallets with secure private key encryption
-- **On-chain State Verification**: Immutable tracking of escrow status (AWAITING_PAYMENT → ACTIVE → CLOSED)
-- **Event-Driven Architecture**: RabbitMQ for asynchronous communication between services
-- **Secure Authentication**: JWT-based auth with session revocation and refresh token rotation
-- **Multi-Service Architecture**: Microservices for user management, payments, escrow, and blockchain interaction
-- **Webhook Integration**: Secure handling of Chapa payment confirmations
-- **Consul Service Discovery**: Dynamic service registration and discovery
-- **Dockerized Deployment**: Containerized services with Docker Compose
+**Primary Parties**
+- Depositor / Buyer
+  - Address (0x...)
+  - Contact Reference
+- Beneficiary / Service Provider
+  - Address (0x...)
+  - Contact Reference
 
-## Architecture Overview
+**Escrow Agent**
+- Agent Address
+- Agent Identifier
 
-SafeDeal implements a **hybrid escrow architecture** that strategically separates financial operations from state management:
+**Authorized Representatives**
+- Address
+- Scope (view / approve / dispute)
 
-### Core Design Principles
-1. **Regulatory Compliance**: All ETB funds flow through Chapa's regulated payment system
-2. **Blockchain Transparency**: Ethereum smart contracts maintain an immutable record of transaction states
-3. **Decoupled Services**: Microservices communicate via gRPC and RabbitMQ
-4. **User-Centric Design**: Wallet creation is opt-in, ensuring user consent
+### 2. Agreement Core
 
-### Workflow
-1. **Escrow Creation**: 
-   - Buyer creates escrow through frontend
-   - System creates off-chain record and logs on-chain state as `AWAITING_PAYMENT`
+- Escrow ID
+- Escrow Type: Service-for-Payment
+- Sub-Type
+- Underlying Agreement Reference (hash or URI)
+- Governing Rules (clause reference, not full legal)
 
-2. **Payment Processing**:
-   - Buyer pays via Chapa (funds held in Chapa's system)
-   - Chapa webhook triggers on-chain status update to `ACTIVE`
+### 3. What Is Held
 
-3. **Fund Release**:
-   - Buyer confirms receipt
-   - System initiates Chapa transfer to seller's bank
-   - Transfer webhook triggers on-chain status update to `CLOSED`
+- Amount (in native token, e.g., ETH)
+- Token Standard (if ERC-20)
+- Contract/Account Holding Address
+- Deposit Transaction Hash
+- Total Funded
+- Available Balance
+- Reserved (per milestone)
 
-### Key Components
-- **API Gateway**: Single entry point that routes requests and handles authentication
-- **User Service**: Manages user accounts, authentication, and wallet generation
-- **Escrow Service**: Handles escrow lifecycle and business logic
-- **Payment Service**: Integrates with Chapa and processes webhooks
-- **Chat Service**: Allow users to Chat once it is accepted by seller(service provider) of the escrow
-- **Notification Service**: Handle notification for both parties related to the escrow they are involved
-- **Blockchain Adapter**: Bridges between backend services and Ethereum smart contract
-- **RabbitMQ**: Event bus for asynchronous communication
-- **PostgreSQL**: Persistent storage for off-chain data
-- **Redis**: Session management and token revocation
+### 4. What Is Owed By Each Party
 
-The architecture ensures that sensitive financial operations remain within the regulated Chapa ecosystem while leveraging blockchain for trustless state verification and auditability.
+**Obligation Record**
+- Obligation ID
+- Responsible Party
+- Type: Service Performance / Payment / Approval
 
-## Technology Stack
-- **Backend**: Golang
-- **Framework**: Fiber (Golang)
-- **Blockchain**: Ethereum (Sepolia Testnet)
-- **Smart Contracts**: Solidity
-- **Payment Gateway**: Chapa
-- **Message Broker**: RabbitMQ
-- **Database**: PostgreSQL
-- **Cache**: Redis
+**Service Obligation**
+- Clear Description of Work
+- Performance Period (start → deadline)
+
+**Acceptance Criteria**
+- Measurable Standard
+- Verification Method
+
+**Rejection Conditions**
+- Defined Non-Conformance
+
+**Cure Terms**
+- Revision Window
+- Resolution Deadline
+
+### 5. Milestones & Payment Mapping
+
+**Milestone Record**
+- Milestone ID
+- Description
+- Linked Obligation
+- Due Date
+
+**Payment Mapping**
+- Allocated Amount
+- Percentage of Total
+
+**Completion Trigger**
+- Required Approval(s)
+- Required Document/Proof Hash
+
+**Status**
+- Pending
+- Submitted
+- Under Review
+- Accepted
+- Rejected
+- Released
+
+### 6. Release Conditions
+
+**Condition Types**
+- Explicit Buyer Approval
+- Auto-Acceptance (timeout)
+- Third-Party Verifier Signature
+
+**Approval Rules**
+- Single Signature
+- Multi-Signature
+
+**Time Logic**
+- Review Window (e.g., 7 days)
+- Auto-Release After Timeout
+
+### 7. Acceptance & Timeout Outcomes
+
+- **Accepted** → Funds released to provider
+- **Rejected** → Reason logged, cure period starts
+- **No Response (Timeout)** → Auto-accept or Escalation
+
+### 8. Dispute Handling
+
+**Dispute Record**
+- Dispute ID
+- Raised By
+- Reason Hash/Reference
+
+**Effect**
+- Funds Frozen
+
+**Resolution**
+- Agent Decision
+- Arbitrator Signature
+- Outcome: Release / Refund / Split
+
+### 9. State Lifecycle
+
+1. Created
+2. Funded
+3. Active
+4. Milestone Under Review
+5. Partially Released
+6. Dispute
+7. Completed
+8. Cancelled (refunded)
+
+### 10. Event Log (Immutable)
+
+Per event:
+- Timestamp
+- Event Type
+- Actor Address
+- Related Milestone/Dispute ID
+- Transaction Hash (if on-chain action)
+
+## Technical Stack
+
+- **Frontend**: TypeScript/React with Vite build system
+- **Backend**: Golang with Fiber web framework
+- **Blockchain**: Ethereum Sepolia Testnet with Solidity contracts
+- **Payment Gateway**: Chapa (Ethiopian local compliant payment)
+- **Message Broker**: RabbitMQ for event-driven architecture
+- **Database**: PostgreSQL for main business data
+- **Cache/Session**: Redis for JWT blacklists and session storage
 - **Service Discovery**: HashiCorp Consul
-- **Containerization**: Docker & Docker Compose
-- **Authentication**: JWT with refresh tokens
-- **gRPC**: Service-to-service communication
-- **Web Framework**: Fiber (Golang)
+- **Authentication**: JWT with refresh token rotation
+- **Real-time Communication**: WebSocket for chat and notifications
+
+## Microservices Architecture
+
+- **API Gateway**: Unified routing, auth, rate limiting (Fiber + middleware)
+- **Escrow Service**: Core escrow logic and state management
+- **Payment Service**: Payment processing and verification
+- **Chat Service**: Real-time communication between parties
+- **Notification Service**: Multi-channel notifications (email, WebSocket, webhook)
+- **Blockchain Adapter**: Ethereum RPC interaction and contract management
+- **AI Arbitrator**: Experimental AI-assisted dispute resolution
 
 ## Getting Started
-```bash
-# Clone the repository
-git clone https://github.com/kida21/safedeal.git
-cd safedeal
 
-# Set up environment variables
-cp .env.example .env
-# Update .env with your configuration
+1. Clone the repository
+2. Install dependencies for both frontend and backend
+3. Set up environment variables (Chapa API key, Ethereum RPC, DB connections)
+4. Start services using Docker Compose
+5. Access the API gateway at `http://localhost:8080`
 
-# Start the services
-docker-compose up --build
+## Security Features
 
-# Access the API
-# API Gateway: http://localhost:8080
+- Private keys encrypted with AES-256
+- All webhook calls validated (Chapa signature verification)
+- JWT refresh token rotation with Redis blacklist
+- PostgreSQL passwords and private keys injected via environment variables
+
+## Scaling Layers (Future Implementation)
+
+- Enhanced Identity (ENS names, decentralized identity)
+- Advanced Party Structures (multi-sig buyers, DAO treasury participation)
+- Token & Chain Features (ERC-20/721/1155 support, multi-chain tracking)
+- Rich Agreement Layer (legal text on Arweave/IPFS)
+- Advanced Release Logic (oracle-triggered release, ZK-proof of completion)
+- Communications Layer (encrypted messaging, dispute evidence on IPFS)
+- Analytics & Audit (comprehensive ledger export)
+- Compliance features (KYC, sanctions screening)
+- Recovery & Fallback (social recovery, time-locked overrides)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
