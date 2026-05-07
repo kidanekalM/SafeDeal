@@ -162,6 +162,11 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
               <input {...register("profession", { required: "Profession is required" })} className="input w-full" placeholder="e.g., Designer" />
               <ErrorMessage error={errors.profession} />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.phone_number')}</label>
+              <input {...register("phone_number", { required: "Phone number is required" })} className="input w-full" placeholder="+251..." />
+              <ErrorMessage error={errors.phone_number} />
+            </div>
           </>
         )}
 

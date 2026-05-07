@@ -74,10 +74,13 @@ export interface Escrow {
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
     title?: string;
+    sub_type?: string;
+    inspection_period?: number;
     active: boolean;
     is_locked: boolean;
     is_detailed: boolean;
     CreatedAt?: string;
+    escrow_hash?: string;
     snapshot?: string;
     contract_hash?: string;
     buyer_signature?: string;

@@ -12,6 +12,14 @@
 - ✅ Step 12: Consolidated all documentation into single SAFEDEAL_MONOLITH_FEATURE_CARDINAL.md file
 - ✅ Step 13: Backend tests run successfully (verified with escrow_state_test.go)
 - ✅ Step 14: Frontend type-checks pass (verified with tsc --noEmit)
+- ✅ Step 15: Fixed detailed flow amount issue (was showing 0 during creation)
+- ✅ Step 16: Removed "Legal Grade" text as requested
+- ✅ Step 17: Improved mediation selection flow
+- ✅ Step 18: Implemented faster search with reduced debounce time
+- ✅ Step 19: Created formal print layout for escrow agreements
+- ✅ Step 20: Added phone number requirement during signup
+- ✅ Step 21: Changed profile click to menu dropdown instead of one-click logout
+- ✅ Step 22: Added pagination and infinite scroll to escrows and transactions lists
 
 ## Completed Features
 - Crypto-native escrow system with blockchain integration

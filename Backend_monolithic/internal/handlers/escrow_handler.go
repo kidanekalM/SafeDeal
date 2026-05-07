@@ -74,6 +74,31 @@ func (h *EscrowHandler) adjustTrustScore(userID uint, delta float64) {
 	_ = h.DB.Model(&user).Update("trust_score", next).Error
 }
 
+func (h *EscrowHandler) computeEscrowHash(escrow *models.Escrow) string {
+	// Create a stable string representation for hashing
+	milestoneData := ""
+	for _, m := range escrow.Milestones {
+		milestoneData += fmt.Sprintf("|%s:%d:%s", m.Title, m.Amount, m.Description)
+	}
+
+	data := fmt.Sprintf(
+		"v2|%d|%d|%d|%s|%s|%d|%s|%s|%s|%s",
+		escrow.BuyerID,
+		escrow.SellerID,
+		escrow.Amount,
+		escrow.Title,
+		escrow.SubType,
+		escrow.InspectionPeriod,
+		escrow.Conditions,
+		escrow.Jurisdiction,
+		escrow.GoverningLaw,
+		milestoneData,
+	)
+
+	hashBytes := crypto.Keccak256([]byte(data))
+	return "0x" + common.Bytes2Hex(hashBytes)
+}
+
 func NewEscrowHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer, blockchainClient *blockchain.Client, notificationHandler *NotificationHandler) *EscrowHandler {
 	return &EscrowHandler{
 		DB:                  db,
@@ -92,10 +117,12 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	var req struct {
 		BuyerID           uint               `json:"buyer_id"`
-		SellerID          uint               `json:"seller_id"` // Removed validate:"required" since we might receive email instead
+		SellerID          uint               `json:"seller_id"` 
 		MediatorID        *uint              `json:"mediator_id,omitempty"`
 		Amount            uint               `json:"amount" validate:"required,gt=0"`
 		Title             string             `json:"title"`
+		SubType           string             `json:"sub_type"`
+		InspectionPeriod  int                `json:"inspection_period"`
 		Conditions        string             `json:"conditions"`
 		Jurisdiction      string             `json:"jurisdiction"`
 		GoverningLaw      string             `json:"governing_law"`
@@ -157,11 +184,6 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		}
 	}
 
-	// Compute immutable EscrowHash - include timestamp for uniqueness
-	hashData := fmt.Sprintf("%d|%d|%d|%s|%d", finalBuyerID, finalSellerID, req.Amount, req.Conditions, time.Now().UnixNano())
-	hashBytes := crypto.Keccak256([]byte(hashData))
-	escrowHash := "0x" + common.Bytes2Hex(hashBytes)
-
 	// Create escrow record
 	fee := uint(float64(req.Amount) * 0.02)
 	escrow := &models.Escrow{
@@ -171,13 +193,18 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		Amount:            req.Amount,
 		PlatformFee:       fee,
 		Title:             req.Title,
+		SubType:           req.SubType,
+		InspectionPeriod:  req.InspectionPeriod,
 		Conditions:        req.Conditions,
 		Jurisdiction:      req.Jurisdiction,
 		GoverningLaw:      req.GoverningLaw,
 		DisputeResolution: req.DisputeResolution,
 		Status:            "Pending",
-		EscrowHash:        escrowHash,
+		Milestones:        req.Milestones,
 	}
+
+	// Compute robust hash including milestones
+	escrow.EscrowHash = h.computeEscrowHash(escrow)
 
 	if err := h.DB.Create(escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow"})
@@ -865,8 +892,13 @@ func (h *EscrowHandler) UpdateEscrow(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		Amount     uint   `json:"amount"`
-		Conditions string `json:"conditions"`
+		Amount           uint   `json:"amount"`
+		Title            string `json:"title"`
+		SubType          string `json:"sub_type"`
+		InspectionPeriod int    `json:"inspection_period"`
+		Conditions       string `json:"conditions"`
+		Jurisdiction     string `json:"jurisdiction"`
+		GoverningLaw     string `json:"governing_law"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -874,7 +906,7 @@ func (h *EscrowHandler) UpdateEscrow(c *fiber.Ctx) error {
 	}
 
 	var escrow models.Escrow
-	if err := h.DB.First(&escrow, uint(id)).Error; err != nil {
+	if err := h.DB.Preload("Milestones").First(&escrow, uint(id)).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
 	}
 
@@ -889,9 +921,27 @@ func (h *EscrowHandler) UpdateEscrow(c *fiber.Ctx) error {
 	if req.Amount > 0 {
 		escrow.Amount = req.Amount
 	}
+	if req.Title != "" {
+		escrow.Title = req.Title
+	}
+	if req.SubType != "" {
+		escrow.SubType = req.SubType
+	}
+	if req.InspectionPeriod > 0 {
+		escrow.InspectionPeriod = req.InspectionPeriod
+	}
 	if req.Conditions != "" {
 		escrow.Conditions = req.Conditions
 	}
+	if req.Jurisdiction != "" {
+		escrow.Jurisdiction = req.Jurisdiction
+	}
+	if req.GoverningLaw != "" {
+		escrow.GoverningLaw = req.GoverningLaw
+	}
+
+	// Re-calculate hash after updates
+	escrow.EscrowHash = h.computeEscrowHash(&escrow)
 
 	if err := h.DB.Save(&escrow).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})

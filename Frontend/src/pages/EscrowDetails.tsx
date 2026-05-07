@@ -32,7 +32,8 @@ import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RealTimeChat from "../components/RealTimeChat";
 import PaymentModal from "../components/PaymentModal";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
+
 
 const formatDateSafe = (date: string | number | Date | null | undefined) => {
   if (!date) return "Unknown date";
@@ -63,14 +64,19 @@ const EscrowDetails = () => {
   const [showChat, setShowChat] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  // Phone collection moved to signup/profile completion
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCBEModal, setShowCBEModal] = useState(false);
   const [cbeTransactionId, setCbeTransactionId] = useState("");
   const [cbeAccountSuffix, setCbeAccountSuffix] = useState("");
   const [isVerifyingCBE, setIsVerifyingCBE] = useState(false);
   const [editConditions, setEditConditions] = useState("");
-  const [editAmount, setEditAmount] = useState<number>(0);
+  const [editAmount, setEditAmount] = useState(0);
+  const [editTitle, setEditTitle] = useState("");
+  const [editJurisdiction, setEditJurisdiction] = useState("");
+  const [editGoverningLaw, setEditGoverningLaw] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
@@ -114,6 +120,8 @@ const EscrowDetails = () => {
         active: rawData.active !== undefined ? rawData.active : rawData.Active,
         is_locked: rawData.is_locked !== undefined ? rawData.is_locked : rawData.IsLocked,
         is_detailed: rawData.is_detailed !== undefined ? rawData.is_detailed : rawData.IsDetailed,
+        sub_type: rawData.sub_type || rawData.SubType,
+        inspection_period: rawData.inspection_period || rawData.InspectionPeriod,
         created_at: rawData.created_at || rawData.CreatedAt,
         updated_at: rawData.updated_at || rawData.UpdatedAt,
         blockchain_tx_hash: rawData.blockchain_tx_hash || rawData.BlockchainTxHash,
@@ -159,24 +167,22 @@ const EscrowDetails = () => {
   };
 
   const handleInitiatePayment = async () => {
-    let profile: any = {};
-    try { profile = JSON.parse(localStorage.getItem("user_profile") || "{}"); } catch {}
-    if (!profile?.phone_number) { setPhoneNumber(""); setShowPhoneModal(true); return; }
+    // Phone number is collected during signup/profile completion (not right before payment)
     try {
       const response = await paymentApi.initiateEscrowPayment(Number(id));
-      setPayment(response.data); setShowPayment(true);
-    } catch (error) { toast.error(t('pages.payment_initiate_failed', "Failed to initiate payment")); }
+      setPayment(response.data);
+      setShowPayment(true);
+    } catch (error) {
+      toast.error(t('pages.payment_initiate_failed', "Failed to initiate payment"));
+    }
   };
 
+
+  // Phone submit removed (collected at signup)
   const handlePhoneSubmit = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) return;
-    try {
-      const profile = JSON.parse(localStorage.getItem("user_profile") || "{}");
-      localStorage.setItem("user_profile", JSON.stringify({ ...profile, phone_number: phoneNumber }));
-    } catch {}
-    setShowPhoneModal(false);
-    handleInitiatePayment();
+    return;
   };
+
 
   const handleDisputeSubmit = async () => {
     if (!disputeReason || disputeReason.length < 10) return;
@@ -191,7 +197,11 @@ const EscrowDetails = () => {
   const handleEditSubmit = async () => {
     if (!editConditions || editConditions.length < 10) return;
     try {
-      await escrowApi.update(Number(id), { amount: editAmount, conditions: editConditions });
+      await escrowApi.update(Number(id), { 
+        amount: editAmount, 
+        conditions: editConditions,
+      });
+
       toast.success(t('pages.terms_updated', "Updated!"));
       setShowEditModal(false);
       fetchEscrowDetails();
@@ -328,6 +338,23 @@ const EscrowDetails = () => {
                     <div data-testid="escrow-mode-badge" className="px-3 py-1 rounded-lg bg-gray-100 text-[10px] font-black uppercase text-gray-500 border border-gray-200">
                       {escrow.is_detailed ? t('pages.detailed', 'Detailed') : t('pages.quick', 'Quick')}
                     </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{t('pages.type', 'Type')}</p>
+                    <p className="font-black text-gray-900 capitalize">{escrow.sub_type || 'Standard'}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{t('pages.inspection', 'Inspection')}</p>
+                    <p className="font-black text-gray-900">{escrow.inspection_period || 0} day(s)</p>
+                  </div>
+                  <div className="col-span-2 p-4 bg-teal-50 rounded-2xl border border-teal-100">
+                    <p className="text-[10px] font-bold text-[#014d46] uppercase mb-1 flex items-center gap-1">
+                      <Shield size={10} /> {t('pages.integrity_hash', 'Integrity Hash')}
+                    </p>
+                    <p className="font-mono text-[9px] text-[#014d46] truncate" title={escrow.escrow_hash}>{escrow.escrow_hash}</p>
                   </div>
                 </div>
               </div>
@@ -539,7 +566,14 @@ const EscrowDetails = () => {
                 {!escrow.is_locked && (isBuyer || isSeller) && (
                   <div className="sm:col-span-2 grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 mt-4">
                     <button 
-                      onClick={() => { setEditConditions(escrow.conditions || ""); setEditAmount(escrow.amount); setShowEditModal(true); }} 
+                      onClick={() => { 
+                        setEditConditions(escrow.conditions || ""); 
+                        setEditAmount(escrow.amount); 
+                        setEditTitle(escrow.title || "");
+                        setEditJurisdiction(escrow.jurisdiction || "");
+                        setEditGoverningLaw(escrow.governing_law || "");
+                        setShowEditModal(true); 
+                      }} 
                       data-testid="edit-escrow-button"
                       className="btn btn-outline border-gray-200 rounded-xl gap-2 h-12 text-sm font-bold"
                     >
@@ -681,23 +715,8 @@ const EscrowDetails = () => {
         <RealTimeChat isOpen={showChat} onClose={() => setShowChat(false)} escrowId={Number(id)} />
         <PaymentModal isOpen={showPayment} onClose={() => setShowPayment(false)} amount={escrow.amount} paymentUrl={payment?.payment_url} onPaymentComplete={() => fetchEscrowDetails()} />
 
-        <AnimatePresence>
-          {showPhoneModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm no-print">
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
-                <h3 className="text-2xl font-black mb-2">{t('pages.contact_verification', 'Verification')}</h3>
-                <p className="text-sm text-gray-500 mb-6">{t('pages.phone_needed_for_payment', 'We need your phone number for Chapa integration.')}</p>
-                <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="input w-full mb-6 h-14 rounded-2xl text-xl font-bold text-center tracking-widest" placeholder="0911..." />
-                <div className="flex gap-3">
-                  <button onClick={() => setShowPhoneModal(false)} className="flex-1 btn btn-ghost rounded-2xl h-14 font-bold">{t('pages.cancel', 'Cancel')}</button>
-                  <button onClick={handlePhoneSubmit} className="flex-1 btn btn-primary rounded-2xl h-14 font-black shadow-lg shadow-primary-500/20">{t('pages.continue', 'Continue')}</button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
         {showDisputeModal && (
+
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-md no-print">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl">
               <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6">
@@ -716,16 +735,30 @@ const EscrowDetails = () => {
 
         {showEditModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-md no-print">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
               <h3 className="text-3xl font-black text-gray-900 mb-8">{t('pages.revise_escrow_terms', 'Revise Terms')}</h3>
               <div className="space-y-6">
                 <div>
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">{t('pages.updated_transaction_amount', 'New Amount (ETB)')}</label>
-                  <input type="number" className="input w-full h-16 rounded-2xl text-2xl font-black pl-6" value={editAmount} onChange={e => setEditAmount(Number(e.target.value))} />
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.agreement_title', 'Title')}</label>
+                  <input type="text" className="input w-full h-14 rounded-2xl font-bold" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.amount', 'Amount (ETB)')}</label>
+                    <input type="number" className="input w-full h-14 rounded-2xl font-bold" value={editAmount} onChange={e => setEditAmount(Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.jurisdiction', 'Jurisdiction')}</label>
+                    <input type="text" className="input w-full h-14 rounded-2xl" value={editJurisdiction} onChange={e => setEditJurisdiction(e.target.value)} />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">{t('pages.updated_conditions', 'Contractual Conditions')}</label>
-                  <textarea rows={6} className="w-full p-6 bg-gray-50 border-2 border-gray-100 rounded-3xl focus:border-primary-500 outline-none transition-all" value={editConditions} onChange={e => setEditConditions(e.target.value)} />
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.governing_law', 'Governing Law')}</label>
+                  <input type="text" className="input w-full h-14 rounded-2xl" value={editGoverningLaw} onChange={e => setEditGoverningLaw(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.updated_conditions', 'Contractual Conditions')}</label>
+                  <textarea rows={4} className="w-full p-6 bg-gray-50 border-2 border-gray-100 rounded-3xl focus:border-primary-500 outline-none transition-all" value={editConditions} onChange={e => setEditConditions(e.target.value)} />
                 </div>
                 <div className="flex gap-4 pt-6">
                   <button onClick={() => setShowEditModal(false)} className="flex-1 btn btn-ghost h-14 rounded-2xl font-bold">{t('pages.discard_changes', 'Discard')}</button>

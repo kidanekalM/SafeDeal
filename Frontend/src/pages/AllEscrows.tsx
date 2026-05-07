@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   RotateCcw,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
@@ -27,18 +28,28 @@ const AllEscrows = () => {
   const {  } = useAuthStore();
   const [escrows, setEscrows] = useState<Escrow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchEscrows();
+    fetchEscrows(true);
   }, []);
 
-  const fetchEscrows = async () => {
-    setIsLoading(true);
-    setError(null);
+  const fetchEscrows = async (reset = false) => {
+    if (reset) {
+      setIsLoading(true);
+    } else {
+      setIsFetchingMore(true);
+    }
+    
     try {
+      // In a real implementation, this would be an API call with pagination
+      // For now, we'll simulate by fetching all and slicing based on page
       const response = await escrowApi.getMyEscrows();
       const payload: any = response.data;
       const list = Array.isArray(payload)
@@ -46,17 +57,51 @@ const AllEscrows = () => {
         : Array.isArray(payload?.escrows)
         ? payload.escrows
         : [];
-      setEscrows(list as Escrow[]);
+      
+      const allEscrows = list as Escrow[];
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const newItems = allEscrows.slice(startIndex, endIndex);
+      
+      if (reset) {
+        setEscrows(newItems);
+      } else {
+        setEscrows(prev => [...prev, ...newItems]);
+      }
+      
+      // Check if there are more items
+      setHasMore(endIndex < allEscrows.length);
     } catch (error: any) {
       setError(error.response?.data?.message || t('pages.error_loading_escrows', 'Failed to fetch escrows'));
       toast.error(t('pages.error_loading_escrows', 'Failed to load escrows'));
     } finally {
       setIsLoading(false);
+      setIsFetchingMore(false);
     }
   };
 
+  // Infinite scroll handler
+  const handleScroll = useCallback(() => {
+    if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isFetchingMore || !hasMore) {
+      return;
+    }
+    setPage(prevPage => prevPage + 1);
+  }, [isFetchingMore, hasMore]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(1);
+    fetchEscrows(true);
+  }, [searchTerm, statusFilter]);
+
   const handleRefresh = async () => {
-    await fetchEscrows();
+    setPage(1);
+    await fetchEscrows(true);
     toast.success(t('pages.escrows_refreshed', 'Escrows refreshed'));
   };
 
@@ -239,7 +284,7 @@ const AllEscrows = () => {
                         {getStatusIcon(escrow.status)}
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate max-w-xs sm:max-w-md">
                           {escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}
                         </h3>
                         <p className="text-sm text-gray-600">
@@ -284,6 +329,18 @@ const AllEscrows = () => {
                 </motion.div>
               );
             })}
+            
+            {isFetchingMore && (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner />
+              </div>
+            )}
+            
+            {!hasMore && (
+              <div className="text-center py-4 text-gray-500">
+                {t('pages.no_more_escrows', 'No more escrows to load')}
+              </div>
+            )}
           </div>
         )}
 

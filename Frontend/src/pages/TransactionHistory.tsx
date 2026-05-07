@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import {
   Search,
   RefreshCw,
   ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { paymentApi } from '../lib/api';
@@ -23,10 +24,15 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const TransactionHistory = () => {
   const { t } = useTranslation();
   const [transactions, setTransactions] = useState<TransactionHistoryType[]>([]);
+  const [allTransactions, setAllTransactions] = useState<TransactionHistoryType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchTransactions();
@@ -38,7 +44,13 @@ const TransactionHistory = () => {
     try {
       const response = await paymentApi.getTransactionHistory();
       const list = (response.data as any)?.transactions;
-      setTransactions(Array.isArray(list) ? list : []);
+      const allTrans = Array.isArray(list) ? list : [];
+      setAllTransactions(allTrans);
+      // Set first page initially
+      const startIndex = 0;
+      const endIndex = itemsPerPage;
+      setTransactions(allTrans.slice(startIndex, endIndex));
+      setHasMore(endIndex < allTrans.length);
     } catch (error: any) {
       setError(error.response?.data?.message || t('pages.error_loading_transactions', 'Failed to fetch transactions'));
       toast.error(t('pages.error_loading_transactions_toast', 'Failed to load transaction history'));
@@ -46,6 +58,60 @@ const TransactionHistory = () => {
       setIsLoading(false);
     }
   };
+
+  // Function to load more transactions
+  const loadMoreTransactions = useCallback(() => {
+    if (isFetchingMore || !hasMore) return;
+    
+    setIsFetchingMore(true);
+    
+    setTimeout(() => {
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const newItems = allTransactions.slice(startIndex, endIndex);
+      
+      setTransactions(prev => [...prev, ...newItems]);
+      setHasMore(endIndex < allTransactions.length);
+      setIsFetchingMore(false);
+    }, 500); // Simulate network delay
+  }, [page, itemsPerPage, allTransactions, hasMore, isFetchingMore]);
+
+  // Infinite scroll handler
+  const handleScroll = useCallback(() => {
+    const scrollTop = window.pageYOffset;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    // Check if we're near the bottom of the page
+    if (scrollTop + windowHeight >= documentHeight - 100) {
+      loadMoreTransactions();
+    }
+  }, [loadMoreTransactions]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    const filtered = allTransactions.filter(transaction => {
+      const matchesSearch = 
+        transaction.transaction_ref.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.escrow_id.toString().includes(searchTerm) ||
+        transaction.amount.toString().includes(searchTerm);
+      
+      const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    // Update transactions based on filters
+    const startIndex = 0;
+    const endIndex = itemsPerPage;
+    setTransactions(filtered.slice(startIndex, endIndex));
+    setHasMore(endIndex < filtered.length);
+  }, [searchTerm, statusFilter, allTransactions]);
 
   const handleRefresh = async () => {
     await fetchTransactions();
@@ -219,7 +285,7 @@ const TransactionHistory = () => {
                       {getStatusIcon(transaction.status)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate max-w-xs sm:max-w-md">
                         {t('pages.transaction', 'Transaction')} #{transaction.transaction_ref}
                       </h3>
                       <p className="text-sm text-gray-600">
@@ -267,6 +333,18 @@ const TransactionHistory = () => {
                 </div>
               </motion.div>
             ))}
+            
+            {isFetchingMore && (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner />
+              </div>
+            )}
+            
+            {!hasMore && (
+              <div className="text-center py-4 text-gray-500">
+                {t('pages.no_more_transactions', 'No more transactions to load')}
+              </div>
+            )}
           </div>
         )}
 

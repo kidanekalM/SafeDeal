@@ -12,6 +12,7 @@ import {
   Search,
   Menu,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -31,6 +32,7 @@ const Layout = ({ children }: LayoutProps) => {
   const { unreadCount } = useNotificationStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -40,6 +42,7 @@ const Layout = ({ children }: LayoutProps) => {
     } catch (error) {
       logout(); // Still logout locally even if API call fails
     }
+    setShowProfileDropdown(false);
   };
 
   const navigation = useMemo(() => {
@@ -120,24 +123,42 @@ const Layout = ({ children }: LayoutProps) => {
                   </span>
                 )}
               </button>
-              <button 
-                onClick={handleLogout}
-                className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-colors"
-                aria-label={t('components.sign_out', 'Sign out')}
-              >
-                <span className="text-sm font-medium text-primary-700">
-                  {user?.first_name?.[0]}{user?.last_name?.[0]}
-                </span>
-              </button>
-              <button
-                onClick={handleLogout}
-                data-testid="logout-button"
-                className="hidden md:flex p-2 text-gray-400 hover:text-red-600 transition-colors"
-                aria-label={t('components.sign_out', 'Sign out')}
-                title={t('components.sign_out', 'Sign out')}
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-colors group"
+                  aria-label={t('components.profile_menu', 'Profile menu')}
+                >
+                  <span className="text-sm font-medium text-primary-700">
+                    {user?.first_name?.[0]}{user?.last_name?.[0]}
+                  </span>
+                  <ChevronDown className={`ml-1 h-3 w-3 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <Link 
+                      to="/profile" 
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      {t('components.profile_settings', 'Profile Settings')}
+                    </Link>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {t('components.sign_out', 'Sign out')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

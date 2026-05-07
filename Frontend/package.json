@@ -10,10 +10,8 @@
         "preview": "vite preview",
         "test:e2e": "playwright test",
         "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "PWDEBUG=1 playwright test",
-    "test:e2e:coverage": "playwright test --coverage",
-    "coverage:report": "playwright show-report",
-    "test:automated": "npm run test:e2e"
+        "test:e2e:debug": "PWDEBUG=1 playwright test",
+        "test:automated": "npm run test:e2e"
     },
     "dependencies": {
         "@jvhaile/cbe-verifier": "^1.0.7",
