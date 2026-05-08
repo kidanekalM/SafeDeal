@@ -41,6 +41,7 @@ export interface RegisterRequest {
     profession: string;
     email: string;
     password: string;
+    phone_number: string;
     account_name: string;
     account_number: string;
     bank_code: number;

@@ -64,9 +64,7 @@ const EscrowDetails = () => {
   const [showChat, setShowChat] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
-  // Phone collection moved to signup/profile completion
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-
+  
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCBEModal, setShowCBEModal] = useState(false);
   const [cbeTransactionId, setCbeTransactionId] = useState("");
@@ -78,7 +76,6 @@ const EscrowDetails = () => {
   const [editJurisdiction, setEditJurisdiction] = useState("");
   const [editGoverningLaw, setEditGoverningLaw] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [errorCount, setErrorCount] = useState(0);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
@@ -179,9 +176,7 @@ const EscrowDetails = () => {
 
 
   // Phone submit removed (collected at signup)
-  const handlePhoneSubmit = async () => {
-    return;
-  };
+  // Removed phone modal functionality (moved to signup/profile completion)
 
 
   const handleDisputeSubmit = async () => {

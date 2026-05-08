@@ -12,7 +12,6 @@ import {
   Search,
   RefreshCw,
   ExternalLink,
-  ChevronDown,
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { paymentApi } from '../lib/api';
@@ -66,12 +65,18 @@ const TransactionHistory = () => {
     setIsFetchingMore(true);
     
     setTimeout(() => {
-      const startIndex = (page - 1) * itemsPerPage;
+      const startIndex = page * itemsPerPage; // Use current page to calculate start index
       const endIndex = startIndex + itemsPerPage;
       const newItems = allTransactions.slice(startIndex, endIndex);
       
-      setTransactions(prev => [...prev, ...newItems]);
-      setHasMore(endIndex < allTransactions.length);
+      if (newItems.length > 0) {
+        setTransactions(prev => [...prev, ...newItems]);
+        setPage(prevPage => prevPage + 1); // Increment page after appending new items
+        setHasMore(endIndex < allTransactions.length);
+      } else {
+        setHasMore(false); // No more items to load
+      }
+      
       setIsFetchingMore(false);
     }, 500); // Simulate network delay
   }, [page, itemsPerPage, allTransactions, hasMore, isFetchingMore]);
@@ -106,6 +111,9 @@ const TransactionHistory = () => {
       return matchesSearch && matchesStatus;
     });
     
+    // Reset to first page when filters change
+    setPage(1);
+    
     // Update transactions based on filters
     const startIndex = 0;
     const endIndex = itemsPerPage;
@@ -114,6 +122,7 @@ const TransactionHistory = () => {
   }, [searchTerm, statusFilter, allTransactions]);
 
   const handleRefresh = async () => {
+    setPage(1); // Reset to first page on refresh
     await fetchTransactions();
     toast.success(t('pages.transaction_history_refreshed', 'Transaction history refreshed'));
   };

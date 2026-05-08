@@ -13,7 +13,6 @@ import {
   RefreshCw,
   RotateCcw,
   X,
-  ChevronDown,
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
@@ -224,7 +223,7 @@ const AllEscrows = () => {
                 {t('pages.error_loading_escrows', 'Error loading escrows')}
               </h4>
               <p className="text-gray-600 mb-4">{error}</p>
-              <button onClick={fetchEscrows} className="btn btn-outline btn-sm">
+              <button onClick={() => fetchEscrows(true)} className="btn btn-outline btn-sm">
                 {t('pages.try_again', 'Try Again')}
               </button>
             </div>

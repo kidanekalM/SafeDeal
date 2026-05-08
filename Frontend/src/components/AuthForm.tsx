@@ -86,7 +86,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
   };
 
   const nextStep = async () => {
-    const fieldsToValidate = ["first_name", "last_name", "profession", "email", "password"];
+    const fieldsToValidate = ["first_name", "last_name", "profession", "email", "password", "phone_number"];
     const isValid = await trigger(fieldsToValidate as any);
     if (isValid) setRegStep(2);
   };

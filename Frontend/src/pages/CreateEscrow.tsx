@@ -581,7 +581,6 @@ const CreateEscrow = () => {
       case 'final': {
         const juris = watch('jurisdiction');
         const law = watch('governing_law');
-        const res = watch('dispute_resolution');
         
         return (
           <div className="space-y-8 text-center">
