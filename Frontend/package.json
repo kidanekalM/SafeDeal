@@ -14,12 +14,16 @@
         "test:automated": "npm run test:e2e"
     },
     "dependencies": {
+        "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+        "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
         "@jvhaile/cbe-verifier": "^1.0.7",
         "axios": "^1.6.2",
         "clsx": "^2.0.0",
         "date-fns": "^2.30.0",
         "framer-motion": "^10.16.5",
         "i18next-browser-languagedetector": "^7.0.0",
+        "jspdf": "^4.2.1",
+        "jspdf-autotable": "^5.0.7",
         "lucide-react": "^0.294.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -50,9 +54,9 @@
         "eslint-plugin-react-refresh": "^0.4.4",
         "immer": "^11.1.4",
         "postcss": "^8.4.31",
+        "rollup-plugin-polyfill-node": "^0.13.0",
         "tailwindcss": "^3.3.5",
         "typescript": "^5.2.2",
-        "vite": "^4.5.0",
-        "vite-plugin-pwa": "^1.2.0"
+        "vite": "^4.5.0"
     }
 }

@@ -203,7 +203,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		Milestones:        req.Milestones,
 	}
 
-	// Compute robust hash including milestones
+	// Compute robust hash including milestones and new fields
 	escrow.EscrowHash = h.computeEscrowHash(escrow)
 
 	if err := h.DB.Create(escrow).Error; err != nil {

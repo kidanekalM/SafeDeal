@@ -156,15 +156,17 @@ const CreateEscrow = () => {
   };
 
   const steps = useMemo(() => {
-    const baseSteps = [
+    const s = [
       { id: 'role', title: t('pages.role', 'Role'), icon: Shield },
-      { id: 'mediation', title: t('pages.mediation_type', 'Mediation'), icon: Gavel },
-      { id: 'parties', title: t('pages.parties', 'Parties'), icon: Search },
-      { id: 'details', title: t('pages.terms', 'Terms'), icon: FileText },
     ];
-    if (isDetailed) baseSteps.push({ id: 'milestones', title: t('pages.milestones', 'Milestones'), icon: ListChecks });
-    baseSteps.push({ id: 'final', title: t('pages.finalize', 'Finalize'), icon: Check });
-    return baseSteps;
+    if (isDetailed) {
+      s.push({ id: 'mediation', title: t('pages.mediation_type', 'Mediation'), icon: Gavel });
+      s.push({ id: 'parties', title: t('pages.parties', 'Parties'), icon: Search });
+    }
+    s.push({ id: 'details', title: t('pages.terms', 'Terms'), icon: FileText });
+    if (isDetailed) s.push({ id: 'milestones', title: t('pages.milestones', 'Milestones'), icon: ListChecks });
+    s.push({ id: 'final', title: t('pages.finalize', 'Finalize'), icon: Check });
+    return s;
   }, [isDetailed, t]);
 
   const selectUser = (user: SearchUser, type: string) => {
@@ -515,26 +517,22 @@ const CreateEscrow = () => {
               </div>
             )}
 
-            <div className="relative max-w-xs mx-auto">
-              <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 block text-center">{t('pages.total_amount', 'Amount')}</label>
-              <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input 
-                  type="number" 
-                  {...register('amount')} 
-                  data-testid={isDetailed ? "escrow-amount" : "quick-amount"}
-                  className="input pl-12 h-14 rounded-2xl text-xl font-bold w-full" 
-                  placeholder="0.00" 
-                />
+            {!isDetailed && (
+              <div className="relative max-w-xs mx-auto">
+                <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 block text-center">{t('pages.total_amount', 'Amount')}</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="number" 
+                    {...register('amount')} 
+                    data-testid="quick-amount"
+                    className="input pl-12 h-14 rounded-2xl text-xl font-bold w-full" 
+                    placeholder="0.00" 
+                  />
+                </div>
+                <ErrorMessage error={formErrors.amount} />
               </div>
-              <ErrorMessage error={formErrors.amount} />
-              {isDetailed && (
-                <p className="text-[10px] text-center mt-2 text-gray-400 font-bold uppercase tracking-tighter">
-                  {t('pages.auto_synced_with_milestones', 'Auto-synced with milestones')}
-                </p>
-              )}
-            </div>
-          </div>
+            )}          </div>
         </div>
       );
       case 'milestones': return (

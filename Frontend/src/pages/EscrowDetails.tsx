@@ -1,3 +1,5 @@
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -137,7 +139,44 @@ const EscrowDetails = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("SAFEDEAL FORMAL ESCROW AGREEMENT", 105, 20, { align: "center" });
+    
+    // Escrow Details
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Escrow ID: ${escrow?.id}`, 20, 40);
+    doc.text(`Status: ${escrow?.status}`, 20, 50);
+    doc.text(`Title: ${escrow?.title || 'N/A'}`, 20, 60);
+    
+    // Parties
+    doc.setFont("helvetica", "bold");
+    doc.text("PARTIES", 20, 80);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Buyer: ${escrow?.buyer?.email || 'N/A'}`, 20, 90);
+    doc.text(`Seller: ${escrow?.seller?.email || 'N/A'}`, 20, 100);
+
+    // Terms
+    doc.setFont("helvetica", "bold");
+    doc.text("CONTRACTUAL CONDITIONS", 20, 120);
+    doc.setFont("helvetica", "normal");
+    const splitConditions = doc.splitTextToSize(escrow?.conditions || "", 170);
+    doc.text(splitConditions, 20, 130);
+
+    // Milestones Table
+    if (escrow?.milestones && escrow.milestones.length > 0) {
+      (doc as any).autoTable({
+        startY: 150,
+        head: [['Milestone', 'Amount (ETB)', 'Status']],
+        body: escrow.milestones.map(m => [m.title, m.amount, m.status]),
+      });
+    }
+
+    doc.save(`escrow-${escrow?.id}-agreement.pdf`);
   };
 
   const handleAccept = async () => {
