@@ -40,6 +40,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		LastName      string `json:"last_name" validate:"required,min=2,max=32"`
 		Profession    string `json:"profession"`
 		Email         string `json:"email" validate:"required,email"`
+		Phone         string `json:"phone" validate:"required"`
 		Password      string `json:"password" validate:"required,min=8"`
 		AccountName   string `json:"account_name" validate:"required"`
 		AccountNumber string `json:"account_number" validate:"required"`
@@ -75,6 +76,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		LastName:       req.LastName,
 		Profession:     req.Profession,
 		Email:          req.Email,
+		PhoneNumber:    req.Phone,
 		Password:       hashedPassword,
 		AccountName:    req.AccountName,
 		AccountNumber:  req.AccountNumber,

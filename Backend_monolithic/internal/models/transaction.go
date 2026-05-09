@@ -11,6 +11,7 @@ type Transaction struct {
 	Amount         uint   `json:"amount" validate:"required,gt=0"`
 	Currency       string `json:"currency" gorm:"default:'ETB'"`
 	Status         string `json:"status" gorm:"default:'Pending'" validate:"oneof=Pending Completed Failed Refunded"`
-	PaymentMethod  string `json:"payment_method,omitempty" gorm:"default:'Chapa'"`
-	PaymentURL     string `json:"payment_url,omitempty"`
+	PaymentMethod    string `json:"payment_method,omitempty" gorm:"default:'Chapa'"`
+	PaymentURL       string `json:"payment_url,omitempty"`
+	BlockchainTxHash string `json:"blockchain_tx_hash,omitempty"`
 }

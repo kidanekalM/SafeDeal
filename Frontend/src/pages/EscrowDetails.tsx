@@ -8,7 +8,6 @@ import {
   CheckCircle,
   AlertCircle,
   User,
-  MessageCircle,
   FileText,
   Edit3,
   Download,
@@ -30,7 +29,6 @@ import { formatCurrency, getStatusColor } from "../lib/utils";
 import { Escrow, EscrowPayment } from "../types";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
-import RealTimeChat from "../components/RealTimeChat";
 import PaymentModal from "../components/PaymentModal";
 import { motion } from "framer-motion";
 
@@ -61,7 +59,6 @@ const EscrowDetails = () => {
   const [escrow, setEscrow] = useState<Escrow | null>(null);
   const [payment, setPayment] = useState<EscrowPayment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showChat, setShowChat] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   
@@ -164,9 +161,9 @@ const EscrowDetails = () => {
   };
 
   const handleInitiatePayment = async () => {
-    // Phone number is collected during signup/profile completion (not right before payment)
+    if (!id || !escrow) return;
     try {
-      const response = await paymentApi.initiateEscrowPayment(Number(id));
+      const response = await paymentApi.initiateEscrowPayment(Number(id), escrow.amount);
       setPayment(response.data);
       setShowPayment(true);
     } catch (error) {
@@ -297,13 +294,6 @@ const EscrowDetails = () => {
               <Printer size={18} />
               <span className="hidden sm:inline">{t('pages.print_contract', 'Print Contract')}</span>
             </button>
-            <button 
-              onClick={() => setShowChat(true)} 
-              className="btn btn-primary rounded-xl px-4 flex items-center gap-2 shadow-lg shadow-primary-500/20"
-            >
-              <MessageCircle size={18} />
-              <span>{t('pages.open_chat', 'Chat')}</span>
-            </button>
           </div>
         </div>
 
@@ -402,7 +392,7 @@ const EscrowDetails = () => {
                       <div className="p-2 bg-blue-600 rounded-lg">
                         <Scale size={20} className="text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-blue-900">{t('pages.verifiable_agreement', 'Legal-Grade Verifiable Agreement')}</h3>
+                      <h3 className="text-xl font-bold text-blue-900">{t('pages.verifiable_agreement', 'Verifiable Agreement')}</h3>
                     </div>
                     <div className="space-y-3">
                       <div className="p-4 bg-white/50 rounded-2xl border border-blue-200">
@@ -707,7 +697,7 @@ const EscrowDetails = () => {
           </div>
         </div>
 
-        <RealTimeChat isOpen={showChat} onClose={() => setShowChat(false)} escrowId={Number(id)} />
+        {/* RealTimeChat replaced by requirement: NO CHAT */}
         <PaymentModal isOpen={showPayment} onClose={() => setShowPayment(false)} amount={escrow.amount} paymentUrl={payment?.payment_url} onPaymentComplete={() => fetchEscrowDetails()} />
 
         {showDisputeModal && (

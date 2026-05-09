@@ -6,7 +6,8 @@ import {
   Shield, DollarSign, 
   Search, Check, FileText, 
   ChevronLeft, Trash2,
-  ListChecks, Gavel, Scale
+  ListChecks, Gavel, Scale,
+  User as UserIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -29,7 +30,7 @@ const CreateEscrowSchema = z.object({
   isDetailed: z.boolean().default(false),
   title: z.string().min(3, 'Title is required').optional(),
   sub_type: z.string().optional(),
-  inspection_period: z.number().min(0).default(0),
+  inspection_period: z.coerce.number().min(0).default(0),
   counterparty_id: z.number().optional(),
   counterparty_email: z.string().optional(),
   buyer_id: z.number().optional(),
@@ -61,18 +62,7 @@ const CreateEscrow = () => {
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [selectedBuyer, setSelectedBuyer] = useState<SearchUser | null>(null);
   const [selectedSeller, setSelectedSeller] = useState<SearchUser | null>(null);
-  // Debounce state
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
-  // Debounce effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300); // Reduced debounce time for faster response
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   const {
     register,
@@ -92,59 +82,83 @@ const CreateEscrow = () => {
       jurisdiction: 'Ethiopia',
       governing_law: 'Commercial Code of Ethiopia',
       dispute_resolution: 'AI Arbitration via SafeDeal',
+      sub_type: 'freelance',
+      inspection_period: 3,
     }
   });
-
-  useEffect(() => {
-    if (Object.keys(formErrors).length > 0) {
-      console.log("DEBUG: Form Errors:", JSON.stringify(formErrors));
-    }
-  }, [formErrors]);
-
-  // Handle search with debounced term
-  useEffect(() => {
-    if (debouncedSearchTerm.length < 1) { 
-      setSearchResults([]); 
-      return; 
-    }
-    
-    const handleSearch = async (term: string) => {
-      try {
-        const response = await userApi.searchUsers(term);
-        // Check if an invitation was sent (indicates the email doesn't exist but was invited)
-        if (response.data.data.invited) {
-          // Create a temporary user object for the email
-          const tempUser: SearchUser = {
-            id: 0, // Placeholder ID for non-existent user
-            first_name: term.split('@')[0], // Use email prefix as first name
-            last_name: term.split('@')[1]?.split('.')[0] || 'Invited', // Use domain prefix as last name
-            profession: 'Invited User',
-            activated: false,
-            email: term,
-          };
-          setSearchResults([tempUser]);
-        } else {
-          setSearchResults(response.data.data.users || []);
-        }
-      } catch (error) { 
-        console.error('Search failed', error); 
-        setSearchResults([]);
-      }
-    };
-
-    handleSearch(debouncedSearchTerm);
-  }, [debouncedSearchTerm]);
 
   const { fields, append, remove } = useFieldArray({ control, name: 'milestones' });
 
   const creatorRole = watch('creator_role');
   const isDetailed = watch('isDetailed');
   const amount = watch('amount');
-  const milestones = watch('milestones') || [];
+  const milestonesWatch = watch('milestones') || [];
+
+  useEffect(() => {
+    if (isDetailed && milestonesWatch.length > 0) {
+      const total = milestonesWatch.reduce((sum: number, m: any) => sum + (Number(m.amount) || 0), 0);
+      if (total !== Number(amount)) {
+        setValue('amount', total, { shouldValidate: true });
+      }
+    }
+  }, [milestonesWatch, isDetailed, setValue, amount]);
+
+  useEffect(() => {
+    if (isDetailed && milestonesWatch.length === 0) {
+      append({ title: '', amount: 0, description: '' });
+    }
+  }, [isDetailed, milestonesWatch.length, append]);
+
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    if (term.length < 1) { 
+      setSearchResults([]); 
+      return; 
+    }
+    
+    try {
+      const response = await userApi.searchUsers(term);
+      if (response.data.data.invited) {
+        const tempUser: SearchUser = {
+          id: 0,
+          first_name: term.split('@')[0],
+          last_name: term.split('@')[1]?.split('.')[0] || 'Invited',
+          profession: 'Invited User',
+          activated: false,
+          email: term,
+        };
+        setSearchResults([tempUser]);
+      } else {
+        setSearchResults(response.data.data.users || []);
+      }
+    } catch (error) { 
+      setSearchResults([]);
+    }
+  };
+
+  const handleFetchContacts = async () => {
+    if (!('contacts' in navigator && 'select' in (navigator as any).contacts)) {
+      toast.error(t('pages.contacts_api_not_supported', 'Contact Picker not supported on this browser'));
+      return;
+    }
+    try {
+      const props = ['name', 'email', 'tel'];
+      const opts = { multiple: false };
+      const contacts = await (navigator as any).contacts.select(props, opts);
+      if (contacts.length > 0) {
+        const contact = contacts[0];
+        const email = contact.email?.[0] || contact.tel?.[0];
+        if (email) handleSearch(email);
+      }
+    } catch (err) {
+      console.error('Contact picker failed', err);
+    }
+  };
 
   const steps = useMemo(() => {
     const baseSteps = [
       { id: 'role', title: t('pages.role', 'Role'), icon: Shield },
+      { id: 'mediation', title: t('pages.mediation_type', 'Mediation'), icon: Gavel },
       { id: 'parties', title: t('pages.parties', 'Parties'), icon: Search },
       { id: 'details', title: t('pages.terms', 'Terms'), icon: FileText },
     ];
@@ -152,17 +166,6 @@ const CreateEscrow = () => {
     baseSteps.push({ id: 'final', title: t('pages.finalize', 'Finalize'), icon: Check });
     return baseSteps;
   }, [isDetailed, t]);
-
-  useEffect(() => {
-    if (isDetailed) {
-      if (milestones.length === 0) append({ title: '', amount: 0, description: '' });
-      const total = milestones.reduce((sum: number, m: any) => sum + (Number(m.amount) || 0), 0);
-      // Only sync the amount if milestones exist and have values
-      if (milestones.length > 0) {
-        setValue('amount', total, { shouldValidate: true });
-      }
-    }
-  }, [milestones, isDetailed, setValue, append]);
 
   const selectUser = (user: SearchUser, type: string) => {
     const isInvitedUser = user.id === 0 && user.email;
@@ -188,6 +191,7 @@ const CreateEscrow = () => {
       }
     }
     setSearchResults([]);
+    setSearchTerm('');
   };
 
   const nextStep = async () => {
@@ -197,11 +201,10 @@ const CreateEscrow = () => {
     if (currentStepId === 'role') {
       fieldsToValidate = ['creator_role', 'isDetailed'];
     } 
+    else if (currentStepId === 'mediation') {
+      fieldsToValidate = ['dispute_resolution'];
+    }
     else if (currentStepId === 'parties') {
-      // Reset search term when leaving parties step
-      setSearchTerm('');
-      
-      // Validate parties selection
       if (creatorRole === 'mediator') {
         if (!selectedBuyer || !selectedSeller) {
           toast.error(t('pages.select_buyer_seller', 'Select both parties')); 
@@ -223,7 +226,7 @@ const CreateEscrow = () => {
       fieldsToValidate = isDetailed ? ['conditions', 'title'] : ['amount', 'conditions', 'title'];
     } 
     else if (currentStepId === 'milestones') {
-      const total = milestones.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+      const total = milestonesWatch.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
       if (total <= 0) { 
         toast.error(t('pages.milestones_amount_error', 'Invalid total milestone amount')); 
         return; 
@@ -231,10 +234,8 @@ const CreateEscrow = () => {
       fieldsToValidate = ['milestones'];
     }
 
-    // Validate current step fields
     const isStepValid = await trigger(fieldsToValidate as any);
     
-    // Move to next step if valid
     if (isStepValid) {
       setStep(s => Math.min(s + 1, steps.length - 1));
     } else if (fieldsToValidate.length > 0) {
@@ -284,7 +285,7 @@ const CreateEscrow = () => {
         else if (data.seller_email) payload.seller_email = data.seller_email;
       }
       
-      await escrowApi.create(payload as any);
+      await escrowApi.create(payload);
       toast.success(t('pages.escrow_created_success', 'Created!')); 
       navigate('/escrows');
     } catch (error: any) {
@@ -320,6 +321,24 @@ const CreateEscrow = () => {
           </div>
         </div>
       );
+      case 'mediation': return (
+        <div className="space-y-8">
+          <h2 className="text-2xl font-bold text-center">{t('pages.select_mediation_type', 'Dispute Resolution')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+            {[
+              { id: 'AI Arbitration via SafeDeal', title: t('pages.ai_smart_resolution', 'AI Smart Resolution'), desc: 'Automated, fast, and neutral' },
+              { id: 'Formal Arbitration', title: t('pages.formal_arbitration', 'Formal Arbitration'), desc: 'Legal professional oversight' },
+              { id: 'Mediation', title: t('pages.mediation', 'Human Mediation'), desc: 'Guided negotiation' },
+            ].map(m => (
+              <label key={m.id} className={`p-6 border-2 rounded-2xl cursor-pointer transition-all ${watch('dispute_resolution') === m.id ? 'border-[#014d46] bg-[#e6f7f4]' : 'border-gray-100 hover:border-gray-200'}`}>
+                <input type="radio" value={m.id} {...register('dispute_resolution')} className="sr-only" />
+                <span className="font-bold block text-sm mb-1">{m.title}</span>
+                <span className="text-[10px] text-gray-500 block leading-tight">{m.desc}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
       case 'parties': return (
         <div className="space-y-8">
           <h2 className="text-2xl font-bold text-center">{t('pages.counterparties', 'Parties')}</h2>
@@ -342,13 +361,19 @@ const CreateEscrow = () => {
                     <input 
                       type="text" 
                       data-testid={isDetailed ? "buyer-email" : "quick-buyer-email"}
-                      placeholder={t('pages.search_buyer_placeholder', 'Search buyer by email...')} 
-                      className="input w-full h-14 rounded-2xl pl-12 bg-white" 
-                      onChange={e => {
-                        const val = e.target.value;
-                        setSearchTerm(val);
-                      }} 
+                      placeholder={t('pages.search_buyer_placeholder', 'Search buyer by email')} 
+                      className="input w-full h-14 rounded-2xl pl-12 pr-12 bg-white" 
+                      value={searchTerm}
+                      onChange={e => handleSearch(e.target.value)} 
                     />
+                    <button 
+                      type="button"
+                      onClick={handleFetchContacts}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-600 hover:text-primary-700"
+                      title={t('pages.import_contacts', 'Import Contacts')}
+                    >
+                      <UserIcon size={20} />
+                    </button>
                     {searchResults.length > 0 && (
                       <div className="absolute z-10 w-full mt-2 border rounded-2xl overflow-hidden shadow-2xl bg-white max-h-48 overflow-y-auto">
                         {searchResults.map(u => (
@@ -385,13 +410,19 @@ const CreateEscrow = () => {
                     <input 
                       type="text" 
                       data-testid={isDetailed ? "seller-email" : "quick-seller-email"}
-                      placeholder={t('pages.search_seller_placeholder', 'Search seller by email...')} 
-                      className="input w-full h-14 rounded-2xl pl-12 bg-white" 
-                      onChange={e => {
-                        const val = e.target.value;
-                        setSearchTerm(val);
-                      }} 
+                      placeholder={t('pages.search_seller_placeholder', 'Search seller by email')} 
+                      className="input w-full h-14 rounded-2xl pl-12 pr-12 bg-white" 
+                      value={searchTerm}
+                      onChange={e => handleSearch(e.target.value)} 
                     />
+                    <button 
+                      type="button"
+                      onClick={handleFetchContacts}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-600 hover:text-primary-700"
+                      title={t('pages.import_contacts', 'Import Contacts')}
+                    >
+                      <UserIcon size={20} />
+                    </button>
                     {searchResults.length > 0 && (
                       <div className="absolute z-10 w-full mt-2 border rounded-2xl overflow-hidden shadow-2xl bg-white max-h-48 overflow-y-auto">
                         {searchResults.map(u => (
@@ -455,7 +486,7 @@ const CreateEscrow = () => {
                   {...register('conditions')} 
                   data-testid={isDetailed ? "escrow-description" : "quick-condition"}
                   className="w-full p-5 border-2 rounded-2xl focus:border-[#014d46] outline-none transition-all" 
-                  placeholder={t('pages.terms_placeholder', 'Enter the conditions of your agreement...')} 
+                  placeholder={t('pages.terms_placeholder', 'Enter the conditions of your agreement')} 
                 />
                 <ErrorMessage error={formErrors.conditions} />
               </div>
@@ -480,14 +511,6 @@ const CreateEscrow = () => {
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.governing_law', 'Governing Law')}</label>
                   <input type="text" {...register('governing_law')} className="input w-full h-12 rounded-xl border-2 px-4" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.dispute_resolution', 'Dispute Resolution')}</label>
-                  <select {...register('dispute_resolution')} className="select w-full h-12 rounded-xl border-2 bg-white px-4">
-                    <option value="AI Arbitration via SafeDeal">{t('pages.ai_smart_resolution', 'AI Smart Resolution')}</option>
-                    <option value="Formal Arbitration">{t('pages.formal_arbitration', 'Formal Arbitration')}</option>
-                    <option value="Mediation">{t('pages.mediation', 'Human Mediation')}</option>
-                  </select>
                 </div>
               </div>
             )}
@@ -691,7 +714,7 @@ const CreateEscrow = () => {
                 data-testid={isDetailed ? "create-escrow-submit" : "create-quick-submit"}
                 className="btn btn-primary px-8 h-14 rounded-2xl font-bold uppercase shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
               >
-                {isSubmitting ? t('pages.launching', 'Launching...') : t('pages.start_secure_escrow_btn', 'Start Deal')}
+                {isSubmitting ? t('pages.launching', 'Launching') : t('pages.start_secure_escrow_btn', 'Start Deal')}
                 <Check size={20} />
               </button>
             )}

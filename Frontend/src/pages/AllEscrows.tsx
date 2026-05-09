@@ -42,25 +42,18 @@ const AllEscrows = () => {
   const fetchEscrows = async (reset = false) => {
     if (reset) {
       setIsLoading(true);
+      setPage(1);
     } else {
       setIsFetchingMore(true);
     }
     
+    const currentPage = reset ? 1 : page;
+
     try {
-      // In a real implementation, this would be an API call with pagination
-      // For now, we'll simulate by fetching all and slicing based on page
-      const response = await escrowApi.getMyEscrows();
-      const payload: any = response.data;
-      const list = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.escrows)
-        ? payload.escrows
-        : [];
+      const response = await escrowApi.getMyEscrows(currentPage, itemsPerPage, statusFilter, searchTerm);
+      const { data, meta } = response.data;
       
-      const allEscrows = list as Escrow[];
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const newItems = allEscrows.slice(startIndex, endIndex);
+      const newItems = data || [];
       
       if (reset) {
         setEscrows(newItems);
@@ -68,8 +61,8 @@ const AllEscrows = () => {
         setEscrows(prev => [...prev, ...newItems]);
       }
       
-      // Check if there are more items
-      setHasMore(endIndex < allEscrows.length);
+      // Check if there are more items based on total count
+      setHasMore(newItems.length === itemsPerPage && (reset ? newItems.length : (escrows.length + newItems.length)) < meta.total);
     } catch (error: any) {
       setError(error.response?.data?.message || t('pages.error_loading_escrows', 'Failed to fetch escrows'));
       toast.error(t('pages.error_loading_escrows', 'Failed to load escrows'));
@@ -123,19 +116,7 @@ const AllEscrows = () => {
     }
   };
 
-  const filteredEscrows = Array.isArray(escrows)
-    ? escrows.filter((escrow) => {
-        const term = searchTerm.trim().toLowerCase();
-        const matchesSearch = !term
-          ? true
-          : escrow.id.toString().includes(term) ||
-            escrow.title?.toLowerCase().includes(term) ||
-            escrow.amount.toString().includes(term) ||
-            (escrow.conditions || '').toLowerCase().includes(term);
-        const matchesStatus = statusFilter === 'all' || escrow.status === statusFilter;
-        return matchesSearch && matchesStatus;
-      })
-    : [];
+  const filteredEscrows = escrows; // Server-side filtered
 
   if (isLoading) {
     return (

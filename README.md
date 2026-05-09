@@ -1,171 +1,31 @@
-# SafeDeal - Crypto-Native Escrow Platform
+# SafeDeal - Hybrid Escrow Platform
 
-SafeDeal is a blockchain-driven hybrid escrow platform designed to solve fund security and regulatory compliance challenges in cross-border/local high-trust transactions. The platform combines decentralized state verification with traditional payment methods to ensure security and transparency.
-
-## Architecture Overview
-
-The platform uses a **monolithic backend architecture** with modular components, enabling rapid development and simplified deployment while maintaining clear separation of concerns. The modular design allows for focused development on specific features while maintaining overall system coherence.
-
-### 1. Parties & Identity
-
-**Primary Parties**
-- Depositor / Buyer
-  - Address (0x...)
-  - Contact Reference
-- Beneficiary / Service Provider
-  - Address (0x...)
-  - Contact Reference
-
-**Escrow Agent**
-- Agent Address
-- Agent Identifier
-
-**Authorized Representatives**
-- Address
-- Scope (view / approve / dispute)
-
-### 2. Agreement Core
-
-- Escrow ID
-- Escrow Type: Service-for-Payment
-- Sub-Type
-- Underlying Agreement Reference (hash or URI)
-- Governing Rules (clause reference, not full legal)
-
-### 3. What Is Held
-
-- Amount (in native token, e.g., ETH)
-- Token Standard (if ERC-20)
-- Contract/Account Holding Address
-- Deposit Transaction Hash
-- Total Funded
-- Available Balance
-- Reserved (per milestone)
-
-### 4. What Is Owed By Each Party
-
-**Obligation Record**
-- Obligation ID
-- Responsible Party
-- Type: Service Performance / Payment / Approval
-
-**Service Obligation**
-- Clear Description of Work
-- Performance Period (start → deadline)
-
-**Acceptance Criteria**
-- Measurable Standard
-- Verification Method
-
-**Rejection Conditions**
-- Defined Non-Conformance
-
-**Cure Terms**
-- Revision Window
-- Resolution Deadline
-
-### 5. Milestones & Payment Mapping
-
-**Milestone Record**
-- Milestone ID
-- Description
-- Linked Obligation
-- Due Date
-
-**Payment Mapping**
-- Allocated Amount
-- Percentage of Total
-
-**Completion Trigger**
-- Required Approval(s)
-- Required Document/Proof Hash
-
-**Status**
-- Pending
-- Submitted
-- Under Review
-- Accepted
-- Rejected
-- Released
-
-### 6. Release Conditions
-
-**Condition Types**
-- Explicit Buyer Approval
-- Auto-Acceptance (timeout)
-- Third-Party Verifier Signature
-
-**Approval Rules**
-- Single Signature
-- Multi-Signature
-
-**Time Logic**
-- Review Window (e.g., 7 days)
-- Auto-Release After Timeout
-
-### 7. Acceptance & Timeout Outcomes
-
-- **Accepted** → Funds released to provider
-- **Rejected** → Reason logged, cure period starts
-- **No Response (Timeout)** → Auto-accept or Escalation
-
-### 8. Dispute Handling
-
-**Dispute Record**
-- Dispute ID
-- Raised By
-- Reason Hash/Reference
-
-**Effect**
-- Funds Frozen
-
-**Resolution**
-- Agent Decision
-- Arbitrator Signature
-- Outcome: Release / Refund / Split
-
-### 9. State Lifecycle
-
-1. Created
-2. Funded
-3. Active
-4. Milestone Under Review
-5. Partially Released
-6. Dispute
-7. Completed
-8. Cancelled (refunded)
-
-### 10. Event Log (Immutable)
-
-Per event:
-- Timestamp
-- Event Type
-- Actor Address
-- Related Milestone/Dispute ID
-- Transaction Hash (if on-chain action)
-
-## Technical Stack
-
-- **Backend Architecture**: Monolithic with modular components
-- **Backend Language**: Golang with Fiber web framework
-- **Frontend**: TypeScript/React with Vite build system
-- **Blockchain**: Ethereum Sepolia Testnet with Solidity contracts
-- **Payment Gateway**: Chapa (Ethiopian local compliant payment)
-- **Message Broker**: RabbitMQ for event-driven architecture
-- **Database**: PostgreSQL for main business data
-- **Cache/Session**: Redis for JWT blacklists and session storage
-- **Authentication**: JWT with refresh token rotation
-- **Real-time Communication**: WebSocket for chat and notifications
+## Overview
+SafeDeal is a **hybrid escrow platform** that combines traditional payment systems (Chapa for Ethiopian Birr transactions) with blockchain verification for enhanced security and transparency. The platform ensures secure transactions between buyers and sellers while maintaining regulatory compliance.
 
 ## Key Features
+- **Hybrid Payment System**: Uses Chapa for ETB transactions while recording state on blockchain for verification
+- **Multi-party Escrow**: Supports buyer, seller, and mediator roles
+- **Milestone-based Payments**: Releases funds upon completion of agreed-upon milestones
+- **Dispute Resolution**: Built-in mediation and resolution mechanisms
+- **Tamper-Proof Records**: Blockchain anchoring for immutable transaction records
+- **Real-time Notifications**: WebSocket-based communication system
+- **Multi-language Support**: Internationalization for broader accessibility
 
-- **Modular Design**: Clear separation of concerns within the monolith
-- **Blockchain Integration**: Ethereum-based transaction verification
-- **Real-time Communication**: WebSocket-based chat and notifications
-- **Secure Payments**: Chapa integration for local compliance
-- **Dispute Resolution**: Built-in mechanisms for conflict resolution
-- **Milestone Tracking**: Payment releases tied to completion of milestones
-- **Trust Scoring**: Reputation system for participants
+## Tech Stack
+- **Frontend**: TypeScript, React, Tailwind CSS
+- **Backend**: Go with Fiber framework
+- **Database**: PostgreSQL with GORM
+- **Blockchain**: Ethereum integration for state verification
+- **Payment Gateway**: Chapa for Ethiopian Birr transactions
+- **Message Broker**: RabbitMQ for event-driven architecture
+- **Real-time Communication**: WebSocket connections
+- **Authentication**: JWT-based with refresh tokens
+
+## Architecture
+The platform implements a hybrid approach combining:
+1. **Traditional Financial Layer**: Chapa handles ETB transactions ensuring regulatory compliance
+2. **Blockchain Verification Layer**: Records transaction hashes and state changes on Ethereum for immutable proof
 
 ## Getting Started
 

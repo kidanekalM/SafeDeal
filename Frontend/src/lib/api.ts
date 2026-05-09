@@ -147,10 +147,8 @@ export const escrowApi = {
         api.post('/api/v1/escrows', data),
 
     // GET My Escrows - Get user's escrows
-    // Backend returns: { escrows: Escrow[], summary: { total, active, completed } }
-    // Fix route mismatch - backend: /api/escrows, frontend was /my  
-    getMyEscrows: (): Promise<AxiosResponse<Escrow[]>> =>
-        api.get('/api/v1/escrows'),
+    getMyEscrows: (page = 1, limit = 10, status = 'all', q = ''): Promise<AxiosResponse<{ data: Escrow[]; meta: any }>> =>
+        api.get(`/api/v1/escrows?page=${page}&limit=${limit}&status=${status}&q=${encodeURIComponent(q)}`),
 
     // GET Fetch-escrow
     getById: (id: number): Promise<AxiosResponse<Escrow>> =>
@@ -180,7 +178,7 @@ export const escrowApi = {
     verifyCBE: (id: number, transactionId: string, accountSuffix: string): Promise<AxiosResponse<Escrow>> =>
         api.post(`/api/v1/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
 
-    update: (id: number, data: { amount?: number; conditions?: string }): Promise<AxiosResponse<Escrow>> => 
+    update: (id: number, data: { amount?: number; conditions?: string; title?: string; jurisdiction?: string; governing_law?: string; sub_type?: string; inspection_period?: number }): Promise<AxiosResponse<Escrow>> => 
         api.put(`/api/v1/escrows/${id}`, data),
     
     lock: (id: number): Promise<AxiosResponse<Escrow>> => 
@@ -240,40 +238,17 @@ export const milestoneApi = {
 // Payment API - Based on backend endpoints
 export const paymentApi = {
     // POST Payment
-    initiateEscrowPayment: async (escrowId: number, paymentMethod: 'Chapa' | 'Transfer' = 'Chapa'): Promise<AxiosResponse<EscrowPayment>> => {
-        // Fetch escrow to get amount if needed
-        const escrowResp = await api.get(`/api/v1/escrows/${escrowId}`);
-        const amount = escrowResp?.data?.amount;
-        const profileRaw = localStorage.getItem('user_profile');
-        let email = '';
-        let first_name = '';
-        let last_name = '';
-        let phone_number = '';
-        try {
-            if (profileRaw) {
-                const profile = JSON.parse(profileRaw);
-                email = profile.email || '';
-                first_name = profile.first_name || '';
-                last_name = profile.last_name || '';
-                phone_number = profile.phone_number || '';
-            }
-        } catch { }
-
+    initiateEscrowPayment: (escrowId: number, amount: number, paymentMethod: 'Chapa' | 'Transfer' = 'Chapa'): Promise<AxiosResponse<EscrowPayment>> => {
         return api.post('/api/v1/payments/initiate', {
             escrow_id: escrowId,
             amount,
             payment_method: paymentMethod,
-            currency: 'ETB',
-            email,
-            first_name,
-            last_name,
-            phone_number,
         });
     },
 
     // GET Transaction History
-    getTransactionHistory: (): Promise<AxiosResponse<{ transactions: TransactionHistory[]; total: number; status: string }>> =>
-        api.get('/api/v1/payments/transactions'),
+    getTransactionHistory: (page = 1, limit = 10): Promise<AxiosResponse<{ data: TransactionHistory[]; meta: any }>> =>
+        api.get(`/api/v1/payments/transactions?page=${page}&limit=${limit}`),
 };
 
 // WebSocket API for real-time features

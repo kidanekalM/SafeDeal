@@ -12,7 +12,7 @@ import {
   Search,
   Menu,
   X,
-  ChevronDown,
+  User as UserIcon
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -32,7 +32,7 @@ const Layout = ({ children }: LayoutProps) => {
   const { unreadCount } = useNotificationStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -42,7 +42,7 @@ const Layout = ({ children }: LayoutProps) => {
     } catch (error) {
       logout(); // Still logout locally even if API call fails
     }
-    setShowProfileDropdown(false);
+    setShowProfileMenu(false);
   };
 
   const navigation = useMemo(() => {
@@ -127,34 +127,38 @@ const Layout = ({ children }: LayoutProps) => {
               {/* Profile Dropdown */}
               <div className="relative">
                 <button 
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-colors group"
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-all group border-2 border-transparent hover:border-primary-300"
                   aria-label={t('components.profile_menu', 'Profile menu')}
                 >
-                  <span className="text-sm font-medium text-primary-700">
+                  <span className="text-sm font-bold text-primary-700">
                     {user?.first_name?.[0]}{user?.last_name?.[0]}
                   </span>
-                  <ChevronDown className={`ml-1 h-3 w-3 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {/* Dropdown Menu */}
-                {showProfileDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
+                    <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                      <p className="text-sm font-black text-gray-900 truncate">{user?.first_name} {user?.last_name}</p>
+                      <p className="text-xs font-bold text-gray-400 truncate">{user?.email}</p>
+                    </div>
+                    
                     <Link 
                       to="/profile" 
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setShowProfileDropdown(false)}
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-colors"
                     >
-                      <Settings className="mr-2 h-4 w-4" />
-                      {t('components.profile_settings', 'Profile Settings')}
+                      <UserIcon className="h-4 w-4" />
+                      {t('pages.profile', 'My Profile')}
                     </Link>
                     
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {t('components.sign_out', 'Sign out')}
+                      <LogOut className="h-4 w-4" />
+                      {t('components.sign_out', 'Sign Out')}
                     </button>
                   </div>
                 )}

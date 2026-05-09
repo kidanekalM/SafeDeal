@@ -4,9 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
+	"os"
+	"strconv"
 	"time"
 
 	"backend_monolithic/internal/auth"
+	"backend_monolithic/internal/blockchain"
 	"backend_monolithic/internal/models"
 	"backend_monolithic/internal/rabbitmq"
 	"backend_monolithic/pkg/chapa"
@@ -15,16 +19,18 @@ import (
 )
 
 type PaymentHandler struct {
-	DB          *gorm.DB
-	AuthService *auth.Service
-	RabbitMQ    *rabbitmq.Producer
+	DB             *gorm.DB
+	AuthService    *auth.Service
+	RabbitMQ       *rabbitmq.Producer
+	BlockchainClient *blockchain.Client
 }
 
-func NewPaymentHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer) *PaymentHandler {
+func NewPaymentHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq.Producer, blockchainClient *blockchain.Client) *PaymentHandler {
 	return &PaymentHandler{
-		DB:          db,
-		AuthService: authService,
-		RabbitMQ:    rabbitMQ,
+		DB:             db,
+		AuthService:    authService,
+		RabbitMQ:       rabbitMQ,
+		BlockchainClient: blockchainClient,
 	}
 }
 
@@ -96,11 +102,12 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 		Email:             user.Email,
 		FirstName:         user.FirstName,
 		LastName:          user.LastName,
+		PhoneNumber:       user.PhoneNumber,
 		TxRef:             transaction.TransactionRef,
-		CallbackURL:       fmt.Sprintf("https://yoursite.com/api/payments/callback/%s", transaction.TransactionRef),
-		CustomTitle:       "Escrow Payment",
-		CustomDescription: "Secure escrow transaction via Chapa",
-		HideReceipt:       "true",
+		CallbackURL:       os.Getenv("CHAPA_CALLBACK_URL"),
+		ReturnURL:         os.Getenv("CHAPA_RETURN_URL"),
+		CustomTitle:       "SafeDeal Escrow",
+		CustomDescription: fmt.Sprintf("Payment for Escrow #%d", req.EscrowID),
 	}
 
 	paymentURL, _, err := chapaClient.InitiatePayment(paymentReq)
@@ -117,6 +124,26 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 
 	h.DB.Save(transaction)
 
+	// Record the hybrid payment on blockchain if blockchain client is available and connected
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
+		// Get the escrow to access its details
+		var escrow models.Escrow
+		result := h.DB.First(&escrow, req.EscrowID)
+		if result.Error == nil {
+			tx, err := h.BlockchainClient.ConfirmPayment(
+				big.NewInt(int64(req.EscrowID)), 
+			)
+			if err != nil {
+				log.Printf("Failed to record hybrid payment on blockchain: %v", err)
+			} else if tx != nil {
+				log.Printf("Successfully recorded hybrid payment on blockchain with TX: %v", tx.Hash().Hex())
+				// Update the transaction with blockchain hash
+				transaction.BlockchainTxHash = tx.Hash().Hex()
+				h.DB.Save(transaction)
+			}
+		}
+	}
+
 	return c.JSON(fiber.Map{
 		"transaction": transaction,
 		"payment_url": paymentURL,
@@ -129,11 +156,29 @@ func (h *PaymentHandler) GetTransactions(c *fiber.Ctx) error {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	if page < 1 { page = 1 }
+	if limit < 1 { limit = 10 }
+	offset := (page - 1) * limit
+
 	var transactions []models.Transaction
-	result := h.DB.Where("buyer_id = ?", userID).Order("created_at DESC").Find(&transactions)
+	var total int64
+
+	query := h.DB.Model(&models.Transaction{}).Where("buyer_id = ?", userID)
+	query.Count(&total)
+
+	result := query.Order("created_at DESC").Limit(limit).Offset(offset).Find(&transactions)
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	return c.JSON(transactions)
+	return c.JSON(fiber.Map{
+		"data": transactions,
+		"meta": fiber.Map{
+			"total": total,
+			"page":  page,
+			"limit": limit,
+		},
+	})
 }

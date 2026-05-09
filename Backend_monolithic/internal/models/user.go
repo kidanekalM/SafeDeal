@@ -12,6 +12,7 @@ type User struct {
 	FirstName           string    `json:"first_name" validate:"required,min=2,max=32"`
 	LastName            string    `json:"last_name" validate:"required,min=2,max=32"`
 	Email               string    `json:"email" gorm:"unique;not null" validate:"required,email"`
+	PhoneNumber         string    `json:"phone_number" validate:"required"`
 	Password            string    `json:"-" validate:"required,min=8"`
 	Activated           bool      `json:"activated" gorm:"default:false"`
 	Profession          string    `json:"profession"`

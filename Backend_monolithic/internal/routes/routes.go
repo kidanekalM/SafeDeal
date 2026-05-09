@@ -42,7 +42,7 @@ func NewServiceContainer(db *gorm.DB, rabbitMQ *rabbitmq.Producer) *ServiceConta
 		AuthService:         authService,
 		UserHandler:         handlers.NewUserHandler(db, authService, notificationHandler),
 		EscrowHandler:       handlers.NewEscrowHandler(db, authService, rabbitMQ, blockchainClient, notificationHandler),
-		PaymentHandler:      handlers.NewPaymentHandler(db, authService, rabbitMQ),
+		PaymentHandler:      handlers.NewPaymentHandler(db, authService, rabbitMQ, blockchainClient),
 		ChatHandler:         handlers.NewChatHandler(db, authService),
 		NotificationHandler: notificationHandler,
 		MilestoneHandler:    milestoneHandler,
@@ -135,7 +135,7 @@ func SetupRoutes(app *fiber.App, sc *ServiceContainer) {
 
 	// Milestone routes
 	v1.Post("/milestones", sc.MilestoneHandler.CreateMilestone)
-	v1.Get("/milestones/:id", sc.MilestoneHandler.GetMilestone)
+	v1.Get("/milestones/:id", sc.MilestoneHandler.GetMilestoneByID)
 	v1.Get("/escrows/:escrowId/milestones", sc.MilestoneHandler.GetMilestonesByEscrow)
 	v1.Put("/milestones/:id", sc.MilestoneHandler.UpdateMilestone)
 	v1.Put("/milestones/:id/submit", sc.MilestoneHandler.SubmitMilestone)

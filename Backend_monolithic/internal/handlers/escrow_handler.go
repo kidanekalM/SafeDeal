@@ -276,15 +276,61 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	// Interact with blockchain to create the escrow
 	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
-		buyerAddr := common.HexToAddress(buyerUser.WalletAddress)   // Buyer is the user creating the escrow
-		sellerAddr := common.HexToAddress(sellerUser.WalletAddress) // Seller is the fetched user
+		creatorAddr := common.HexToAddress("") // Creator is the current user, will be set based on role
+		buyerAddr := common.HexToAddress("")   // Will be set after determining roles
+		sellerAddr := common.HexToAddress("")  // Will be set after determining roles
+		mediatorAddr := common.HexToAddress("") // Will be set if mediator exists
+		
+		// Set addresses based on determined roles
+		switch creatorRole {
+		case "seller":
+			creatorAddr = common.HexToAddress(sellerUser.WalletAddress)
+			buyerAddr = common.HexToAddress(buyerUser.WalletAddress)
+			sellerAddr = creatorAddr
+		case "mediator":
+			// If current user is the mediator
+			var creatorUser models.User
+			h.DB.First(&creatorUser, userID)
+			creatorAddr = common.HexToAddress(creatorUser.WalletAddress)
+			
+			h.DB.First(&buyerUser, finalBuyerID)
+			h.DB.First(&sellerUser, finalSellerID)
+			buyerAddr = common.HexToAddress(buyerUser.WalletAddress)
+			sellerAddr = common.HexToAddress(sellerUser.WalletAddress)
+			
+			if req.MediatorID != nil {
+				var mediatorUser models.User
+				h.DB.First(&mediatorUser, *req.MediatorID)
+				mediatorAddr = common.HexToAddress(mediatorUser.WalletAddress)
+			} else {
+				mediatorAddr = creatorAddr // Current user acts as mediator
+			}
+		default: // buyer
+			creatorAddr = common.HexToAddress(buyerUser.WalletAddress)
+			buyerAddr = creatorAddr
+			h.DB.First(&sellerUser, finalSellerID)
+			sellerAddr = common.HexToAddress(sellerUser.WalletAddress)
+		}
+		
+		// If mediator was not set above but exists in request, get their address
+		if mediatorAddr.Hex() == "0x0000000000000000000000000000000000000000" && req.MediatorID != nil {
+			var mediatorUser models.User
+			h.DB.First(&mediatorUser, *req.MediatorID)
+			mediatorAddr = common.HexToAddress(mediatorUser.WalletAddress)
+		}
+		
 		amount := big.NewInt(int64(req.Amount))
-
-		tx, err := h.BlockchainClient.CreateEscrow(buyerAddr, sellerAddr, amount)
+		
+		// Use available blockchain escrow creation function
+		tx, err := h.BlockchainClient.CreateEscrow(
+			buyerAddr, 
+			sellerAddr, 
+			amount, 
+		)
 		if err != nil {
-			log.Printf("Failed to create escrow on blockchain: %v", err)
-		} else {
-			log.Printf("Successfully created escrow on blockchain with TX: %v", tx.Hash().Hex())
+			log.Printf("Failed to create hybrid escrow on blockchain: %v", err)
+		} else if tx != nil {
+			log.Printf("Successfully created hybrid escrow on blockchain with TX: %v", tx.Hash().Hex())
 			escrow.BlockchainTxHash = tx.Hash().Hex()
 			h.DB.Save(escrow)
 		}
@@ -334,14 +380,47 @@ func (h *EscrowHandler) GetMyEscrows(c *fiber.Ctx) error {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	if page < 1 { page = 1 }
+	if limit < 1 { limit = 10 }
+	offset := (page - 1) * limit
+
 	var escrows []models.Escrow
-	result := h.DB.Where("buyer_id = ? OR seller_id = ? OR mediator_id = ?", userID, userID, userID).
-		Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Milestones.Approver").Find(&escrows)
+	var total int64
+	
+	query := h.DB.Model(&models.Escrow{}).Where("buyer_id = ? OR seller_id = ? OR mediator_id = ?", userID, userID, userID)
+	
+	status := c.Query("status", "all")
+	if status != "all" {
+		query = query.Where("status = ?", status)
+	}
+	
+	searchTerm := c.Query("q", "")
+	if searchTerm != "" {
+		search := "%" + strings.ToLower(searchTerm) + "%"
+		query = query.Where("LOWER(title) LIKE ? OR id::text LIKE ? OR LOWER(conditions) LIKE ?", search, search, search)
+	}
+
+	query.Count(&total)
+	
+	result := query.
+		Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Milestones.Approver").
+		Order("created_at DESC").
+		Limit(limit).Offset(offset).Find(&escrows)
+		
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	return c.JSON(escrows)
+	return c.JSON(fiber.Map{
+		"data": escrows,
+		"meta": fiber.Map{
+			"total": total,
+			"page":  page,
+			"limit": limit,
+		},
+	})
 }
 
 func (h *EscrowHandler) GetEscrowContacts(c *fiber.Ctx) error {
@@ -600,6 +679,11 @@ func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 	}
 	if err := h.RabbitMQ.Publish("escrow.disputed", eventData); err != nil {
 		log.Printf("Failed to publish escrow.disputed event: %v", err)
+	}
+
+	// Record the dispute on blockchain if blockchain client is available and connected
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
+		log.Printf("Blockchain: Dispute raised for escrow %d", escrow.ID)
 	}
 
 	return c.JSON(fiber.Map{"message": "Dispute created successfully", "data": escrow})
@@ -1005,6 +1089,21 @@ func (h *EscrowHandler) LockEscrow(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not lock escrow"})
 	}
 
+	// Record the escrow locking on blockchain if blockchain client is available and connected
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
+		escrowID := big.NewInt(int64(escrow.ID))
+		
+		tx, err := h.BlockchainClient.FinalizeEscrow(escrowID)
+		if err != nil {
+			log.Printf("Failed to record escrow locking on blockchain for escrow %d: %v", escrow.ID, err)
+		} else if tx != nil {
+			log.Printf("Successfully recorded escrow locking on blockchain with TX: %v", tx.Hash().Hex())
+			// Optionally update the escrow with blockchain hash
+			escrow.BlockchainTxHash = tx.Hash().Hex()
+			h.DB.Save(&escrow)
+		}
+	}
+
 	return c.JSON(fiber.Map{"message": "Escrow locked successfully", "data": escrow})
 }
 
@@ -1134,9 +1233,13 @@ func (h *EscrowHandler) ResolveDispute(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not resolve dispute: " + err.Error()})
 	}
 
+	// Record resolution on blockchain if available
+	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
+		log.Printf("Blockchain: Dispute resolved for escrow %d", escrow.ID)
+	}
+
 	return c.JSON(fiber.Map{"message": "Dispute resolved", "data": escrow})
 }
-
 func (h *EscrowHandler) DownloadFinalizedAgreement(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {

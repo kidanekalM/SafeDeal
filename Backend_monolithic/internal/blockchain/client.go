@@ -101,10 +101,6 @@ func (c *Client) FinalizeEscrow(id *big.Int) (*types.Transaction, error) {
 	return c.Contract.FinalizeEscrow(c.Auth, id)
 }
 
-func (c *Client) GetEscrow(id *big.Int) (contracts.EscrowRecord, error) {
-	return c.Contract.GetEscrow(&bind.CallOpts{Context: context.Background()}, id)
-}
-
 func (c *Client) LogMilestoneSubmitted(id *big.Int, milestoneID *big.Int) (*types.Transaction, error) {
 	log.Printf("Blockchain: Logging milestone %d submitted for escrow %d", milestoneID, id)
 	return c.Contract.LogMilestoneSubmitted(c.Auth, id, milestoneID)
