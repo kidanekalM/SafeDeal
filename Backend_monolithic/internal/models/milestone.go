@@ -30,6 +30,18 @@ type Milestone struct {
 	ContentHash    string          `json:"content_hash,omitempty"` // SHA256 of uploaded deliverable
 	FilePath       string          `json:"file_path,omitempty"`    // Local storage path
 
+	// Normalized Condition Fields (Court Standard Compliance)
+	VerificationMethod string      `json:"verification_method,omitempty"`
+	AutoRelease        bool        `json:"auto_release" gorm:"default:false"`
+	RequiredApprovals  int         `json:"required_approvals" gorm:"default:1"`
+	ConditionType      string      `json:"condition_type,omitempty"` // delivery_confirmed, time_release, etc.
+
+	// Enhanced Normalized Condition Fields
+	AcceptanceCriteria string      `json:"acceptance_criteria,omitempty"`
+	RejectionConditions string     `json:"rejection_conditions,omitempty"`
+	CureTerms          string      `json:"cure_terms,omitempty"`
+	RevisionWindow     int         `json:"revision_window,omitempty"` // in days
+
 	// Associations
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`
 	Approver *User   `json:"approver,omitempty" gorm:"foreignKey:ApproverID"`

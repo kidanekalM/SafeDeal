@@ -82,7 +82,7 @@ func (h *EscrowHandler) computeEscrowHash(escrow *models.Escrow) string {
 	}
 
 	data := fmt.Sprintf(
-		"v2|%d|%d|%d|%s|%s|%d|%s|%s|%s|%s",
+		"v4|%d|%d|%d|%s|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%v|%d|%v|%v|%s|%s",
 		escrow.BuyerID,
 		escrow.SellerID,
 		escrow.Amount,
@@ -92,6 +92,22 @@ func (h *EscrowHandler) computeEscrowHash(escrow *models.Escrow) string {
 		escrow.Conditions,
 		escrow.Jurisdiction,
 		escrow.GoverningLaw,
+		escrow.DeliveryMethod,
+		fmt.Sprintf("%v", escrow.CompletionDate),
+		escrow.QualityStandards,
+		escrow.ConfidentialityTerms,
+		escrow.LiabilityTerms,
+		escrow.AdditionalRequirements,
+		escrow.PaymentConditions,
+		escrow.VerificationMethod,
+		escrow.TerminationConditions,
+		escrow.DisputeResolutionMethod,
+		escrow.LegalNotes,
+		escrow.AutoRelease,
+		escrow.RequiredApprovals,
+		fmt.Sprintf("%v", escrow.PerformancePeriodStart),
+		fmt.Sprintf("%v", escrow.PerformancePeriodEnd),
+		escrow.WorkDescription,
 		milestoneData,
 	)
 
@@ -130,6 +146,28 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		Milestones        []models.Milestone `json:"milestones,omitempty"` // Optional milestones
 		SellerEmail       string             `json:"seller_email,omitempty"` // Added to handle seller email when seller doesn't exist yet
 		BuyerEmail        string             `json:"buyer_email,omitempty"` // Added to handle buyer email when buyer doesn't exist yet
+
+		// New Detailed Data Points
+		DeliveryMethod     string     `json:"delivery_method,omitempty"`
+		CompletionDate     *time.Time `json:"completion_date,omitempty"`
+		QualityStandards   string     `json:"quality_standards,omitempty"`
+		ConfidentialityTerms string   `json:"confidentiality_terms,omitempty"`
+		LiabilityTerms     string     `json:"liability_terms,omitempty"`
+		AdditionalRequirements string `json:"additional_requirements,omitempty"`
+
+		// Normalized Condition Fields
+		PaymentConditions    string `json:"payment_conditions,omitempty"`
+		VerificationMethod   string `json:"verification_method,omitempty"`
+		TerminationConditions string `json:"termination_conditions,omitempty"`
+		DisputeResolutionMethod string `json:"dispute_resolution_method,omitempty"`
+		AutoRelease          bool   `json:"auto_release"`
+		RequiredApprovals    int    `json:"required_approvals"`
+		LegalNotes           string `json:"legal_notes,omitempty"`
+
+		// Performance Period
+		PerformancePeriodStart *time.Time `json:"performance_period_start,omitempty"`
+		PerformancePeriodEnd   *time.Time `json:"performance_period_end,omitempty"`
+		WorkDescription        string     `json:"work_description,omitempty"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -138,11 +176,15 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	// Determine roles based on creator and handle mediator assignment
 	var finalBuyerID, finalSellerID uint
+	var buyerUser, sellerUser models.User
 	creatorRole := c.Query("role", "buyer")
 
 	if creatorRole == "mediator" {
 		if req.BuyerID == 0 || req.SellerID == 0 {
-			return c.Status(400).JSON(fiber.Map{"error": "Mediator must specify both buyer and seller"})
+			// Check for emails if IDs are missing (invitation flow)
+			if (req.BuyerID == 0 && req.BuyerEmail == "") || (req.SellerID == 0 && req.SellerEmail == "") {
+				return c.Status(400).JSON(fiber.Map{"error": "Mediator must specify both buyer and seller (ID or Email)"})
+			}
 		}
 		finalBuyerID = req.BuyerID
 		finalSellerID = req.SellerID
@@ -153,35 +195,80 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	} else if creatorRole == "seller" {
 		finalBuyerID = req.BuyerID
 		finalSellerID = userID
-		if finalBuyerID == 0 {
-			return c.Status(400).JSON(fiber.Map{"error": "Seller must specify a buyer"})
+		if finalBuyerID == 0 && req.BuyerEmail == "" {
+			return c.Status(400).JSON(fiber.Map{"error": "Seller must specify a buyer (ID or Email)"})
 		}
 	} else { // buyer
 		finalBuyerID = userID
 		finalSellerID = req.SellerID
-		if finalSellerID == 0 {
-			return c.Status(400).JSON(fiber.Map{"error": "Buyer must specify a seller"})
+		if finalSellerID == 0 && req.SellerEmail == "" {
+			return c.Status(400).JSON(fiber.Map{"error": "Buyer must specify a seller (ID or Email)"})
 		}
 	}
 
-	// Verify buyer exists
-	var buyerUser models.User
-	if err := h.DB.First(&buyerUser, finalBuyerID).Error; err != nil {
-		return c.Status(404).JSON(fiber.Map{"error": "Buyer not found"})
-	}
-
-	var sellerUser models.User
-	var sellerEmail string
-	sellerErr := h.DB.First(&sellerUser, finalSellerID).Error
-	if sellerErr != nil && !errors.Is(sellerErr, gorm.ErrRecordNotFound) {
-		return c.Status(500).JSON(fiber.Map{"error": "Database error fetching seller"})
-	}
-
-	if req.MediatorID != nil {
-		var mediatorUser models.User
-		if err := h.DB.First(&mediatorUser, *req.MediatorID).Error; err != nil {
-			return c.Status(404).JSON(fiber.Map{"error": "Mediator not found"})
+	// Pre-load existing users if IDs are provided
+	if finalBuyerID != 0 {
+		if err := h.DB.First(&buyerUser, finalBuyerID).Error; err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "Buyer not found"})
 		}
+	}
+	if finalSellerID != 0 {
+		if err := h.DB.First(&sellerUser, finalSellerID).Error; err != nil {
+			// If not found but we have an email, we'll handle it in the invitation flow below
+			if !errors.Is(err, gorm.ErrRecordNotFound) || (errors.Is(err, gorm.ErrRecordNotFound) && req.SellerEmail == "") {
+				return c.Status(404).JSON(fiber.Map{"error": "Seller not found"})
+			}
+		}
+	}
+
+	// Handle invitation flow and ensure all parties exist
+	if finalBuyerID == 0 && req.BuyerEmail != "" {
+		var existingBuyer models.User
+		if err := h.DB.Where("email = ?", req.BuyerEmail).First(&existingBuyer).Error; err == nil {
+			finalBuyerID = existingBuyer.ID
+			buyerUser = existingBuyer
+		} else {
+			// Create placeholder buyer
+			placeholderBuyer := models.User{
+				Email:     req.BuyerEmail,
+				FirstName: "Invited",
+				LastName:  "Buyer",
+				Password:  "placeholder_password", // Should be handled better in production
+				Activated: false,
+			}
+			if err := h.DB.Create(&placeholderBuyer).Error; err == nil {
+				finalBuyerID = placeholderBuyer.ID
+				buyerUser = placeholderBuyer
+				log.Printf("Created placeholder buyer for email: %s", req.BuyerEmail)
+			}
+		}
+	}
+
+	if finalSellerID == 0 && req.SellerEmail != "" {
+		var existingSeller models.User
+		if err := h.DB.Where("email = ?", req.SellerEmail).First(&existingSeller).Error; err == nil {
+			finalSellerID = existingSeller.ID
+			sellerUser = existingSeller
+		} else {
+			// Create placeholder seller
+			placeholderSeller := models.User{
+				Email:     req.SellerEmail,
+				FirstName: "Invited",
+				LastName:  "Seller",
+				Password:  "placeholder_password",
+				Activated: false,
+			}
+			if err := h.DB.Create(&placeholderSeller).Error; err == nil {
+				finalSellerID = placeholderSeller.ID
+				sellerUser = placeholderSeller
+				log.Printf("Created placeholder seller for email: %s", req.SellerEmail)
+			}
+		}
+	}
+
+	// Final check: IDs must not be 0
+	if finalBuyerID == 0 || finalSellerID == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "Both buyer and seller must be identified by ID or Email"})
 	}
 
 	// Create escrow record
@@ -201,39 +288,53 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		DisputeResolution: req.DisputeResolution,
 		Status:            "Pending",
 		Milestones:        req.Milestones,
+
+		// New Detailed Data Points
+		DeliveryMethod:     req.DeliveryMethod,
+		CompletionDate:     req.CompletionDate,
+		QualityStandards:   req.QualityStandards,
+		ConfidentialityTerms: req.ConfidentialityTerms,
+		LiabilityTerms:     req.LiabilityTerms,
+		AdditionalRequirements: req.AdditionalRequirements,
+
+		// Normalized Condition Fields
+		PaymentConditions:    req.PaymentConditions,
+		VerificationMethod:   req.VerificationMethod,
+		TerminationConditions: req.TerminationConditions,
+		DisputeResolutionMethod: req.DisputeResolutionMethod,
+		AutoRelease:          req.AutoRelease,
+		RequiredApprovals:    req.RequiredApprovals,
+		LegalNotes:           req.LegalNotes,
+
+		// Performance Period
+		PerformancePeriodStart: req.PerformancePeriodStart,
+		PerformancePeriodEnd:   req.PerformancePeriodEnd,
+		WorkDescription:        req.WorkDescription,
 	}
 
 	// Compute robust hash including milestones and new fields
 	escrow.EscrowHash = h.computeEscrowHash(escrow)
 
 	if err := h.DB.Create(escrow).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow"})
+		log.Printf("Failed to create escrow in DB: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow record"})
 	}
 	h.recordStatusEvent(escrow.ID, userID, "", escrow.Status, "Escrow created", escrow.BlockchainTxHash, "")
 
-	// Handle seller invitation if seller doesn't exist
-	if errors.Is(sellerErr, gorm.ErrRecordNotFound) {
-		// Use the provided seller email if available, otherwise generate a placeholder
-		actualSellerEmail := ""
-		if req.SellerEmail != "" {
-			actualSellerEmail = req.SellerEmail
-		} else {
-			// Fallback to a placeholder if no email was provided
-			actualSellerEmail = fmt.Sprintf("invited_seller_%d@example.com", finalSellerID)
-		}
-		
-		h.NotificationHandler.InviteUser(actualSellerEmail)
-
-		// Update the escrow to reflect that an invite was sent
+	// Handle invitations for placeholder users
+	if !buyerUser.Activated {
+		h.NotificationHandler.InviteUser(buyerUser.Email)
 		escrow.InviteSent = true
 		h.DB.Save(escrow)
-		sellerEmail = actualSellerEmail
-	} else {
-		sellerEmail = sellerUser.Email
+	}
+	if !sellerUser.Activated {
+		h.NotificationHandler.InviteUser(sellerUser.Email)
+		escrow.InviteSent = true
+		h.DB.Save(escrow)
 	}
 
 	// Send notification about the new escrow
-	h.NotificationHandler.SendEscrowUpdate(escrow.ID, "Pending", buyerUser.Email, sellerEmail, req.Amount)
+	h.NotificationHandler.SendEscrowUpdate(escrow.ID, "Pending", buyerUser.Email, sellerUser.Email, req.Amount)
 
 	// Conditionally create milestones if provided
 	if req.Milestones != nil && len(req.Milestones) > 0 {
@@ -524,11 +625,18 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only seller can accept escrow"})
 	}
 
-	if escrow.Status != "Pending" && escrow.Status != "Funded" {
+	if escrow.Status != "Pending" && escrow.Status != "Funded" && escrow.Status != "Verifying" {
 		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in a state that can be accepted"})
 	}
 
-	if err := h.setEscrowStatus(&escrow, userID, "Funded", "Accepted by seller", "", ""); err != nil {
+	nextStatus := "Active"
+	if escrow.Status == "Pending" {
+		nextStatus = "Active"
+	} else if escrow.Status == "Funded" || escrow.Status == "Verifying" {
+		nextStatus = "Active"
+	}
+
+	if err := h.setEscrowStatus(&escrow, userID, nextStatus, "Accepted by seller", "", ""); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not update escrow"})
 	}
 
@@ -540,27 +648,31 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 		"escrow_id": escrow.ID,
 		"status":    escrow.Status,
 	}
-	if err := h.RabbitMQ.Publish("escrow.funded", eventData); err != nil {
-		log.Printf("Failed to publish escrow.funded event: %v", err)
+	if err := h.RabbitMQ.Publish("escrow.active", eventData); err != nil {
+		log.Printf("Failed to publish escrow.active event: %v", err)
 	}
 
-	// Update all milestones to funded status if they exist
-	var milestones []models.Milestone
-	h.DB.Where("escrow_id = ?", escrow.ID).Find(&milestones)
-	for i := range milestones {
-		milestones[i].Status = models.MilestoneFunded
-		h.DB.Save(&milestones[i])
+	// Update all milestones to funded status if they exist and escrow is funded
+	if nextStatus == "Active" {
+		var milestones []models.Milestone
+		h.DB.Where("escrow_id = ?", escrow.ID).Find(&milestones)
+		for i := range milestones {
+			if milestones[i].Status == models.MilestonePending {
+				milestones[i].Status = models.MilestoneFunded // Assuming funding happened or is imminent
+				h.DB.Save(&milestones[i])
+			}
+		}
 	}
 
-	// Interact with blockchain to fund the escrow
+	// Interact with blockchain
 	if h.BlockchainClient != nil && h.BlockchainClient.IsConnected() {
 		escrowID := big.NewInt(int64(escrow.ID))
 
 		tx, err := h.BlockchainClient.ConfirmPayment(escrowID)
 		if err != nil {
-			log.Printf("Failed to confirm payment on blockchain for escrow %d: %v", escrow.ID, err)
+			log.Printf("Failed to confirm acceptance on blockchain for escrow %d: %v", escrow.ID, err)
 		} else {
-			log.Printf("Successfully confirmed payment on blockchain for escrow %d with TX: %v", escrow.ID, tx.Hash().Hex())
+			log.Printf("Successfully confirmed acceptance on blockchain for escrow %d with TX: %v", escrow.ID, tx.Hash().Hex())
 			escrow.BlockchainTxHash = tx.Hash().Hex()
 			h.DB.Save(&escrow)
 		}
@@ -596,8 +708,8 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only buyer can confirm receipt"})
 	}
 
-	if escrow.Status != "Funded" {
-		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in funded state"})
+	if escrow.Status != "Funded" && escrow.Status != "Active" && escrow.Status != "Verifying" {
+		return c.Status(400).JSON(fiber.Map{"error": "Escrow is not in a releasable state"})
 	}
 
 	if err := h.setEscrowStatus(&escrow, userID, "Released", "Buyer confirmed receipt", "", ""); err != nil {
@@ -983,6 +1095,28 @@ func (h *EscrowHandler) UpdateEscrow(c *fiber.Ctx) error {
 		Conditions       string `json:"conditions"`
 		Jurisdiction     string `json:"jurisdiction"`
 		GoverningLaw     string `json:"governing_law"`
+
+		// New Detailed Data Points
+		DeliveryMethod     string     `json:"delivery_method,omitempty"`
+		CompletionDate     *time.Time `json:"completion_date,omitempty"`
+		QualityStandards   string     `json:"quality_standards,omitempty"`
+		ConfidentialityTerms string   `json:"confidentiality_terms,omitempty"`
+		LiabilityTerms     string     `json:"liability_terms,omitempty"`
+		AdditionalRequirements string `json:"additional_requirements,omitempty"`
+
+		// Normalized Condition Fields
+		PaymentConditions    string `json:"payment_conditions,omitempty"`
+		VerificationMethod   string `json:"verification_method,omitempty"`
+		TerminationConditions string `json:"termination_conditions,omitempty"`
+		DisputeResolutionMethod string `json:"dispute_resolution_method,omitempty"`
+		AutoRelease          bool   `json:"auto_release"`
+		RequiredApprovals    int    `json:"required_approvals"`
+		LegalNotes           string `json:"legal_notes,omitempty"`
+
+		// Performance Period
+		PerformancePeriodStart *time.Time `json:"performance_period_start,omitempty"`
+		PerformancePeriodEnd   *time.Time `json:"performance_period_end,omitempty"`
+		WorkDescription        string     `json:"work_description,omitempty"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -1022,6 +1156,52 @@ func (h *EscrowHandler) UpdateEscrow(c *fiber.Ctx) error {
 	}
 	if req.GoverningLaw != "" {
 		escrow.GoverningLaw = req.GoverningLaw
+	}
+	if req.DeliveryMethod != "" {
+		escrow.DeliveryMethod = req.DeliveryMethod
+	}
+	if req.CompletionDate != nil {
+		escrow.CompletionDate = req.CompletionDate
+	}
+	if req.QualityStandards != "" {
+		escrow.QualityStandards = req.QualityStandards
+	}
+	if req.ConfidentialityTerms != "" {
+		escrow.ConfidentialityTerms = req.ConfidentialityTerms
+	}
+	if req.LiabilityTerms != "" {
+		escrow.LiabilityTerms = req.LiabilityTerms
+	}
+	if req.AdditionalRequirements != "" {
+		escrow.AdditionalRequirements = req.AdditionalRequirements
+	}
+	if req.PaymentConditions != "" {
+		escrow.PaymentConditions = req.PaymentConditions
+	}
+	if req.VerificationMethod != "" {
+		escrow.VerificationMethod = req.VerificationMethod
+	}
+	if req.TerminationConditions != "" {
+		escrow.TerminationConditions = req.TerminationConditions
+	}
+	if req.DisputeResolutionMethod != "" {
+		escrow.DisputeResolutionMethod = req.DisputeResolutionMethod
+	}
+	if req.LegalNotes != "" {
+		escrow.LegalNotes = req.LegalNotes
+	}
+	if req.WorkDescription != "" {
+		escrow.WorkDescription = req.WorkDescription
+	}
+	if req.PerformancePeriodStart != nil {
+		escrow.PerformancePeriodStart = req.PerformancePeriodStart
+	}
+	if req.PerformancePeriodEnd != nil {
+		escrow.PerformancePeriodEnd = req.PerformancePeriodEnd
+	}
+	escrow.AutoRelease = req.AutoRelease
+	if req.RequiredApprovals > 0 {
+		escrow.RequiredApprovals = req.RequiredApprovals
 	}
 
 	// Re-calculate hash after updates
@@ -1398,16 +1578,16 @@ Output your response as JSON: {"decision": "RELEASE" or "REFUND", "justification
 
 func (h *EscrowHandler) IsValidTransition(fromStatus, toStatus string) bool {
 	allowedTransitions := map[string][]string{
-		"Pending":   {"Active", "Funded", "Canceled"}, // For the main workflow
-		"Active":    {"Locked", "Canceled"},
-		"Locked":    {"Funded", "Canceled"},
-		"Funded":    {"Released", "Disputed", "Verifying"},
-		"Verifying": {"Funded", "Released"},
-		"Disputed":  {"Completed", "Refunded"},
+		"Pending":   {"Active", "Funded", "Canceled", "Verifying"},
+		"Active":    {"Locked", "Funded", "Released", "Disputed", "Canceled", "Verifying"},
+		"Locked":    {"Funded", "Active", "Canceled"},
+		"Funded":    {"Active", "Released", "Disputed", "Verifying"},
+		"Verifying": {"Funded", "Active", "Released", "Disputed"},
+		"Disputed":  {"Completed", "Refunded", "Released"},
 		"Released":  {"Completed"},
-		"Canceled":  {}, // Usually terminal
-		"Completed": {}, // Terminal
-		"Refunded":  {}, // Terminal
+		"Canceled":  {}, 
+		"Completed": {}, 
+		"Refunded":  {}, 
 	}
 
 	allowed, exists := allowedTransitions[fromStatus]

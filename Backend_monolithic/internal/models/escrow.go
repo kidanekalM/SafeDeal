@@ -29,6 +29,28 @@ type Escrow struct {
 	GoverningLaw       string      `json:"governing_law,omitempty"`
 	DisputeResolution  string      `json:"dispute_resolution,omitempty"`
 
+	// Enhanced Detailed Data Points
+	DeliveryMethod     string      `json:"delivery_method,omitempty"`
+	CompletionDate     *time.Time  `json:"completion_date,omitempty"`
+	QualityStandards   string      `json:"quality_standards,omitempty"`
+	ConfidentialityTerms string    `json:"confidentiality_terms,omitempty"`
+	LiabilityTerms     string      `json:"liability_terms,omitempty"`
+	AdditionalRequirements string  `json:"additional_requirements,omitempty"`
+
+	// Normalized Condition & Legal Fields
+	PaymentConditions    string    `json:"payment_conditions,omitempty"`
+	VerificationMethod   string    `json:"verification_method,omitempty"`
+	TerminationConditions string    `json:"termination_conditions,omitempty"`
+	DisputeResolutionMethod string `json:"dispute_resolution_method,omitempty"`
+	AutoRelease          bool      `json:"auto_release" gorm:"default:false"`
+	RequiredApprovals    int       `json:"required_approvals" gorm:"default:1"`
+	LegalNotes           string    `json:"legal_notes,omitempty"`
+
+	// Performance Period
+	PerformancePeriodStart *time.Time `json:"performance_period_start,omitempty"`
+	PerformancePeriodEnd   *time.Time `json:"performance_period_end,omitempty"`
+	WorkDescription        string     `json:"work_description,omitempty"`
+
 	// Blockchain / Security
 	EscrowHash         string      `json:"escrow_hash,omitempty" gorm:"uniqueIndex;size:66"`
 	BlockchainTxHash   string      `json:"blockchain_tx_hash,omitempty"`
