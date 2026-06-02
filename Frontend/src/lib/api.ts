@@ -178,7 +178,31 @@ export const escrowApi = {
     verifyCBE: (id: number, transactionId: string, accountSuffix: string): Promise<AxiosResponse<Escrow>> =>
         api.post(`/api/v1/escrows/${id}/verify-cbe`, { transaction_id: transactionId, account_suffix: accountSuffix }),
 
-    update: (id: number, data: { amount?: number; conditions?: string; title?: string; jurisdiction?: string; governing_law?: string; sub_type?: string; inspection_period?: number }): Promise<AxiosResponse<Escrow>> => 
+    update: (id: number, data: { 
+        amount?: number; 
+        conditions?: string; 
+        title?: string; 
+        jurisdiction?: string; 
+        governing_law?: string; 
+        sub_type?: string; 
+        inspection_period?: number;
+        delivery_method?: string;
+        completion_date?: string;
+        quality_standards?: string;
+        confidentiality_terms?: string;
+        liability_terms?: string;
+        additional_requirements?: string;
+        payment_conditions?: string;
+        verification_method?: string;
+        termination_conditions?: string;
+        dispute_resolution_method?: string;
+        auto_release?: boolean;
+        required_approvals?: number;
+        legal_notes?: string;
+        performance_period_start?: string;
+        performance_period_end?: string;
+        work_description?: string;
+    }): Promise<AxiosResponse<Escrow>> => 
         api.put(`/api/v1/escrows/${id}`, data),
     
     lock: (id: number): Promise<AxiosResponse<Escrow>> => 

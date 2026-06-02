@@ -23,6 +23,10 @@ const MilestoneSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
   description: z.string().optional(),
   due_date: z.string().optional(),
+  verification_method: z.string().optional(),
+  auto_release: z.boolean().default(false),
+  required_approvals: z.coerce.number().min(1).default(1),
+  condition_type: z.string().optional(),
 });
 
 const CreateEscrowSchema = z.object({
@@ -45,6 +49,23 @@ const CreateEscrowSchema = z.object({
   governing_law: z.string().min(2, 'Governing law is required').optional(),
   dispute_resolution: z.string().min(2, 'Dispute resolution method is required').optional(),
   milestones: z.array(MilestoneSchema).optional(),
+
+  // Enhanced Detailed Data Points
+  delivery_method: z.string().optional(),
+  completion_date: z.string().optional(),
+  quality_standards: z.string().optional(),
+  confidentiality_terms: z.string().optional(),
+  liability_terms: z.string().optional(),
+  additional_requirements: z.string().optional(),
+
+  // Normalized Condition Fields
+  payment_conditions: z.string().optional(),
+  verification_method: z.string().optional(),
+  termination_conditions: z.string().optional(),
+  dispute_resolution_method: z.string().optional(),
+  auto_release: z.boolean().default(false),
+  required_approvals: z.coerce.number().min(1).default(1),
+  legal_notes: z.string().optional(),
 });
 
 type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
@@ -105,7 +126,7 @@ const CreateEscrow = () => {
 
   useEffect(() => {
     if (isDetailed && milestonesWatch.length === 0) {
-      append({ title: '', amount: 0, description: '' });
+      append({ title: '', amount: 0, description: '', auto_release: false, required_approvals: 1 });
     }
   }, [isDetailed, milestonesWatch.length, append]);
 
@@ -161,8 +182,8 @@ const CreateEscrow = () => {
     ];
     if (isDetailed) {
       s.push({ id: 'mediation', title: t('pages.mediation_type', 'Mediation'), icon: Gavel });
-      s.push({ id: 'parties', title: t('pages.parties', 'Parties'), icon: Search });
     }
+    s.push({ id: 'parties', title: t('pages.parties', 'Parties'), icon: Search });
     s.push({ id: 'details', title: t('pages.terms', 'Terms'), icon: FileText });
     if (isDetailed) s.push({ id: 'milestones', title: t('pages.milestones', 'Milestones'), icon: ListChecks });
     s.push({ id: 'final', title: t('pages.finalize', 'Finalize'), icon: Check });
@@ -260,6 +281,22 @@ const CreateEscrow = () => {
         payload.jurisdiction = data.jurisdiction; 
         payload.governing_law = data.governing_law; 
         payload.dispute_resolution = data.dispute_resolution;
+        payload.delivery_method = data.delivery_method;
+        payload.completion_date = data.completion_date ? new Date(data.completion_date).toISOString() : undefined;
+        payload.quality_standards = data.quality_standards;
+        payload.confidentiality_terms = data.confidentiality_terms;
+        payload.liability_terms = data.liability_terms;
+        payload.additional_requirements = data.additional_requirements;
+
+        // Normalized Condition Fields
+        payload.payment_conditions = data.payment_conditions;
+        payload.verification_method = data.verification_method;
+        payload.termination_conditions = data.termination_conditions;
+        payload.dispute_resolution_method = data.dispute_resolution_method;
+        payload.auto_release = data.auto_release;
+        payload.required_approvals = data.required_approvals;
+        payload.legal_notes = data.legal_notes;
+        
         if (data.milestones) {
           payload.milestones = data.milestones.map((m: any, i: number) => ({ 
             ...m, 
@@ -495,26 +532,61 @@ const CreateEscrow = () => {
             </div>
 
             {isDetailed && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
-                <div className="md:col-span-2">
-                  <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                    <Scale size={14} className="text-primary-600" />
-                    {t('pages.legal_framework', 'Legal Framework')}
-                  </h3>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
+                  <div className="md:col-span-2">
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                      <Scale size={14} className="text-primary-600" />
+                      {t('pages.legal_framework', 'Legal Framework')}
+                    </h3>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.jurisdiction', 'Jurisdiction')}</label>
+                    <select {...register('jurisdiction')} className="select w-full h-12 rounded-xl border-2 bg-white px-4">
+                      <option value="Ethiopia">{t('pages.ethiopia', 'Ethiopia')}</option>
+                      <option value="Kenya">{t('pages.kenya', 'Kenya')}</option>
+                      <option value="International">{t('pages.international', 'International')}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.governing_law', 'Governing Law')}</label>
+                    <input type="text" {...register('governing_law')} className="input w-full h-12 rounded-xl border-2 px-4" />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.jurisdiction', 'Jurisdiction')}</label>
-                  <select {...register('jurisdiction')} className="select w-full h-12 rounded-xl border-2 bg-white px-4">
-                    <option value="Ethiopia">{t('pages.ethiopia', 'Ethiopia')}</option>
-                    <option value="Kenya">{t('pages.kenya', 'Kenya')}</option>
-                    <option value="International">{t('pages.international', 'International')}</option>
-                  </select>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-white border-2 border-gray-100 rounded-[2rem]">
+                  <div className="md:col-span-2">
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                      <Shield size={14} className="text-primary-600" />
+                      {t('pages.extended_specifications', 'Extended Specifications')}
+                    </h3>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.delivery_method', 'Delivery Method')}</label>
+                    <input type="text" {...register('delivery_method')} className="input w-full h-12 rounded-xl border-2 px-4" placeholder="e.g. Digital Transfer, Physical Shipping" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.completion_date', 'Expected Completion')}</label>
+                    <input type="date" {...register('completion_date')} className="input w-full h-12 rounded-xl border-2 px-4" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.quality_standards', 'Quality Standards')}</label>
+                    <textarea {...register('quality_standards')} className="w-full p-4 border-2 rounded-xl h-24" placeholder="Specify technical requirements, ISO standards, etc." />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.confidentiality', 'Confidentiality')}</label>
+                    <textarea {...register('confidentiality_terms')} className="w-full p-4 border-2 rounded-xl h-24" placeholder="Non-disclosure terms..." />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.liability', 'Liability & Indemnity')}</label>
+                    <textarea {...register('liability_terms')} className="w-full p-4 border-2 rounded-xl h-24" placeholder="Limitation of liability..." />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.additional_reqs', 'Additional Requirements')}</label>
+                    <textarea {...register('additional_requirements')} className="w-full p-4 border-2 rounded-xl h-24" placeholder="Any other specific requests..." />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.governing_law', 'Governing Law')}</label>
-                  <input type="text" {...register('governing_law')} className="input w-full h-12 rounded-xl border-2 px-4" />
-                </div>
-              </div>
+              </>
             )}
 
             {!isDetailed && (
@@ -541,7 +613,8 @@ const CreateEscrow = () => {
             <h2 className="text-2xl font-bold">{t('pages.project_milestones', 'Milestones')}</h2>
             <button 
               type="button" 
-              onClick={() => append({ title: '', amount: 0, description: '' })} 
+              onClick={() => append({ title: '', amount: 0, description: '', auto_release: false, required_approvals: 1 })}
+ 
               data-testid="add-milestone"
               className="btn btn-primary btn-sm rounded-xl"
             >

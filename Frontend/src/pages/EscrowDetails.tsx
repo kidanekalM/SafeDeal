@@ -74,14 +74,71 @@ const EscrowDetails = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editJurisdiction, setEditJurisdiction] = useState("");
   const [editGoverningLaw, setEditGoverningLaw] = useState("");
+  const [editDeliveryMethod, setEditDeliveryMethod] = useState("");
+  const [editCompletionDate, setEditCompletionDate] = useState("");
+  const [editQualityStandards, setEditQualityStandards] = useState("");
+  const [editConfidentialityTerms, setEditConfidentialityTerms] = useState("");
+  const [editLiabilityTerms, setEditLiabilityTerms] = useState("");
+  const [editAdditionalRequirements, setEditAdditionalRequirements] = useState("");
+  const [editPaymentConditions, setEditPaymentConditions] = useState("");
+  const [editVerificationMethod, setEditVerificationMethod] = useState("");
+  const [editTerminationConditions, setEditTerminationConditions] = useState("");
+  const [editDisputeResolutionMethod, setEditDisputeResolutionMethod] = useState("");
+  const [editAutoRelease, setEditAutoRelease] = useState(false);
+  const [editRequiredApprovals, setEditRequiredApprovals] = useState(1);
+  const [editLegalNotes, setEditLegalNotes] = useState("");
   const [disputeReason, setDisputeReason] = useState("");
   const [errorCount, setErrorCount] = useState(0);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [isMilestoneLoading, setIsMilestoneLoading] = useState<number | null>(null);
 
   const isBuyer = Number(user?.id) === Number(escrow?.buyer_id);
   const isSeller = Number(user?.id) === Number(escrow?.seller_id);
   const isMediator = Number(user?.id) === Number(escrow?.mediator_id);
+
+  const handleMilestoneSubmit = async (milestoneId: number) => {
+    setIsMilestoneLoading(milestoneId);
+    try {
+      await milestoneApi.submit(milestoneId);
+      toast.success(t('pages.milestone_submitted', "Milestone submitted!"));
+      // Refresh milestones
+      const res = await milestoneApi.getByEscrow(escrow!.id);
+      setMilestones(res.data);
+    } catch (error) {
+      toast.error(t('pages.milestone_submit_failed', "Failed to submit milestone"));
+    } finally {
+      setIsMilestoneLoading(null);
+    }
+  };
+
+  const handleMilestoneApprove = async (milestoneId: number) => {
+    setIsMilestoneLoading(milestoneId);
+    try {
+      await milestoneApi.approve(milestoneId);
+      toast.success(t('pages.milestone_approved', "Milestone approved!"));
+      const res = await milestoneApi.getByEscrow(escrow!.id);
+      setMilestones(res.data);
+    } catch (error) {
+      toast.error(t('pages.milestone_approve_failed', "Failed to approve milestone"));
+    } finally {
+      setIsMilestoneLoading(null);
+    }
+  };
+
+  const handleMilestoneReject = async (milestoneId: number) => {
+    setIsMilestoneLoading(milestoneId);
+    try {
+      await milestoneApi.reject(milestoneId);
+      toast.success(t('pages.milestone_rejected', "Milestone rejected!"));
+      const res = await milestoneApi.getByEscrow(escrow!.id);
+      setMilestones(res.data);
+    } catch (error) {
+      toast.error(t('pages.milestone_reject_failed', "Failed to reject milestone"));
+    } finally {
+      setIsMilestoneLoading(null);
+    }
+  };
 
   const fetchEscrowDetails = async (retryCount = 0) => {
     if (!id) return;
@@ -231,6 +288,22 @@ const EscrowDetails = () => {
       await escrowApi.update(Number(id), { 
         amount: editAmount, 
         conditions: editConditions,
+        title: editTitle,
+        jurisdiction: editJurisdiction,
+        governing_law: editGoverningLaw,
+        delivery_method: editDeliveryMethod,
+        completion_date: editCompletionDate ? new Date(editCompletionDate).toISOString() : undefined,
+        quality_standards: editQualityStandards,
+        confidentiality_terms: editConfidentialityTerms,
+        liability_terms: editLiabilityTerms,
+        additional_requirements: editAdditionalRequirements,
+        payment_conditions: editPaymentConditions,
+        verification_method: editVerificationMethod,
+        termination_conditions: editTerminationConditions,
+        dispute_resolution_method: editDisputeResolutionMethod,
+        auto_release: editAutoRelease,
+        required_approvals: editRequiredApprovals,
+        legal_notes: editLegalNotes,
       });
 
       toast.success(t('pages.terms_updated', "Updated!"));
@@ -477,11 +550,43 @@ const EscrowDetails = () => {
                             <span className="text-lg font-black text-[#014d46]">{formatCurrency(m.amount)}</span>
                           </div>
                           {m.description && <p className="text-sm text-gray-600 ml-11 mb-3">{m.description}</p>}
-                          <div className="flex items-center gap-4 ml-11 text-xs">
-                            <span data-testid={`milestone-${idx}-status`} className={`px-3 py-1 rounded-full font-bold uppercase tracking-widest ${m.status === 'Released' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                              {m.status}
-                            </span>
-                            {m.due_date && <span className="text-gray-400 font-medium">Due: {new Date(m.due_date).toLocaleDateString()}</span>}
+                          <div className="flex items-center justify-between ml-11 mt-4">
+                            <div className="flex items-center gap-4 text-xs">
+                              <span data-testid={`milestone-${idx}-status`} className={`px-3 py-1 rounded-full font-bold uppercase tracking-widest ${m.status === 'Released' || m.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                {m.status}
+                              </span>
+                              {m.due_date && <span className="text-gray-400 font-medium">Due: {new Date(m.due_date).toLocaleDateString()}</span>}
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              {isSeller && m.status === 'Funded' && (
+                                <button 
+                                  onClick={() => handleMilestoneSubmit(m.id)}
+                                  disabled={isMilestoneLoading === m.id}
+                                  className="btn btn-primary btn-xs rounded-lg px-4"
+                                >
+                                  {isMilestoneLoading === m.id ? '...' : t('pages.submit_work', 'Submit Work')}
+                                </button>
+                              )}
+                              {isBuyer && m.status === 'Submitted' && (
+                                <>
+                                  <button 
+                                    onClick={() => handleMilestoneApprove(m.id)}
+                                    disabled={isMilestoneLoading === m.id}
+                                    className="btn btn-success btn-xs rounded-lg px-4 text-white"
+                                  >
+                                    {isMilestoneLoading === m.id ? '...' : t('pages.approve', 'Approve')}
+                                  </button>
+                                  <button 
+                                    onClick={() => handleMilestoneReject(m.id)}
+                                    disabled={isMilestoneLoading === m.id}
+                                    className="btn btn-ghost btn-xs rounded-lg px-4 text-red-500 hover:bg-red-50"
+                                  >
+                                    {isMilestoneLoading === m.id ? '...' : t('pages.reject', 'Reject')}
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -596,6 +701,19 @@ const EscrowDetails = () => {
                         setEditTitle(escrow.title || "");
                         setEditJurisdiction(escrow.jurisdiction || "");
                         setEditGoverningLaw(escrow.governing_law || "");
+                        setEditDeliveryMethod(escrow.delivery_method || "");
+                        setEditCompletionDate(escrow.completion_date ? new Date(escrow.completion_date).toISOString().split('T')[0] : "");
+                        setEditQualityStandards(escrow.quality_standards || "");
+                        setEditConfidentialityTerms(escrow.confidentiality_terms || "");
+                        setEditLiabilityTerms(escrow.liability_terms || "");
+                        setEditAdditionalRequirements(escrow.additional_requirements || "");
+                        setEditPaymentConditions(escrow.payment_conditions || "");
+                        setEditVerificationMethod(escrow.verification_method || "");
+                        setEditTerminationConditions(escrow.termination_conditions || "");
+                        setEditDisputeResolutionMethod(escrow.dispute_resolution_method || "");
+                        setEditAutoRelease(escrow.auto_release || false);
+                        setEditRequiredApprovals(escrow.required_approvals || 1);
+                        setEditLegalNotes(escrow.legal_notes || "");
                         setShowEditModal(true); 
                       }} 
                       data-testid="edit-escrow-button"
@@ -708,6 +826,44 @@ const EscrowDetails = () => {
                       </p>
                     </div>
                   )}
+
+                  {/* New Detailed Data Points */}
+                  {escrow.delivery_method && (
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.delivery_method', 'Delivery Method')}</label>
+                      <p className="text-sm font-bold text-gray-700">{escrow.delivery_method}</p>
+                    </div>
+                  )}
+                  {escrow.completion_date && (
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.completion_date', 'Expected Completion')}</label>
+                      <p className="text-sm font-bold text-gray-700">{formatDateSafe(escrow.completion_date)}</p>
+                    </div>
+                  )}
+                  {escrow.quality_standards && (
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.quality_standards', 'Quality Standards')}</label>
+                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.quality_standards}</p>
+                    </div>
+                  )}
+                  {escrow.confidentiality_terms && (
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.confidentiality', 'Confidentiality')}</label>
+                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.confidentiality_terms}</p>
+                    </div>
+                  )}
+                  {escrow.liability_terms && (
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.liability', 'Liability')}</label>
+                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.liability_terms}</p>
+                    </div>
+                  )}
+                  {escrow.additional_requirements && (
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.additional_reqs', 'Additional Requirements')}</label>
+                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.additional_requirements}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -779,6 +935,32 @@ const EscrowDetails = () => {
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.governing_law', 'Governing Law')}</label>
                   <input type="text" className="input w-full h-14 rounded-2xl" value={editGoverningLaw} onChange={e => setEditGoverningLaw(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.delivery_method', 'Delivery Method')}</label>
+                    <input type="text" className="input w-full h-14 rounded-2xl" value={editDeliveryMethod} onChange={e => setEditDeliveryMethod(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.completion_date', 'Expected Completion')}</label>
+                    <input type="date" className="input w-full h-14 rounded-2xl" value={editCompletionDate} onChange={e => setEditCompletionDate(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.quality_standards', 'Quality Standards')}</label>
+                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editQualityStandards} onChange={e => setEditQualityStandards(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.confidentiality', 'Confidentiality')}</label>
+                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editConfidentialityTerms} onChange={e => setEditConfidentialityTerms(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.liability', 'Liability')}</label>
+                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editLiabilityTerms} onChange={e => setEditLiabilityTerms(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.additional_reqs', 'Additional Requirements')}</label>
+                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editAdditionalRequirements} onChange={e => setEditAdditionalRequirements(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.updated_conditions', 'Contractual Conditions')}</label>

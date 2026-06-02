@@ -80,6 +80,22 @@ export interface Escrow {
     active: boolean;
     is_locked: boolean;
     is_detailed: boolean;
+    delivery_method?: string;
+    completion_date?: string;
+    quality_standards?: string;
+    confidentiality_terms?: string;
+    liability_terms?: string;
+    additional_requirements?: string;
+    payment_conditions?: string;
+    verification_method?: string;
+    termination_conditions?: string;
+    dispute_resolution_method?: string;
+    auto_release?: boolean;
+    required_approvals?: number;
+    legal_notes?: string;
+    performance_period_start?: string;
+    performance_period_end?: string;
+    work_description?: string;
     CreatedAt?: string;
     escrow_hash?: string;
     snapshot?: string;
@@ -108,6 +124,12 @@ export interface CreateEscrowRequest {
     jurisdiction?: string;
     governing_law?: string;
     dispute_resolution?: string;
+    delivery_method?: string;
+    completion_date?: string;
+    quality_standards?: string;
+    confidentiality_terms?: string;
+    liability_terms?: string;
+    additional_requirements?: string;
     milestones?: Partial<Milestone>[];
 }
 
@@ -196,6 +218,14 @@ export interface Milestone {
     submitted_at?: string;
     approved_at?: string;
     deliverable_url?: string;
+    verification_method?: string;
+    auto_release?: boolean;
+    required_approvals?: number;
+    condition_type?: string;
+    acceptance_criteria?: string;
+    rejection_conditions?: string;
+    cure_terms?: string;
+    revision_window?: number;
     created_at: string;
     updated_at: string;
     approver?: User;
@@ -211,4 +241,12 @@ export interface CreateMilestoneRequest {
     order_index?: number;
     approver_id?: number;
     deliverable_url?: string;
+    verification_method?: string;
+    auto_release?: boolean;
+    required_approvals?: number;
+    condition_type?: string;
+    acceptance_criteria?: string;
+    rejection_conditions?: string;
+    cure_terms?: string;
+    revision_window?: number;
 }
