@@ -57,21 +57,8 @@ func (h *EscrowHandler) setEscrowStatus(escrow *models.Escrow, actorID uint, nex
 }
 
 func (h *EscrowHandler) adjustTrustScore(userID uint, delta float64) {
-	if userID == 0 || delta == 0 {
-		return
-	}
-	var user models.User
-	if err := h.DB.First(&user, userID).Error; err != nil {
-		return
-	}
-	next := user.TrustScore + delta
-	if next < 0 {
-		next = 0
-	}
-	if next > 100 {
-		next = 100
-	}
-	_ = h.DB.Model(&user).Update("trust_score", next).Error
+	// Simple flow: Trust score logic removed
+	return
 }
 
 func (h *EscrowHandler) computeEscrowHash(escrow *models.Escrow) string {

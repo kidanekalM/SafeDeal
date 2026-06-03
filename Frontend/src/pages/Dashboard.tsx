@@ -92,9 +92,6 @@ const Dashboard = () => {
     return false;
   });
 
-  // Calculate Trust Score (Use value from backend if available)
-  const trustScore = user?.trust_score ?? Math.min(100, (stats?.completed_escrows || 0) * 10 + 65);
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "Pending": return <Clock className="h-4 w-4" />;
@@ -132,28 +129,6 @@ const Dashboard = () => {
               </div>
             </div>
             <Shield className="absolute -right-8 -bottom-8 h-64 w-64 text-white opacity-5 rotate-12" />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-[2rem] p-8 border-2 border-teal-50 shadow-xl flex flex-col justify-center items-center text-center"
-          >
-            <div className="relative w-24 h-24 mb-4">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
-                <path className="text-gray-100" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path className="text-[#014d46]" strokeWidth="3" strokeDasharray={`${trustScore}, 100`} strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-[#014d46]">{trustScore}</span>
-                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">{t('pages.trust_score', 'Trust Score')}</span>
-              </div>
-            </div>
-            <h4 className="font-bold text-gray-900 flex items-center gap-2">
-              <Award className="text-yellow-500" size={18} /> {t('pages.verified_professional', 'Verified Professional')}
-            </h4>
-            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest font-black opacity-60">{t('pages.level_1_member', 'Level 1 Member')}</p>
           </motion.div>
         </div>
 

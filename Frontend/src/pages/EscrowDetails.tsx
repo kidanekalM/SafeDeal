@@ -20,7 +20,8 @@ import {
   ExternalLink,
   Info,
   History,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 import { milestoneApi } from "../lib/api";
 import type { Milestone } from "../types";
@@ -247,12 +248,18 @@ const EscrowDetails = () => {
   };
 
   const handleConfirmReceipt = async () => {
+    if (!window.confirm(t('pages.confirm_receipt_warning', "Are you sure you want to release the funds? This action is irreversible."))) return;
+    
+    setIsLoading(true);
     try {
       await escrowApi.confirmReceipt(Number(id));
-      toast.success(t('pages.receipt_confirmed_toast', "Receipt confirmed!"));
-      fetchEscrowDetails();
-    } catch (error) {
-      toast.error(t('pages.receipt_confirm_failed', "Failed to confirm receipt."));
+      toast.success(t('pages.receipt_confirmed_toast', "Receipt confirmed and funds released!"));
+      await fetchEscrowDetails();
+    } catch (error: any) {
+      const msg = error.response?.data?.error || t('pages.receipt_confirm_failed', "Failed to confirm receipt.");
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -686,8 +693,14 @@ const EscrowDetails = () => {
                 )}
                 
                 {isBuyer && escrow.active && escrow.status === "Funded" && (
-                  <button onClick={handleConfirmReceipt} data-testid="confirm-receipt-button" className="sm:col-span-2 btn btn-success btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-green-500/20">
-                    <CheckCircle className="mr-2" /> {t('pages.confirm_receipt', "Confirm & Release Funds")}
+                  <button 
+                    onClick={handleConfirmReceipt} 
+                    disabled={isLoading}
+                    data-testid="confirm-receipt-button" 
+                    className="sm:col-span-2 btn btn-success btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-green-500/20 disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle className="mr-2" />} 
+                    {t('pages.confirm_receipt', "Confirm & Release Funds")}
                   </button>
                 )}
 
