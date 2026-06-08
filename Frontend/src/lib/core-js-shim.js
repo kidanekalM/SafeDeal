@@ -1,10 +1,12 @@
-'use strict';
-var globalThis = require('./global-this');
+import globalThisShim from './global-this';
 
-module.exports = function (key, value) {
+// eslint-disable-next-line es/no-object-defineproperty -- safe
+var defineProperty = Object.defineProperty;
+
+export default function (key, value) {
   try {
-    Object.defineProperty(globalThis, key, { value: value, configurable: true, writable: true });
+    defineProperty(globalThisShim, key, { value: value, configurable: true, writable: true });
   } catch (error) {
-    globalThis[key] = value;
+    globalThisShim[key] = value;
   } return value;
 };
