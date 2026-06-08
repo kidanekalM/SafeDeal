@@ -5,3 +5,10 @@ dist/
 android_build
 docker-compose*.yml
 .aider*
+*.log
+bin/
+backend
+backend_bin
+backend_monolithic
+main
+.DS_Store

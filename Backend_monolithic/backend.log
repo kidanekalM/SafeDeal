@@ -1,4 +1,0 @@
-Successfully connected to PostgreSQL database
-Server starting on port 8081
-2026/04/26 21:52:12 failed to listen: listen tcp4 :8081: bind: address already in use
-exit status 1
