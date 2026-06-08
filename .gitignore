@@ -6,9 +6,9 @@ android_build
 docker-compose*.yml
 .aider*
 *.log
-bin/
-backend
-backend_bin
-backend_monolithic
-main
+/Backend/bin/
+/Backend/backend
+/Backend/backend_bin
+/Backend/backend_monolithic
+/Backend/main
 .DS_Store
