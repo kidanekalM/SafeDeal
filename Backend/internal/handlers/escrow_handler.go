@@ -151,6 +151,9 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		RequiredApprovals    int    `json:"required_approvals"`
 		LegalNotes           string `json:"legal_notes,omitempty"`
 
+		// Flexible JSON
+		ExtraData            string `json:"extra_data,omitempty"`
+
 		// Performance Period
 		PerformancePeriodStart *time.Time `json:"performance_period_start,omitempty"`
 		PerformancePeriodEnd   *time.Time `json:"performance_period_end,omitempty"`
@@ -159,6 +162,17 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// Sync amount from milestones if provided
+	if len(req.Milestones) > 0 {
+		var totalMilestoneAmount uint = 0
+		for _, m := range req.Milestones {
+			totalMilestoneAmount += m.Amount
+		}
+		if totalMilestoneAmount > 0 {
+			req.Amount = totalMilestoneAmount
+		}
 	}
 
 	// Determine roles based on creator and handle mediator assignment
@@ -297,6 +311,9 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		PerformancePeriodStart: req.PerformancePeriodStart,
 		PerformancePeriodEnd:   req.PerformancePeriodEnd,
 		WorkDescription:        req.WorkDescription,
+
+		// Flexible JSON
+		ExtraData: req.ExtraData,
 	}
 
 	// Compute robust hash including milestones and new fields

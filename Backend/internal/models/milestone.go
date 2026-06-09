@@ -42,6 +42,9 @@ type Milestone struct {
 	CureTerms          string      `json:"cure_terms,omitempty"`
 	RevisionWindow     int         `json:"revision_window,omitempty"` // in days
 
+	// Flexible JSON storage
+	ExtraData          string      `json:"extra_data,omitempty" gorm:"type:jsonb"`
+
 	// Associations
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`
 	Approver *User   `json:"approver,omitempty" gorm:"foreignKey:ApproverID"`

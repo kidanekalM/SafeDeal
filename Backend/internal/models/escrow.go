@@ -81,6 +81,17 @@ type Escrow struct {
 	Mediator           *User       `json:"mediator,omitempty" gorm:"foreignKey:MediatorID"`
 	Milestones         []Milestone `json:"milestones,omitempty" gorm:"foreignKey:EscrowID"`
 	Obligations        []Obligation `json:"obligations,omitempty" gorm:"foreignKey:EscrowID"`
+	AuthorizedReps     []AuthorizedRep `json:"authorized_reps,omitempty" gorm:"foreignKey:EscrowID"`
+}
+
+type AuthorizedRep struct {
+	gorm.Model
+	EscrowID      uint   `json:"escrow_id"`
+	Address       string `json:"address"`
+	ParentParty   string `json:"parent_party"` // depositor/beneficiary/agent
+	Scope         string `json:"scope"`        // view/approve/dispute
+	AddedBy       string `json:"added_by"`
+	Active        bool   `json:"active" gorm:"default:true"`
 }
 
 type Obligation struct {
