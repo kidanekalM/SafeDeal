@@ -136,43 +136,151 @@ const EscrowDetails = () => {
 
   const handlePrint = () => {
     const doc = new jsPDF();
-    
+    let y = 20;
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const contentWidth = pageWidth - (margin * 2);
+
+    const addText = (text: string, fontSize = 10, fontStyle = "normal", color = [0, 0, 0]) => {
+      doc.setFontSize(fontSize);
+      doc.setFont("helvetica", fontStyle);
+      doc.setTextColor(color[0], color[1], color[2]);
+      const lines = doc.splitTextToSize(text, contentWidth);
+      doc.text(lines, margin, y);
+      y += (lines.length * (fontSize * 0.5)) + 2;
+      return lines.length;
+    };
+
+    const addSectionTitle = (text: string) => {
+      y += 5;
+      doc.setFillColor(245, 247, 250);
+      doc.rect(margin - 2, y - 5, contentWidth + 4, 8, "F");
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 41, 59);
+      doc.text(text.toUpperCase(), margin, y);
+      y += 8;
+    };
+
+    const checkPageBreak = (needed: number) => {
+      if (y + needed > 280) {
+        doc.addPage();
+        y = 20;
+      }
+    };
+
     // Header
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("SAFEDEAL DETERMINISTIC ESCROW AGREEMENT", 105, 20, { align: "center" });
-    
-    // Escrow Details
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Escrow ID: ${escrow?.id}`, 20, 40);
-    doc.text(`Status: ${escrow?.status.toUpperCase()}`, 20, 50);
-    doc.text(`Title: ${escrow?.title || 'N/A'}`, 20, 60);
-    
-    // Parties
-    doc.setFont("helvetica", "bold");
-    doc.text("PARTIES", 20, 80);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Buyer: ${escrow?.buyer?.email || 'N/A'}`, 20, 90);
-    doc.text(`Seller: ${escrow?.seller?.email || 'N/A'}`, 20, 100);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "black");
+    doc.setTextColor(15, 23, 42);
+    doc.text("SAFEDEAL ESCROW AGREEMENT", pageWidth / 2, y, { align: "center" });
+    y += 15;
 
-    // Terms
-    doc.setFont("helvetica", "bold");
-    doc.text("DETERMINISTIC CONDITIONS", 20, 120);
-    doc.setFont("helvetica", "normal");
-    const splitConditions = doc.splitTextToSize(escrow?.conditions || "", 170);
-    doc.text(splitConditions, 20, 130);
+    // Agreement Details
+    addSectionTitle("AGREEMENT DETAILS");
+    addText(`Agreement ID: SD-${escrow?.id}-${escrow?.escrow_hash?.slice(2, 10).toUpperCase() || 'OFF-CHAIN'}`, 10, "bold");
+    addText(`Date Created: ${formatDateSafe(escrow?.created_at)}`);
+    addText(`Jurisdiction: ${escrow?.jurisdiction || 'Federal Democratic Republic of Ethiopia'}`);
+    addText(`Governing Law: ${escrow?.governing_law || 'Commercial Code of Ethiopia, Civil Code of Ethiopia, Electronic Transaction Proclamation and applicable laws.'}`);
+    addText(`Dispute Resolution Method: ${escrow?.dispute_resolution || 'Mediation / Arbitration via SafeDeal AI'}`);
 
-    // Milestones Table
+    // 1. PARTIES
+    checkPageBreak(40);
+    addSectionTitle("1. PARTIES");
+    
+    addText("Buyer / Client", 10, "bold", [59, 130, 246]);
+    addText(`Legal Name: ${escrow?.buyer?.first_name} ${escrow?.buyer?.last_name}`);
+    addText(`Email: ${escrow?.buyer?.email}`);
+    addText(`Phone: ${escrow?.buyer?.account_number || 'N/A'}`); // Using account number as placeholder for ID/Phone if missing
+    addText(`Address: ____________________________________________________`);
+    
+    y += 5;
+    addText("Seller / Service Provider", 10, "bold", [16, 185, 129]);
+    addText(`Legal Name: ${escrow?.seller?.first_name} ${escrow?.seller?.last_name}`);
+    addText(`Email: ${escrow?.seller?.email}`);
+    addText(`Phone: ${escrow?.seller?.account_number || 'N/A'}`);
+    addText(`Address: ____________________________________________________`);
+
+    // 2. CONTRACT PURPOSE
+    checkPageBreak(40);
+    addSectionTitle("2. CONTRACT PURPOSE");
+    addText("The Seller agrees to provide the following goods, services, or deliverables:", 9, "italic");
+    addText(`Description: ${escrow?.title || 'N/A'}`, 10, "bold");
+    addText(`Category: ${escrow?.sub_type?.toUpperCase() || 'GENERAL'}`);
+    addText(`Expected Outcome: ${escrow?.conditions?.slice(0, 100)}...`);
+
+    // 3. CONTRACT VALUE
+    checkPageBreak(30);
+    addSectionTitle("3. CONTRACT VALUE");
+    addText(`Base Contract Amount: ETB ${escrow?.amount.toLocaleString()}`, 10, "bold");
+    addText(`Taxes Included: _________________`);
+    addText(`Additional Charges: ETB ${escrow?.platform_fee.toLocaleString()} (Secure Platform Fee)`);
+    addText(`Total Secured Amount: ETB ${(escrow?.amount || 0) + (escrow?.platform_fee || 0)}`, 11, "bold", [30, 41, 59]);
+    addText(`Currency: ETB (Ethiopian Birr)`);
+
+    // 4. DELIVERY MILESTONES
+    checkPageBreak(20);
+    addSectionTitle("4. DELIVERY MILESTONES");
     if (milestones && milestones.length > 0) {
       (doc as any).autoTable({
-        startY: 150,
-        head: [['Milestone', 'Amount (ETB)', 'Trigger', 'Status']],
-        body: milestones.map(m => [m.title, m.amount, m.release_trigger, m.status]),
+        startY: y,
+        head: [['#', 'Milestone Title', 'Amount (ETB)', 'Trigger', 'Due Date']],
+        body: milestones.map((m, i) => [i + 1, m.title, m.amount.toLocaleString(), m.release_trigger, m.due_date || 'N/A']),
+        margin: { left: margin },
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [51, 65, 85] }
       });
+      y = (doc as any).lastAutoTable.finalY + 10;
+    } else {
+      addText("Single Installment Delivery Model active.");
+      y += 5;
     }
 
-    doc.save(`escrow-${escrow?.id}-agreement.pdf`);
+    // 5-7 Logic Boilerplate
+    checkPageBreak(60);
+    addSectionTitle("5. ACCEPTANCE CRITERIA");
+    addText("A milestone shall be considered complete only if: 1) All listed deliverables are submitted; 2) Required evidence is uploaded; 3) Buyer confirms acceptance; OR 4) Inspection period expires without dispute.");
+
+    addSectionTitle("6. INSPECTION PERIOD");
+    addText(`Inspection Period: ${escrow?.inspection_period || 7} Calendar Days`);
+    addText("Buyer Rights: Request clarification, Reject incomplete work, Open dispute, Approve milestone. If no action is taken before the deadline, milestone is automatically deemed accepted.");
+
+    addSectionTitle("7. PAYMENT RELEASE CONDITIONS");
+    addText(`Escrow funds shall only be released when: ${escrow?.is_detailed ? 'Milestone Triggers are met' : 'Buyer manually approves or Inspection period expires'}.`);
+
+    // 8-13 Legal Clauses
+    checkPageBreak(80);
+    addSectionTitle("8. SELLER WARRANTIES");
+    addText("The Seller warrants that: Work is original, Goods are legally owned, Deliverables comply with Ethiopian law and meet stated specifications. No fraud or misrepresentation exists.");
+
+    addSectionTitle("9. BUYER OBLIGATIONS");
+    addText("The Buyer agrees to: Provide necessary information, Review deliverables promptly, Raise disputes in good faith, and Not unreasonably delay acceptance.");
+
+    addSectionTitle("10. CHANGE ORDERS");
+    addText("Any modification to Scope, Price, Deliverables, or Deadlines must be approved electronically by both parties. No verbal modifications shall be binding.");
+
+    checkPageBreak(40);
+    addSectionTitle("11. DELAYS");
+    addText("Seller Delay: Buyer may extend deadline, cancel milestone, or seek refund. Buyer Delay: Deadlines shall be extended accordingly.");
+
+    addSectionTitle("12. NON-PAYMENT PROTECTION");
+    addText("If payment is withheld without valid contractual grounds, Seller may initiate dispute resolution. Escrow records shall serve as evidence.");
+
+    addSectionTitle("13. FRAUD AND MISREPRESENTATION");
+    addText("Material breach includes: Fake documents, False identity, Forged invoices, and Attempted escrow circumvention. Remedies include fund freeze and account suspension.");
+
+    // Signatures
+    checkPageBreak(50);
+    y += 10;
+    doc.setDrawColor(200);
+    doc.line(margin, y, margin + 70, y);
+    doc.line(pageWidth - margin - 70, y, pageWidth - margin, y);
+    y += 5;
+    doc.setFontSize(8);
+    doc.text("Buyer Signature (Digital ID Authenticated)", margin, y);
+    doc.text("Seller Signature (Digital ID Authenticated)", pageWidth - margin, y, { align: "right" });
+
+    doc.save(`SafeDeal-Agreement-SD${escrow?.id}.pdf`);
   };
 
   const handleAccept = async () => {
