@@ -79,9 +79,9 @@ export const useEscrowStore = create<EscrowState>((set) => ({
             // Calculate stats from escrows
             const stats = {
                 total_escrows: escrows.length,
-                active_escrows: escrows.filter((e: Escrow) => e.status === 'Pending' || e.status === 'Funded').length,
-                completed_escrows: escrows.filter((e: Escrow) => e.status === 'Released').length,
-                disputed_escrows: escrows.filter((e: Escrow) => e.status === 'Disputed').length,
+                active_escrows: escrows.filter((e: Escrow) => e.status === 'pending' || e.status === 'funded').length,
+                completed_escrows: escrows.filter((e: Escrow) => e.status === 'completed').length,
+                disputed_escrows: escrows.filter((e: Escrow) => e.status === 'disputed').length,
                 total_amount: escrows.reduce((sum: number, e: Escrow) => sum + e.amount, 0)
             };
 
@@ -116,9 +116,9 @@ export const useEscrowStore = create<EscrowState>((set) => ({
             const escrows: Escrow[] = Array.isArray(payload) ? payload : (payload.escrows || []);
             const stats = {
                 total_escrows: escrows.length,
-                active_escrows: escrows.filter((e: Escrow) => e.status === 'Pending' || e.status === 'Funded').length,
-                completed_escrows: escrows.filter((e: Escrow) => e.status === 'Released').length,
-                disputed_escrows: escrows.filter((e: Escrow) => e.status === 'Disputed').length,
+                active_escrows: escrows.filter((e: Escrow) => e.status === 'pending' || e.status === 'funded').length,
+                completed_escrows: escrows.filter((e: Escrow) => e.status === 'completed').length,
+                disputed_escrows: escrows.filter((e: Escrow) => e.status === 'disputed').length,
                 total_amount: escrows.reduce((sum: number, e: Escrow) => sum + e.amount, 0)
             };
 

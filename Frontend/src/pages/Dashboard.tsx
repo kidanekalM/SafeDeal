@@ -60,9 +60,9 @@ const Dashboard = () => {
       const summary = payload?.summary;
       const computed = {
         total_escrows: list.length,
-        active_escrows: list.filter((e: any) => e.status === 'Pending' || e.status === 'Funded').length,
-        completed_escrows: list.filter((e: any) => e.status === 'Released').length,
-        disputed_escrows: list.filter((e: any) => e.status === 'Disputed').length,
+        active_escrows: list.filter((e: any) => e.status === 'pending' || e.status === 'funded').length,
+        completed_escrows: list.filter((e: any) => e.status === 'completed').length,
+        disputed_escrows: list.filter((e: any) => e.status === 'disputed').length,
         total_amount: list.reduce((sum: number, e: any) => sum + (e.amount || 0), 0),
       };
 
@@ -87,8 +87,8 @@ const Dashboard = () => {
   }, [user]);
 
   const nextActions = escrows.filter(e => {
-    if (e.status === 'Pending' && e.buyer_id === user?.id) return true;
-    if (e.status === 'Funded' && e.seller_id === user?.id && !e.active) return true;
+    if (e.status === 'pending' && e.buyer_id === user?.id) return true;
+    if (e.status === 'funded' && e.seller_id === user?.id && !e.active) return true;
     return false;
   });
 
@@ -143,10 +143,10 @@ const Dashboard = () => {
                 <Link key={action.id} to={`/escrow/${action.id}`} className="bg-white border-2 border-orange-100 rounded-3xl p-5 flex items-center justify-between hover:shadow-xl hover:border-orange-200 transition-all group">
                   <div className="flex items-center gap-4">
                     <div className="p-4 bg-orange-50 rounded-2xl text-orange-600 group-hover:scale-110 transition-transform">
-                      {action.status === 'Pending' ? <CreditCard size={22} /> : <CheckCircle size={22} />}
+                      {action.status === 'pending' ? <CreditCard size={22} /> : <CheckCircle size={22} />}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-gray-900">{action.status === 'Pending' ? t('pages.payment_needed', 'Payment Needed') : t('pages.acceptance_needed', 'Acceptance Needed')}</p>
+                      <p className="text-sm font-black text-gray-900">{action.status === 'pending' ? t('pages.payment_needed', 'Payment Needed') : t('pages.acceptance_needed', 'Acceptance Needed')}</p>
                       <p className="text-[10px] font-bold text-gray-400 uppercase">{action.title || `${t('pages.escrow_id', 'Escrow')} #${action.id}`} • {formatCurrency(action.amount)}</p>                    </div>
                   </div>
                   <ArrowRight size={20} className="text-orange-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />

@@ -11,17 +11,12 @@ import {
   AlertCircle,
   User,
   FileText,
-  Edit3,
-  Download,
   Lock,
   Zap,
   Scale,
   Printer,
   ExternalLink,
-  Info,
-  History,
-  AlertTriangle,
-  Loader2
+  ListChecks,
 } from "lucide-react";
 import { milestoneApi } from "../lib/api";
 import type { Milestone } from "../types";
@@ -63,43 +58,20 @@ const EscrowDetails = () => {
   const [payment, setPayment] = useState<EscrowPayment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPayment, setShowPayment] = useState(false);
-  const [showDisputeModal, setShowDisputeModal] = useState(false);
   
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showCBEModal, setShowCBEModal] = useState(false);
   const [cbeTransactionId, setCbeTransactionId] = useState("");
   const [cbeAccountSuffix, setCbeAccountSuffix] = useState("");
   const [isVerifyingCBE, setIsVerifyingCBE] = useState(false);
-  const [editConditions, setEditConditions] = useState("");
-  const [editAmount, setEditAmount] = useState(0);
-  const [editTitle, setEditTitle] = useState("");
-  const [editJurisdiction, setEditJurisdiction] = useState("");
-  const [editGoverningLaw, setEditGoverningLaw] = useState("");
-  const [editDeliveryMethod, setEditDeliveryMethod] = useState("");
-  const [editCompletionDate, setEditCompletionDate] = useState("");
-  const [editQualityStandards, setEditQualityStandards] = useState("");
-  const [editConfidentialityTerms, setEditConfidentialityTerms] = useState("");
-  const [editLiabilityTerms, setEditLiabilityTerms] = useState("");
-  const [editAdditionalRequirements, setEditAdditionalRequirements] = useState("");
-  const [editPaymentConditions, setEditPaymentConditions] = useState("");
-  const [editVerificationMethod, setEditVerificationMethod] = useState("");
-  const [editTerminationConditions, setEditTerminationConditions] = useState("");
-  const [editDisputeResolutionMethod, setEditDisputeResolutionMethod] = useState("");
-  const [editAutoRelease, setEditAutoRelease] = useState(false);
-  const [editRequiredApprovals, setEditRequiredApprovals] = useState(1);
-  const [editLegalNotes, setEditLegalNotes] = useState("");
-  const [disputeReason, setDisputeReason] = useState("");
+  
   const [errorCount, setErrorCount] = useState(0);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [statusHistory, setStatusHistory] = useState<any[]>([]);
-  const [isMilestoneLoading, setIsMilestoneLoading] = useState<number | null>(null);
 
   const isBuyer = Number(user?.id) === Number(escrow?.buyer_id);
   const isSeller = Number(user?.id) === Number(escrow?.seller_id);
   const isMediator = Number(user?.id) === Number(escrow?.mediator_id);
 
   const handleMilestoneSubmit = async (milestoneId: number) => {
-    setIsMilestoneLoading(milestoneId);
     try {
       await milestoneApi.submit(milestoneId);
       toast.success(t('pages.milestone_submitted', "Milestone submitted!"));
@@ -108,13 +80,10 @@ const EscrowDetails = () => {
       setMilestones(res.data);
     } catch (error) {
       toast.error(t('pages.milestone_submit_failed', "Failed to submit milestone"));
-    } finally {
-      setIsMilestoneLoading(null);
     }
   };
 
   const handleMilestoneApprove = async (milestoneId: number) => {
-    setIsMilestoneLoading(milestoneId);
     try {
       await milestoneApi.approve(milestoneId);
       toast.success(t('pages.milestone_approved', "Milestone approved!"));
@@ -122,22 +91,6 @@ const EscrowDetails = () => {
       setMilestones(res.data);
     } catch (error) {
       toast.error(t('pages.milestone_approve_failed', "Failed to approve milestone"));
-    } finally {
-      setIsMilestoneLoading(null);
-    }
-  };
-
-  const handleMilestoneReject = async (milestoneId: number) => {
-    setIsMilestoneLoading(milestoneId);
-    try {
-      await milestoneApi.reject(milestoneId);
-      toast.success(t('pages.milestone_rejected', "Milestone rejected!"));
-      const res = await milestoneApi.getByEscrow(escrow!.id);
-      setMilestones(res.data);
-    } catch (error) {
-      toast.error(t('pages.milestone_reject_failed', "Failed to reject milestone"));
-    } finally {
-      setIsMilestoneLoading(null);
     }
   };
 
@@ -153,15 +106,6 @@ const EscrowDetails = () => {
     try {
       const response = await escrowApi.getById(escrowId);
       const rawData = response.data as any;
-      console.log("DEBUG: Escrow Data:", JSON.stringify({ 
-        status: rawData.status || rawData.Status, 
-        active: rawData.active !== undefined ? rawData.active : rawData.Active,
-        user_id: user?.id,
-        escrow_buyer_id: rawData.buyer_id || rawData.BuyerID,
-        escrow_seller_id: rawData.seller_id || rawData.SellerID,
-        isSeller: Number(user?.id) === Number(rawData.seller_id || rawData.SellerID),
-        isBuyer: Number(user?.id) === Number(rawData.buyer_id || rawData.BuyerID)
-      }));
       setEscrow({
         ...rawData,
         id: rawData.id || rawData.ID,
@@ -170,7 +114,7 @@ const EscrowDetails = () => {
         mediator_id: rawData.mediator_id || rawData.MediatorID,
         amount: rawData.amount || rawData.Amount,
         platform_fee: rawData.platform_fee || rawData.PlatformFee,
-        status: rawData.status || rawData.Status,
+        status: (rawData.status || rawData.Status).toLowerCase(),
         active: rawData.active !== undefined ? rawData.active : rawData.Active,
         is_locked: rawData.is_locked !== undefined ? rawData.is_locked : rawData.IsLocked,
         is_detailed: rawData.is_detailed !== undefined ? rawData.is_detailed : rawData.IsDetailed,
@@ -179,15 +123,9 @@ const EscrowDetails = () => {
         created_at: rawData.created_at || rawData.CreatedAt,
         updated_at: rawData.updated_at || rawData.UpdatedAt,
         blockchain_tx_hash: rawData.blockchain_tx_hash || rawData.BlockchainTxHash,
+        escrow_hash: rawData.escrow_hash || rawData.EscrowHash,
       });
       setErrorCount(0);
-      
-      // Fetch status history if available
-      try {
-        const historyRes = await escrowApi.getStatusHistory(escrowId);
-        setStatusHistory(historyRes.data || []);
-      } catch (e) { /* ignore */ }
-      
     } catch (error: any) {
       setErrorCount(prev => prev + 1);
       toast.error(t('pages.escrow_fetch_failed', "Failed to fetch escrow details."));
@@ -202,13 +140,13 @@ const EscrowDetails = () => {
     // Header
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("SAFEDEAL FORMAL ESCROW AGREEMENT", 105, 20, { align: "center" });
+    doc.text("SAFEDEAL DETERMINISTIC ESCROW AGREEMENT", 105, 20, { align: "center" });
     
     // Escrow Details
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(`Escrow ID: ${escrow?.id}`, 20, 40);
-    doc.text(`Status: ${escrow?.status}`, 20, 50);
+    doc.text(`Status: ${escrow?.status.toUpperCase()}`, 20, 50);
     doc.text(`Title: ${escrow?.title || 'N/A'}`, 20, 60);
     
     // Parties
@@ -220,17 +158,17 @@ const EscrowDetails = () => {
 
     // Terms
     doc.setFont("helvetica", "bold");
-    doc.text("CONTRACTUAL CONDITIONS", 20, 120);
+    doc.text("DETERMINISTIC CONDITIONS", 20, 120);
     doc.setFont("helvetica", "normal");
     const splitConditions = doc.splitTextToSize(escrow?.conditions || "", 170);
     doc.text(splitConditions, 20, 130);
 
     // Milestones Table
-    if (escrow?.milestones && escrow.milestones.length > 0) {
+    if (milestones && milestones.length > 0) {
       (doc as any).autoTable({
         startY: 150,
-        head: [['Milestone', 'Amount (ETB)', 'Status']],
-        body: escrow.milestones.map(m => [m.title, m.amount, m.status]),
+        head: [['Milestone', 'Amount (ETB)', 'Trigger', 'Status']],
+        body: milestones.map(m => [m.title, m.amount, m.release_trigger, m.status]),
       });
     }
 
@@ -247,22 +185,6 @@ const EscrowDetails = () => {
     }
   };
 
-  const handleConfirmReceipt = async () => {
-    if (!window.confirm(t('pages.confirm_receipt_warning', "Are you sure you want to release the funds? This action is irreversible."))) return;
-    
-    setIsLoading(true);
-    try {
-      await escrowApi.confirmReceipt(Number(id));
-      toast.success(t('pages.receipt_confirmed_toast', "Receipt confirmed and funds released!"));
-      await fetchEscrowDetails();
-    } catch (error: any) {
-      const msg = error.response?.data?.error || t('pages.receipt_confirm_failed', "Failed to confirm receipt.");
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleInitiatePayment = async () => {
     if (!id || !escrow) return;
     try {
@@ -272,51 +194,6 @@ const EscrowDetails = () => {
     } catch (error) {
       toast.error(t('pages.payment_initiate_failed', "Failed to initiate payment"));
     }
-  };
-
-
-  // Phone submit removed (collected at signup)
-  // Removed phone modal functionality (moved to signup/profile completion)
-
-
-  const handleDisputeSubmit = async () => {
-    if (!disputeReason || disputeReason.length < 10) return;
-    try {
-      await escrowApi.dispute(Number(id), disputeReason);
-      toast.success(t('pages.dispute_created_success', "Disputed!"));
-      setShowDisputeModal(false);
-      fetchEscrowDetails();
-    } catch (error) { toast.error(t('pages.dispute_create_failed', "Failed to dispute")); }
-  };
-
-  const handleEditSubmit = async () => {
-    if (!editConditions || editConditions.length < 10) return;
-    try {
-      await escrowApi.update(Number(id), { 
-        amount: editAmount, 
-        conditions: editConditions,
-        title: editTitle,
-        jurisdiction: editJurisdiction,
-        governing_law: editGoverningLaw,
-        delivery_method: editDeliveryMethod,
-        completion_date: editCompletionDate ? new Date(editCompletionDate).toISOString() : undefined,
-        quality_standards: editQualityStandards,
-        confidentiality_terms: editConfidentialityTerms,
-        liability_terms: editLiabilityTerms,
-        additional_requirements: editAdditionalRequirements,
-        payment_conditions: editPaymentConditions,
-        verification_method: editVerificationMethod,
-        termination_conditions: editTerminationConditions,
-        dispute_resolution_method: editDisputeResolutionMethod,
-        auto_release: editAutoRelease,
-        required_approvals: editRequiredApprovals,
-        legal_notes: editLegalNotes,
-      });
-
-      toast.success(t('pages.terms_updated', "Updated!"));
-      setShowEditModal(false);
-      fetchEscrowDetails();
-    } catch (error) { toast.error(t('pages.terms_update_failed', "Failed update")); }
   };
 
   const handleLock = async () => {
@@ -356,31 +233,16 @@ const EscrowDetails = () => {
   }, [escrow?.id]);
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Pending":
-      case "Verifying": return <Clock className="h-5 w-5" />;
-      case "Funded": return <Shield className="h-5 w-5" />;
-      case "Released": return <CheckCircle className="h-5 w-5" />;
-      case "Disputed": return <AlertCircle className="h-5 w-5" />;
+    switch (status.toLowerCase()) {
+      case "pending":
+      case "verifying": return <Clock className="h-5 w-5" />;
+      case "funded": 
+      case "active": return <Shield className="h-5 w-5" />;
+      case "completed":
+      case "released": return <CheckCircle className="h-5 w-5" />;
+      case "disputed": return <AlertCircle className="h-5 w-5" />;
       default: return <Clock className="h-5 w-5" />;
     }
-  };
-
-  const handleDownloadAgreement = async () => {
-    if (!escrow) return;
-    try {
-      const response = await escrowApi.downloadFinalAgreement(escrow.id);
-      const blob = new Blob([response.data], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `escrow-${escrow.id}.txt`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success(t('pages.agreement_download_success', "Downloaded!"));
-    } catch (error) { toast.error(t('pages.agreement_download_failed', "Failed download")); }
   };
 
   if (isLoading) return <Layout><LoadingSpinner /></Layout>;
@@ -388,16 +250,6 @@ const EscrowDetails = () => {
 
   return (
     <Layout>
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          #printable-area, #printable-area * { visibility: visible; }
-          #printable-area { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; background: white; }
-          .no-print { display: none !important; }
-          .card { border: 1px solid #eee !important; box-shadow: none !important; }
-        }
-      `}</style>
-
       <div className="max-w-6xl mx-auto pb-12 px-4 sm:px-6">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 no-print">
@@ -411,44 +263,42 @@ const EscrowDetails = () => {
               className="btn btn-outline border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl px-4 flex items-center gap-2"
             >
               <Printer size={18} />
-              <span className="hidden sm:inline">{t('pages.print_contract', 'Print Contract')}</span>
+              <span className="hidden sm:inline">{t('pages.print_agreement', 'Print Agreement')}</span>
             </button>
           </div>
         </div>
 
         <div id="printable-area" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Main Info Card */}
             <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden">
               <div className="p-8 sm:p-10 border-b border-gray-100 bg-gradient-to-br from-white to-gray-50">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
                       <Shield className="text-primary-600 h-6 w-6" />
-                      <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight uppercase">{t('pages.safedeal_escrow', 'SafeDeal')} #{escrow.id}</h1>
+                      <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight uppercase">#{escrow.id}: {escrow.title}</h1>
                     </div>
                     <p className="text-gray-500 font-medium flex items-center gap-2">
                       <Clock size={16} /> {t('pages.initiated_on', 'Initiated on')} {formatDateSafe(escrow.created_at)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <div data-testid="escrow-status" className={`px-6 py-2 rounded-2xl text-sm font-black tracking-widest uppercase border-2 ${getStatusColor(escrow.status)}`}>
+                    <div className={`px-6 py-2 rounded-2xl text-sm font-black tracking-widest uppercase border-2 ${getStatusColor(escrow.status)}`}>
                       <div className="flex items-center gap-2">
                         {getStatusIcon(escrow.status)}
                         {t(`pages.${escrow.status.toLowerCase()}`, escrow.status)}
                       </div>
                     </div>
-                    <div data-testid="escrow-mode-badge" className="px-3 py-1 rounded-lg bg-gray-100 text-[10px] font-black uppercase text-gray-500 border border-gray-200">
-                      {escrow.is_detailed ? t('pages.detailed', 'Detailed') : t('pages.quick', 'Quick')}
+                    <div className="px-3 py-1 rounded-lg bg-gray-100 text-[10px] font-black uppercase text-gray-500 border border-gray-200">
+                      {escrow.is_detailed ? t('pages.logic_deterministic', 'Deterministic') : t('pages.logic_standard', 'Standard')}
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{t('pages.type', 'Type')}</p>
-                    <p className="font-black text-gray-900 capitalize">{escrow.sub_type || 'Standard'}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{t('pages.agreement_type', 'Agreement Type')}</p>
+                    <p className="font-black text-gray-900 capitalize">{escrow.sub_type || 'General'}</p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{t('pages.inspection', 'Inspection')}</p>
@@ -456,7 +306,7 @@ const EscrowDetails = () => {
                   </div>
                   <div className="col-span-2 p-4 bg-teal-50 rounded-2xl border border-teal-100">
                     <p className="text-[10px] font-bold text-[#014d46] uppercase mb-1 flex items-center gap-1">
-                      <Shield size={10} /> {t('pages.integrity_hash', 'Integrity Hash')}
+                      <Scale size={10} /> {t('pages.legal_fingerprint', 'Deterministic Hash')}
                     </p>
                     <p className="font-mono text-[9px] text-[#014d46] truncate" title={escrow.escrow_hash}>{escrow.escrow_hash}</p>
                   </div>
@@ -464,135 +314,74 @@ const EscrowDetails = () => {
               </div>
 
               <div className="p-8 sm:p-10 space-y-10">
-                {/* Financial Overview */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">{t('pages.transaction_amount', 'Transaction Amount')}</label>
                     <p className="text-3xl font-black text-gray-900">{formatCurrency(escrow.amount)}</p>
-                    <p className="text-xs text-gray-500 mt-1">{t('pages.fiat_currency_etb', 'In Ethiopian Birr (ETB)')}</p>
                   </div>
-                  <div className="p-6 bg-[#014d46] rounded-3xl text-white shadow-xl shadow-primary-900/10">
+                  <div className="p-6 bg-primary-900 rounded-3xl text-white shadow-xl">
                     <label className="text-xs font-black opacity-60 uppercase tracking-widest block mb-2">{t('pages.total_secured', 'Total Secured Value')}</label>
                     <p className="text-3xl font-black">{formatCurrency(escrow.amount + (escrow.platform_fee || 0))}</p>
-                    <p className="text-xs opacity-60 mt-1">{t('pages.includes_platform_fee', 'Includes processing fees')}</p>
                   </div>
                 </div>
 
-                {/* Agreement Terms */}
                 <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <FileText className="text-primary-600" size={20} />
-                      {t('pages.legal_agreement_terms', 'Agreement Terms')}
-                    </h3>
-                    <button data-testid="view-contract-button" className="text-xs font-bold text-primary-600 hover:underline">
-                      {t('pages.view_contract', 'View Full Contract')}
-                    </button>
-                  </div>
-                  {escrow.status === "Pending" && <div data-testid="escrow-created-success" className="hidden">Created</div>}
-                  <div className="p-8 bg-white border-2 border-gray-100 rounded-[2rem] relative" data-testid="contract-content">
-                    {!escrow.is_locked && (
-                      <div className="absolute top-4 right-4 no-print">
-                        <span className="badge badge-warning flex items-center gap-1 text-[10px] uppercase font-black px-3 py-1">
-                          <AlertTriangle size={10} /> {t('pages.draft_stage', 'Draft')}
-                        </span>
-                      </div>
-                    )}
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap italic font-serif text-lg">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <FileText className="text-primary-600" size={20} />
+                    {t('pages.contractual_conditions', 'Contractual Conditions')}
+                  </h3>
+                  <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[2rem]">
+                    <p className="text-gray-700 leading-relaxed italic font-serif text-lg">
                       "{escrow.conditions || t('pages.no_conditions_provided', 'No specific conditions provided.')}"
                     </p>
                   </div>
                 </div>
 
-                {/* Legal-Grade Verification (Snapshot & Hash) */}
-                {escrow.is_locked && escrow.contract_hash && (
-                  <div className="p-8 bg-blue-50 border-2 border-blue-100 rounded-[2rem] space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-600 rounded-lg">
-                        <Scale size={20} className="text-white" />
-                      </div>
-                      <h3 className="text-xl font-bold text-blue-900">{t('pages.verifiable_agreement', 'Verifiable Agreement')}</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="p-4 bg-white/50 rounded-2xl border border-blue-200">
-                        <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1 block">{t('pages.agreement_hash', 'Digital Fingerprint (SHA-256)')}</label>
-                        <code className="text-xs text-blue-800 break-all font-mono font-bold">{escrow.contract_hash}</code>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className={`p-4 rounded-2xl border flex items-center gap-3 ${escrow.buyer_signature ? 'bg-green-100 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-400'}`}>
-                          {escrow.buyer_signature ? <CheckCircle size={18} /> : <Clock size={18} />}
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest">{t('pages.buyer_signed', 'Buyer Signed')}</p>
-                            <p className="text-[9px] truncate max-w-[150px]">{escrow.buyer_signature || t('pages.pending', 'Pending')}</p>
-                          </div>
-                        </div>
-                        <div className={`p-4 rounded-2xl border flex items-center gap-3 ${escrow.seller_signature ? 'bg-green-100 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-400'}`}>
-                          {escrow.seller_signature ? <CheckCircle size={18} /> : <Clock size={18} />}
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest">{t('pages.seller_signed', 'Seller Signed')}</p>
-                            <p className="text-[9px] truncate max-w-[150px]">{escrow.seller_signature || t('pages.pending', 'Pending')}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Milestones */}
+                {/* Milestones with Deterministic Logic */}
                 {milestones.length > 0 && (
-                  <div data-testid="milestone-section">
-                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                      <Zap className="text-primary-600" size={20} />
-                      {t('pages.delivery_milestones', 'Delivery Milestones')}
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <ListChecks className="text-primary-600" size={20} />
+                      {t('pages.deterministic_milestones', 'Deterministic Milestones')}
                     </h3>
-                    <div className="space-y-4" data-testid="milestone-list">
+                    <div className="space-y-4">
                       {milestones.map((m, idx) => (
-                        <div key={m.id} data-testid={`milestone-item-${idx}`} className="group p-6 bg-white border border-gray-100 rounded-3xl hover:border-primary-200 hover:shadow-md transition-all">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-3">
-                              <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-black text-gray-500">{idx + 1}</span>
-                              <h4 className="font-bold text-gray-900">{m.title}</h4>
+                        <div key={m.id} className="p-6 bg-white border border-gray-100 rounded-[2rem] hover:shadow-md transition-all">
+                          <div className="flex flex-col lg:flex-row justify-between gap-6">
+                            <div className="flex-1 space-y-4">
+                              <div className="flex items-center gap-3">
+                                <span className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center text-xs font-black">#{idx + 1}</span>
+                                <h4 className="font-black text-gray-900 text-lg">{m.title}</h4>
+                              </div>
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-3 bg-gray-50 rounded-xl">
+                                  <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">What</label>
+                                  <p className="text-[10px] font-bold text-gray-700 capitalize">{m.completion_type?.replace('_', ' ')}</p>
+                                </div>
+                                <div className="p-3 bg-gray-50 rounded-xl">
+                                  <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Who Verifies</label>
+                                  <p className="text-[10px] font-bold text-gray-700 capitalize">{m.verification_authority?.replace('_', ' ')}</p>
+                                </div>
+                                <div className="p-3 bg-gray-50 rounded-xl">
+                                  <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Trigger</label>
+                                  <p className="text-[10px] font-bold text-primary-600 capitalize">{m.release_trigger?.replace('_', ' ')}</p>
+                                </div>
+                                <div className="p-3 bg-gray-50 rounded-xl">
+                                  <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Evidence</label>
+                                  <p className="text-[10px] font-bold text-gray-700 uppercase">{m.evidence_types || 'None'}</p>
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-lg font-black text-[#014d46]">{formatCurrency(m.amount)}</span>
-                          </div>
-                          {m.description && <p className="text-sm text-gray-600 ml-11 mb-3">{m.description}</p>}
-                          <div className="flex items-center justify-between ml-11 mt-4">
-                            <div className="flex items-center gap-4 text-xs">
-                              <span data-testid={`milestone-${idx}-status`} className={`px-3 py-1 rounded-full font-bold uppercase tracking-widest ${m.status === 'Released' || m.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                {m.status}
-                              </span>
-                              {m.due_date && <span className="text-gray-400 font-medium">Due: {new Date(m.due_date).toLocaleDateString()}</span>}
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              {isSeller && m.status === 'Funded' && (
-                                <button 
-                                  onClick={() => handleMilestoneSubmit(m.id)}
-                                  disabled={isMilestoneLoading === m.id}
-                                  className="btn btn-primary btn-xs rounded-lg px-4"
-                                >
-                                  {isMilestoneLoading === m.id ? '...' : t('pages.submit_work', 'Submit Work')}
-                                </button>
-                              )}
-                              {isBuyer && m.status === 'Submitted' && (
-                                <>
-                                  <button 
-                                    onClick={() => handleMilestoneApprove(m.id)}
-                                    disabled={isMilestoneLoading === m.id}
-                                    className="btn btn-success btn-xs rounded-lg px-4 text-white"
-                                  >
-                                    {isMilestoneLoading === m.id ? '...' : t('pages.approve', 'Approve')}
-                                  </button>
-                                  <button 
-                                    onClick={() => handleMilestoneReject(m.id)}
-                                    disabled={isMilestoneLoading === m.id}
-                                    className="btn btn-ghost btn-xs rounded-lg px-4 text-red-500 hover:bg-red-50"
-                                  >
-                                    {isMilestoneLoading === m.id ? '...' : t('pages.reject', 'Reject')}
-                                  </button>
-                                </>
-                              )}
+                            <div className="flex flex-col justify-between items-end min-w-[120px]">
+                              <span className="text-xl font-black text-[#014d46]">{formatCurrency(m.amount)}</span>
+                              <div className="flex gap-2 mt-4">
+                                {isSeller && (m.status.toLowerCase() === 'funded' || m.status.toLowerCase() === 'pending') && (
+                                  <button onClick={() => handleMilestoneSubmit(m.id)} className="btn btn-primary btn-xs rounded-lg px-4">{t('pages.submit_proof', 'Submit Proof')}</button>
+                                )}
+                                {isBuyer && m.status.toLowerCase() === 'submitted' && (
+                                  <button onClick={() => handleMilestoneApprove(m.id)} className="btn btn-success btn-xs rounded-lg px-4 text-white">{t('pages.approve', 'Approve')}</button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -601,402 +390,118 @@ const EscrowDetails = () => {
                   </div>
                 )}
 
-                {/* Legal Signatures - only visible on print */}
-                <div className="hidden print:block pt-20">
-                  <h3 className="text-xl font-bold border-b-2 border-gray-900 pb-2 mb-12 uppercase tracking-[0.2em]">{t('pages.official_endorsement', 'Official Endorsement')}</h3>
-                  <div className="grid grid-cols-2 gap-16">
-                    <div className="space-y-4">
-                      <div className="border-b border-black h-12" />
-                      <div>
-                        <p className="font-black uppercase text-xs">{t('pages.buyer_signature', 'Buyer / Purchaser')}</p>
-                        <p className="text-[10px] text-gray-500">{escrow.buyer?.first_name} {escrow.buyer?.last_name} ({escrow.buyer?.email})</p>
-                        <p className="text-[10px] text-gray-500">Date: ____________________</p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="border-b border-black h-12" />
-                      <div>
-                        <p className="font-black uppercase text-xs">{t('pages.seller_signature', 'Seller / Provider')}</p>
-                        <p className="text-[10px] text-gray-500">{escrow.seller?.first_name} {escrow.seller?.last_name} ({escrow.seller?.email})</p>
-                        <p className="text-[10px] text-gray-500">Date: ____________________</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-16 pt-8 border-t border-gray-100 text-[8px] text-gray-400 leading-tight">
-                    <p>{t('pages.print_footer_info', 'This document was digitally generated by SafeDeal Escrow Platform. All terms are protected by hybrid blockchain audit logs.')}</p>
-                    <p>Escrow Hash: {escrow.blockchain_tx_hash || 'PENDING_SECURE_LOG'}</p>
-                  </div>
-                </div>
-                
-                {/* Blockchain Proof */}
                 {escrow.blockchain_tx_hash && (
-                  <div className="p-8 bg-gray-900 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full -translate-y-32 translate-x-32 blur-3xl group-hover:bg-primary-500/20 transition-all duration-700" />
+                  <div className="p-8 bg-gray-900 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
                     <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-primary-600 rounded-xl">
-                          <Shield size={24} className="text-white" />
-                        </div>
+                        <Shield size={24} className="text-primary-600" />
                         <div>
-                          <h3 className="text-xl font-bold uppercase tracking-tight">{t('pages.tamper_proof_record', 'Tamper-Proof Record')}</h3>
-                          <p className="text-xs text-primary-400 font-black tracking-widest">{t('pages.on_ethereum_sepolia', 'ON ETHEREUM SEPOLIA TESTNET')}</p>
+                          <h3 className="text-xl font-bold uppercase tracking-tight">{t('pages.tamper_proof_audit', 'Tamper-Proof Audit')}</h3>
+                          <p className="text-[10px] text-primary-400 font-black tracking-widest">ETHEREUM ANCHORED LOG</p>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-colors">
-                          <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1 block">{t('pages.transaction_hash', 'Transaction Hash')}</label>
-                          <div className="flex items-center justify-between gap-4">
-                            <code className="text-xs text-primary-300 break-all font-mono">{escrow.blockchain_tx_hash}</code>
-                            <a 
-                              href={`https://sepolia.etherscan.io/tx/${escrow.blockchain_tx_hash}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors shrink-0 no-print"
-                            >
-                              <ExternalLink size={16} />
-                            </a>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-white/50 font-medium italic">
-                          <Info size={14} />
-                          {t('pages.blockchain_verified_desc', 'This agreement is permanently logged on the blockchain for auditability.')}
-                        </div>
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-between gap-4">
+                        <code className="text-[10px] text-primary-300 break-all font-mono">{escrow.blockchain_tx_hash}</code>
+                        <a href={`https://sepolia.etherscan.io/tx/${escrow.blockchain_tx_hash}`} target="_blank" rel="noreferrer" className="p-2 bg-white/10 rounded-lg"><ExternalLink size={14} /></a>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-            
-            {/* Actions Card - Mobile Friendly */}
-            <div className="no-print bg-white rounded-[2rem] shadow-xl border border-gray-100 p-8 sm:p-10">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-8 text-center">{t('pages.available_actions', 'Available Actions')}</h3>
-              
+
+            {/* User Actions */}
+            <div className="no-print bg-white rounded-[2rem] shadow-xl border border-gray-100 p-10 text-center">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-8">{t('pages.available_actions', 'Available Actions')}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {isBuyer && escrow.status === "Pending" && (
+                {isBuyer && escrow.status.toLowerCase() === "pending" && (
                   <>
-                    <button onClick={handleInitiatePayment} data-testid="fund-button" className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
+                    <button onClick={handleInitiatePayment} className="btn btn-primary btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 group">
                       <Zap size={28} className="group-hover:scale-110 transition-transform" />
                       <span className="font-black uppercase tracking-widest text-xs">{t('components.pay_with_chapa', 'Pay with Chapa')}</span>
                     </button>
-                    <button onClick={() => setShowCBEModal(true)} data-testid="fund-button" className="btn btn-outline border-gray-200 btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 hover:bg-gray-50">
+                    <button onClick={() => setShowCBEModal(true)} className="btn btn-outline border-gray-200 btn-lg rounded-2xl flex flex-col items-center py-6 h-auto gap-2 hover:bg-gray-50">
                       <Shield size={28} className="text-primary-600" />
                       <span className="font-black uppercase tracking-widest text-xs text-gray-600">{t('pages.cbe_direct_verify', 'CBE Direct Verify')}</span>
                     </button>
                   </>
                 )}
                 
-                {isSeller && !escrow.active && escrow.status === "Funded" && (
-                  <button onClick={handleAccept} data-testid="accept-button" className="sm:col-span-2 btn btn-primary btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-primary-500/20">
+                {isSeller && !escrow.active && escrow.status.toLowerCase() === "funded" && (
+                  <button onClick={handleAccept} className="sm:col-span-2 btn btn-primary btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl">
                     {t('pages.accept_funded_escrow', "Accept Funded Escrow")}
                   </button>
                 )}
-                
-                {isBuyer && escrow.active && escrow.status === "Funded" && (
-                  <button 
-                    onClick={handleConfirmReceipt} 
-                    disabled={isLoading}
-                    data-testid="confirm-receipt-button" 
-                    className="sm:col-span-2 btn btn-success btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-green-500/20 disabled:opacity-50"
-                  >
-                    {isLoading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle className="mr-2" />} 
-                    {t('pages.confirm_receipt', "Confirm & Release Funds")}
-                  </button>
-                )}
 
-                {/* Edit Section */}
                 {!escrow.is_locked && (isBuyer || isSeller) && (
-                  <div className="sm:col-span-2 grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 mt-4">
-                    <button 
-                      onClick={() => { 
-                        setEditConditions(escrow.conditions || ""); 
-                        setEditAmount(escrow.amount); 
-                        setEditTitle(escrow.title || "");
-                        setEditJurisdiction(escrow.jurisdiction || "");
-                        setEditGoverningLaw(escrow.governing_law || "");
-                        setEditDeliveryMethod(escrow.delivery_method || "");
-                        setEditCompletionDate(escrow.completion_date ? new Date(escrow.completion_date).toISOString().split('T')[0] : "");
-                        setEditQualityStandards(escrow.quality_standards || "");
-                        setEditConfidentialityTerms(escrow.confidentiality_terms || "");
-                        setEditLiabilityTerms(escrow.liability_terms || "");
-                        setEditAdditionalRequirements(escrow.additional_requirements || "");
-                        setEditPaymentConditions(escrow.payment_conditions || "");
-                        setEditVerificationMethod(escrow.verification_method || "");
-                        setEditTerminationConditions(escrow.termination_conditions || "");
-                        setEditDisputeResolutionMethod(escrow.dispute_resolution_method || "");
-                        setEditAutoRelease(escrow.auto_release || false);
-                        setEditRequiredApprovals(escrow.required_approvals || 1);
-                        setEditLegalNotes(escrow.legal_notes || "");
-                        setShowEditModal(true); 
-                      }} 
-                      data-testid="edit-escrow-button"
-                      className="btn btn-outline border-gray-200 rounded-xl gap-2 h-12 text-sm font-bold"
-                    >
-                      <Edit3 size={16} /> {t('pages.edit_terms', 'Edit Terms')}
-                    </button>
-                    <button 
-                      onClick={handleLock} 
-                      className="btn btn-primary rounded-xl gap-2 h-12 text-sm font-bold shadow-lg shadow-primary-500/20"
-                    >
-                      <Lock size={16} /> {t('pages.lock_and_agree', 'Lock & Agree')}
-                    </button>
-                  </div>
-                )}
-                
-                {(isBuyer || isSeller) && escrow.active && escrow.status === "Funded" && (
-                  <button onClick={() => setShowDisputeModal(true)} data-testid="dispute-button" className="sm:col-span-2 btn btn-outline border-red-100 text-red-600 hover:bg-red-50 btn-lg w-full rounded-2xl py-4 font-bold">
-                    <AlertCircle className="mr-2" /> {t('pages.raise_dispute', "Raise Formal Dispute")}
-                  </button>
-                )}
-                
-                {escrow.status === "Released" && (
-                  <button onClick={handleDownloadAgreement} data-testid="download-final-agreement" className="sm:col-span-2 btn btn-secondary btn-lg w-full flex items-center justify-center gap-2 rounded-2xl py-6 font-black uppercase tracking-widest">
-                    <Download size={20} /> {t('pages.download_final_agreement', "Official Agreement PDF")}
+                  <button onClick={handleLock} className="sm:col-span-2 btn btn-primary btn-lg w-full rounded-2xl py-6 font-black uppercase tracking-widest shadow-xl shadow-primary-500/20">
+                    <Lock size={20} className="mr-2" /> {t('pages.lock_agreement', 'Lock Deterministic Agreement')}
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Sidebar Column */}
+          {/* Sidebar */}
           <div className="space-y-8">
-            {/* Participants Card */}
             <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-8 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -translate-y-16 translate-x-16" />
               <h3 className="text-xl font-black text-gray-900 mb-8 relative z-10">{t('pages.the_parties', 'The Parties')}</h3>
-              
               <div className="space-y-8 relative z-10">
-                {/* Buyer */}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 shadow-sm border border-blue-100">
-                    <User size={24} />
-                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 border border-blue-100"><User size={24} /></div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">{t('pages.buyer_role', 'Purchaser / Buyer')}</p>
-                    <p className="font-bold text-gray-900 truncate">
-                      {isBuyer ? t('pages.you', 'You') : (escrow.buyer?.first_name ? `${escrow.buyer.first_name} ${escrow.buyer.last_name}` : t('pages.pending_user', 'Pending...'))}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{isBuyer ? user?.email : (escrow.buyer?.email || t('pages.invited_user', 'Invited via Email'))}</p>
+                    <p className="font-bold text-gray-900 truncate">{isBuyer ? t('pages.you', 'You') : (escrow.buyer?.email || t('pages.pending_user', 'Pending...'))}</p>
                   </div>
                 </div>
-
-                {/* Seller */}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 shrink-0 shadow-sm border border-green-100">
-                    <User size={24} />
-                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 shrink-0 border border-green-100"><User size={24} /></div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">{t('pages.seller_role', 'Provider / Seller')}</p>
-                    <p className="font-bold text-gray-900 truncate">
-                      {isSeller ? t('pages.you', 'You') : (escrow.seller?.first_name ? `${escrow.seller.first_name} ${escrow.seller.last_name}` : t('pages.pending_user', 'Pending...'))}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{isSeller ? user?.email : (escrow.seller?.email || t('pages.invited_user', 'Invited via Email'))}</p>
+                    <p className="font-bold text-gray-900 truncate">{isSeller ? t('pages.you', 'You') : (escrow.seller?.email || t('pages.pending_user', 'Pending...'))}</p>
                   </div>
                 </div>
-
-                {/* Mediator */}
                 {escrow.mediator_id && (
                   <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-2xl border border-purple-100">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-                      <Scale size={20} />
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 shrink-0"><Scale size={20} /></div>
                     <div className="min-w-0">
                       <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-0.5">{t('pages.mediator_role', 'Assigned Mediator')}</p>
-                      <p className="font-bold text-gray-900 text-sm truncate">
-                        {isMediator ? t('pages.you', 'You') : (escrow.mediator?.first_name ? `${escrow.mediator.first_name} ${escrow.mediator.last_name}` : t('pages.official_mediator', 'SafeDeal Official'))}
-                      </p>
+                      <p className="font-bold text-gray-900 text-sm truncate">{isMediator ? t('pages.you', 'You') : (escrow.mediator?.first_name || t('pages.official_mediator', 'Official'))}</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Compliance Card */}
-            {(escrow.jurisdiction || escrow.governing_law || escrow.dispute_resolution) && (
-              <div className="bg-[#f8fafc] rounded-[2rem] shadow-xl border border-gray-200 p-8">
-                <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
-                  <Scale className="text-primary-600 h-5 w-5" />
-                  {t('pages.legal_framework', 'Framework')}
-                </h3>
-                <div className="space-y-6">
-                  {escrow.jurisdiction && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.jurisdiction', 'Jurisdiction')}</label>
-                      <p className="text-sm font-bold text-gray-700">{escrow.jurisdiction}</p>
-                    </div>
-                  )}
-                  {escrow.governing_law && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.governing_law', 'Governing Law')}</label>
-                      <p className="text-sm font-bold text-gray-700">{escrow.governing_law}</p>
-                    </div>
-                  )}
-                  {escrow.dispute_resolution && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.resolution_method', 'Resolution Method')}</label>
-                      <p className="text-sm font-bold text-primary-700 flex items-center gap-1">
-                        <Zap size={12} /> {escrow.dispute_resolution}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* New Detailed Data Points */}
-                  {escrow.delivery_method && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.delivery_method', 'Delivery Method')}</label>
-                      <p className="text-sm font-bold text-gray-700">{escrow.delivery_method}</p>
-                    </div>
-                  )}
-                  {escrow.completion_date && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.completion_date', 'Expected Completion')}</label>
-                      <p className="text-sm font-bold text-gray-700">{formatDateSafe(escrow.completion_date)}</p>
-                    </div>
-                  )}
-                  {escrow.quality_standards && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.quality_standards', 'Quality Standards')}</label>
-                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.quality_standards}</p>
-                    </div>
-                  )}
-                  {escrow.confidentiality_terms && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.confidentiality', 'Confidentiality')}</label>
-                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.confidentiality_terms}</p>
-                    </div>
-                  )}
-                  {escrow.liability_terms && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.liability', 'Liability')}</label>
-                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.liability_terms}</p>
-                    </div>
-                  )}
-                  {escrow.additional_requirements && (
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.additional_reqs', 'Additional Requirements')}</label>
-                      <p className="text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">{escrow.additional_requirements}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Timeline Card */}
-            <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-8">
-              <h3 className="text-xl font-black text-gray-900 mb-8 flex items-center gap-2">
-                <History className="text-primary-600 h-5 w-5" />
-                {t('pages.activity_log', 'Activity Log')}
-              </h3>
+            <div className="bg-[#f8fafc] rounded-[2rem] shadow-xl border border-gray-200 p-8">
+              <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2"><Scale className="text-primary-600 h-5 w-5" /> Legal Framework</h3>
               <div className="space-y-6">
-                <div className="relative pl-6 border-l-2 border-primary-500 py-1">
-                  <div className="absolute -left-[9px] top-1/2 -translate-y-1/2 w-4 h-4 bg-primary-500 rounded-full border-4 border-white" />
-                  <p className="text-xs font-black text-primary-600 uppercase tracking-widest">{t('pages.created', 'Created')}</p>
-                  <p className="text-[10px] text-gray-500">{formatDateSafe(escrow.created_at)}</p>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.jurisdiction', 'Jurisdiction')}</label>
+                  <p className="text-sm font-bold text-gray-700">{escrow.jurisdiction || 'International'}</p>
                 </div>
-                {statusHistory.map((h, i) => (
-                  <div key={i} className="relative pl-6 border-l-2 border-gray-200 py-1">
-                    <div className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-300 rounded-full" />
-                    <p className="text-xs font-bold text-gray-700 uppercase">{h.status}</p>
-                    <p className="text-[10px] text-gray-500">{formatDateSafe(h.created_at)}</p>
-                  </div>
-                ))}
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.governing_law', 'Governing Law')}</label>
+                  <p className="text-sm font-bold text-gray-700">{escrow.governing_law || 'SafeDeal Rules'}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.arbitration', 'Resolution')}</label>
+                  <p className="text-sm font-bold text-primary-700">{escrow.dispute_resolution || 'AI Smart Arbitration'}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RealTimeChat replaced by requirement: NO CHAT */}
         <PaymentModal isOpen={showPayment} onClose={() => setShowPayment(false)} amount={escrow.amount} paymentUrl={payment?.payment_url} onPaymentComplete={() => fetchEscrowDetails()} />
-
-        {showDisputeModal && (
-
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-md no-print">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl">
-              <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6">
-                <AlertCircle size={32} />
-              </div>
-              <h3 className="text-3xl font-black text-gray-900 mb-2">{t('pages.initiate_dispute', 'Initiate Dispute')}</h3>
-              <p className="text-gray-500 mb-8">{t('pages.dispute_warning', 'Raising a dispute will freeze the funds and notify our arbitration team.')}</p>
-              <textarea value={disputeReason} onChange={e => setDisputeReason(e.target.value)} className="w-full p-6 bg-gray-50 border-2 border-gray-100 rounded-3xl mb-6 focus:border-red-500 outline-none transition-all h-40" placeholder={t('pages.describe_issue', 'Detailed reason for dispute...')} />
-              <div className="flex gap-4">
-                <button onClick={() => setShowDisputeModal(false)} className="flex-1 btn btn-ghost h-14 rounded-2xl font-bold">{t('pages.cancel', 'Cancel')}</button>
-                <button onClick={handleDisputeSubmit} className="flex-1 btn bg-red-600 hover:bg-red-700 text-white h-14 rounded-2xl font-black uppercase tracking-widest">{t('pages.submit_dispute', 'Freeze & Dispute')}</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {showEditModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-md no-print">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
-              <h3 className="text-3xl font-black text-gray-900 mb-8">{t('pages.revise_escrow_terms', 'Revise Terms')}</h3>
-              <div className="space-y-6">
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.agreement_title', 'Title')}</label>
-                  <input type="text" className="input w-full h-14 rounded-2xl font-bold" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.amount', 'Amount (ETB)')}</label>
-                    <input type="number" className="input w-full h-14 rounded-2xl font-bold" value={editAmount} onChange={e => setEditAmount(Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.jurisdiction', 'Jurisdiction')}</label>
-                    <input type="text" className="input w-full h-14 rounded-2xl" value={editJurisdiction} onChange={e => setEditJurisdiction(e.target.value)} />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.governing_law', 'Governing Law')}</label>
-                  <input type="text" className="input w-full h-14 rounded-2xl" value={editGoverningLaw} onChange={e => setEditGoverningLaw(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.delivery_method', 'Delivery Method')}</label>
-                    <input type="text" className="input w-full h-14 rounded-2xl" value={editDeliveryMethod} onChange={e => setEditDeliveryMethod(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.completion_date', 'Expected Completion')}</label>
-                    <input type="date" className="input w-full h-14 rounded-2xl" value={editCompletionDate} onChange={e => setEditCompletionDate(e.target.value)} />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.quality_standards', 'Quality Standards')}</label>
-                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editQualityStandards} onChange={e => setEditQualityStandards(e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.confidentiality', 'Confidentiality')}</label>
-                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editConfidentialityTerms} onChange={e => setEditConfidentialityTerms(e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.liability', 'Liability')}</label>
-                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editLiabilityTerms} onChange={e => setEditLiabilityTerms(e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.additional_reqs', 'Additional Requirements')}</label>
-                  <textarea className="w-full p-4 border-2 rounded-2xl" value={editAdditionalRequirements} onChange={e => setEditAdditionalRequirements(e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{t('pages.updated_conditions', 'Contractual Conditions')}</label>
-                  <textarea rows={4} className="w-full p-6 bg-gray-50 border-2 border-gray-100 rounded-3xl focus:border-primary-500 outline-none transition-all" value={editConditions} onChange={e => setEditConditions(e.target.value)} />
-                </div>
-                <div className="flex gap-4 pt-6">
-                  <button onClick={() => setShowEditModal(false)} className="flex-1 btn btn-ghost h-14 rounded-2xl font-bold">{t('pages.discard_changes', 'Discard')}</button>
-                  <button onClick={handleEditSubmit} className="flex-1 btn btn-primary h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary-500/20">{t('pages.apply_revisions', 'Apply Revisions')}</button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
 
         {showCBEModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-md no-print">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl">
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
-                <Shield size={32} />
-              </div>
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6"><Shield size={32} /></div>
               <h3 className="text-3xl font-black text-gray-900 mb-2">{t('pages.cbe_verification', 'CBE Verification')}</h3>
               <p className="text-gray-500 mb-8">{t('pages.cbe_verify_desc', 'Enter the transaction ID and your account suffix to verify payment.')}</p>
-              
               <div className="space-y-4 mb-8">
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Transaction ID</label>
@@ -1007,7 +512,6 @@ const EscrowDetails = () => {
                   <input type="text" value={cbeAccountSuffix} onChange={e => setCbeAccountSuffix(e.target.value)} className="input w-full h-14 rounded-2xl" placeholder="262..." />
                 </div>
               </div>
-
               <div className="flex gap-4">
                 <button onClick={() => setShowCBEModal(false)} className="flex-1 btn btn-ghost h-14 rounded-2xl font-bold">{t('pages.cancel', 'Cancel')}</button>
                 <button onClick={handleCBEVerify} disabled={isVerifyingCBE} className="flex-1 btn btn-primary h-14 rounded-2xl font-black uppercase tracking-widest">

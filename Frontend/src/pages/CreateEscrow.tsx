@@ -7,7 +7,7 @@ import {
   Search, Check, FileText, 
   ChevronLeft, Trash2,
   ListChecks, Gavel, Scale,
-  Info
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -23,11 +23,35 @@ const MilestoneSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
   description: z.string().optional(),
   due_date: z.string().optional(),
-  verification_method: z.string().optional(),
-  auto_release: z.boolean().default(false),
+  
+  // Structured Logic
+  completion_type: z.string().min(1, 'Completion type is required'),
+  release_trigger: z.string().min(1, 'Release trigger is required'),
+  verification_authority: z.string().min(1, 'Verification authority is required'),
+  evidence_types: z.array(z.string()).min(1, 'At least one evidence type is required'),
+  
+  // Business Logic
+  auto_accept_days: z.coerce.number().min(0).max(30).optional(),
+  inspection_period_days: z.coerce.number().min(0).default(7),
   required_approvals: z.coerce.number().min(1).default(1),
-  condition_type: z.string().optional(),
+  
   acceptance_criteria: z.string().optional(),
+}).refine(data => {
+  if (data.release_trigger === 'inspection_passed' && (!data.inspection_period_days || data.inspection_period_days <= 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Inspection trigger requires inspection_period_days > 0",
+  path: ["inspection_period_days"]
+}).refine(data => {
+  if (data.release_trigger === 'auto_accept' && (!data.auto_accept_days || data.auto_accept_days <= 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Auto-accept requires auto_accept_days > 0",
+  path: ["auto_accept_days"]
 });
 
 const CreateEscrowSchema = z.object({
@@ -48,23 +72,6 @@ const CreateEscrowSchema = z.object({
   governing_law: z.string().min(2, 'Governing law is required').optional(),
   dispute_resolution: z.string().default('AI Arbitration via SafeDeal'),
   milestones: z.array(MilestoneSchema).optional(),
-
-  // Enhanced Detailed Data Points
-  delivery_method: z.string().optional(),
-  completion_date: z.string().optional(),
-  quality_standards: z.string().optional(),
-  confidentiality_terms: z.string().optional(),
-  liability_terms: z.string().optional(),
-  additional_requirements: z.string().optional(),
-
-  // Normalized Condition Fields
-  payment_conditions: z.string().optional(),
-  verification_method: z.string().optional(),
-  termination_conditions: z.string().optional(),
-  dispute_resolution_method: z.string().optional(),
-  auto_release: z.boolean().default(false),
-  required_approvals: z.coerce.number().min(1).default(1),
-  legal_notes: z.string().optional(),
 });
 
 type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
@@ -127,7 +134,18 @@ const CreateEscrow = () => {
 
   useEffect(() => {
     if (isDetailed && milestonesWatch.length === 0) {
-      append({ title: 'Initial Milestone', amount: 0, description: '', auto_release: false, required_approvals: 1 });
+      append({ 
+        title: 'Initial Milestone', 
+        amount: 0, 
+        description: '', 
+        completion_type: 'delivery',
+        release_trigger: 'buyer_approval',
+        verification_authority: 'buyer',
+        evidence_types: ['photo'],
+        auto_accept_days: 0,
+        inspection_period_days: 7,
+        required_approvals: 1
+      });
     }
   }, [isDetailed, milestonesWatch.length, append]);
 
@@ -257,18 +275,6 @@ const CreateEscrow = () => {
 
   const onSubmit = async (data: CreateEscrowForm) => {
     try {
-      const extraDataObj: any = {
-        app_version: '2.0',
-        flow_type: data.isDetailed ? 'detailed' : 'quick',
-        extended_specs: {
-          delivery_method: data.delivery_method,
-          quality_standards: data.quality_standards,
-          confidentiality_terms: data.confidentiality_terms,
-          liability_terms: data.liability_terms,
-          additional_requirements: data.additional_requirements
-        }
-      };
-
       const payload: any = { 
         creator_role: data.creator_role, 
         amount: Number(data.amount), 
@@ -276,43 +282,19 @@ const CreateEscrow = () => {
         title: data.title,
         sub_type: data.sub_type,
         inspection_period: Number(data.inspection_period),
-        extra_data: JSON.stringify(extraDataObj)
       };
       
-      if (data.isDetailed) {
+      if (data.isDetailed && data.milestones) {
         payload.jurisdiction = data.jurisdiction; 
         payload.governing_law = data.governing_law; 
         payload.dispute_resolution = data.dispute_resolution;
-        payload.delivery_method = data.delivery_method;
-        payload.completion_date = data.completion_date ? new Date(data.completion_date).toISOString() : undefined;
-        payload.quality_standards = data.quality_standards;
-        payload.confidentiality_terms = data.confidentiality_terms;
-        payload.liability_terms = data.liability_terms;
-        payload.additional_requirements = data.additional_requirements;
-
-        // Normalized Condition Fields
-        payload.payment_conditions = data.payment_conditions;
-        payload.verification_method = data.verification_method;
-        payload.termination_conditions = data.termination_conditions;
-        payload.dispute_resolution_method = data.dispute_resolution_method;
-        payload.auto_release = data.auto_release;
-        payload.required_approvals = data.required_approvals;
-        payload.legal_notes = data.legal_notes;
         
-        if (data.milestones) {
-          payload.milestones = data.milestones.map((m: any, i: number) => {
-            const mExtra: any = {
-              acceptance_criteria: m.acceptance_criteria,
-              verification_method: m.verification_method
-            };
-            return { 
-              ...m, 
-              order_index: i, 
-              amount: Number(m.amount),
-              extra_data: JSON.stringify(mExtra)
-            };
-          });
-        }
+        payload.milestones = data.milestones.map((m: any, i: number) => ({ 
+          ...m, 
+          order_index: i, 
+          amount: Number(m.amount),
+          evidence_types: m.evidence_types.join(',')
+        }));
       }
       
       // Assign participants
@@ -333,7 +315,6 @@ const CreateEscrow = () => {
           payload.seller_id = data.seller_id;
           payload.seller_email = data.seller_email;
         }
-        // Optional mediator for non-mediator creators
         if (data.mediator_id || data.mediator_email) {
           payload.mediator_id = data.mediator_id;
           payload.mediator_email = data.mediator_email;
@@ -380,8 +361,8 @@ const CreateEscrow = () => {
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">
                   {m 
-                    ? t('pages.detailed_desc', 'Full legal parameters, milestones, and specific terms.') 
-                    : t('pages.quick_desc', 'Basic info only. Fast and simple for standard trades.')}
+                    ? t('pages.detailed_desc', 'Deterministic legal enums, mandatory evidence, and milestone triggers.') 
+                    : t('pages.quick_desc', 'Fast and simple for trusted standard trades.')}
                 </p>
               </label>
             ))}
@@ -397,7 +378,6 @@ const CreateEscrow = () => {
           </div>
           
           <div className="max-w-xl mx-auto space-y-8">
-            {/* Buyer Input */}
             {(creatorRole === 'seller' || creatorRole === 'mediator') && (
               <PartySearchField 
                 label={t('pages.buyer', 'Buyer')}
@@ -412,7 +392,6 @@ const CreateEscrow = () => {
               />
             )}
 
-            {/* Seller Input */}
             {(creatorRole === 'buyer' || creatorRole === 'mediator') && (
               <PartySearchField 
                 label={t('pages.seller', 'Seller')}
@@ -427,7 +406,6 @@ const CreateEscrow = () => {
               />
             )}
 
-            {/* Optional Mediator Input for Detailed Flow */}
             {isDetailed && creatorRole !== 'mediator' && (
               <div className="pt-4 border-t border-dashed">
                 <PartySearchField 
@@ -531,18 +509,15 @@ const CreateEscrow = () => {
                   </div>
                 </div>
 
-                <div className="space-y-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Info size={14} className="text-primary-600" />
-                    {t('pages.extended_specs', 'Extended Specifications')}
-                  </h3>
-                  <div>
-                    <label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">{t('pages.delivery_method', 'Delivery Method')}</label>
-                    <input type="text" {...register('delivery_method')} className="input input-sm w-full rounded-xl bg-white border-none shadow-sm h-10" placeholder="e.g. Email / Physical Shipping" />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">{t('pages.quality_standards', 'Quality Standards')}</label>
-                    <textarea {...register('quality_standards')} className="textarea textarea-sm w-full rounded-xl bg-white border-none shadow-sm h-20" placeholder="Technical requirements..." />
+                <div className="p-6 bg-primary-100 rounded-3xl">
+                  <div className="flex gap-3 text-primary-900">
+                    <Shield size={24} className="shrink-0" />
+                    <div>
+                      <h4 className="font-black text-xs uppercase tracking-widest">{t('pages.legal_strength', 'Legal Strength: High')}</h4>
+                      <p className="text-[10px] opacity-80 leading-relaxed font-medium">
+                        All milestones in detailed mode are fully deterministic. Triggers and evidence are strictly enforced.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -552,7 +527,7 @@ const CreateEscrow = () => {
                   <Shield size={48} className="text-primary-600 mx-auto mb-4" />
                   <h3 className="font-black text-xl text-primary-900 mb-2">{t('pages.secure_by_default', 'SafeDeal Protected')}</h3>
                   <p className="text-sm text-primary-700 leading-relaxed">
-                    This deal is cryptographically secured with Keccak256 anchoring on Ethereum.
+                    Quick trades are anchored on-chain with basic cryptographic signatures.
                   </p>
                 </div>
               </div>
@@ -565,87 +540,146 @@ const CreateEscrow = () => {
         <div className="space-y-8">
           <div className="flex justify-between items-end">
             <div>
-              <h2 className="text-3xl font-black text-gray-900">{t('pages.milestones', 'Project Milestones')}</h2>
-              <p className="text-gray-500 font-medium">{t('pages.break_down_payments', 'Break the total ETB amount into deliverables')}</p>
+              <h2 className="text-3xl font-black text-gray-900">{t('pages.milestones', 'Deterministic Milestones')}</h2>
+              <p className="text-gray-500 font-medium">{t('pages.break_down_payments', 'Each payment must have a clear, non-text trigger')}</p>
             </div>
             <button 
               type="button" 
-              onClick={() => append({ title: '', amount: 0, description: '', auto_release: false, required_approvals: 1 })}
+              onClick={() => append({ 
+                title: '', 
+                amount: 0, 
+                description: '', 
+                completion_type: 'delivery',
+                release_trigger: 'buyer_approval',
+                verification_authority: 'buyer',
+                evidence_types: ['photo'],
+                auto_accept_days: 0,
+                inspection_period_days: 7,
+                required_approvals: 1
+              })}
               className="btn btn-primary px-6 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary-500/30"
             >
               + {t('pages.add_milestone', 'Add Milestone')}
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[50vh] pr-4">
+          <div className="grid grid-cols-1 gap-8 overflow-y-auto max-h-[55vh] pr-4">
             {fields.map((f, i) => (
               <motion.div 
                 key={f.id} 
-                initial={{ opacity: 0, y: 10 }} 
-                animate={{ opacity: 1, y: 0 }}
-                className="p-6 bg-white border-2 border-gray-100 rounded-[2rem] relative group hover:border-primary-200 transition-all shadow-sm hover:shadow-md"
+                initial={{ opacity: 0, x: -10 }} 
+                animate={{ opacity: 1, x: 0 }}
+                className="p-8 bg-white border-2 border-gray-100 rounded-[2.5rem] relative group hover:border-primary-200 transition-all shadow-sm"
               >
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">#{i + 1} {t('pages.milestone_title', 'Milestone Title')}</label>
-                      <input 
-                        placeholder="e.g. Design Phase" 
-                        {...register(`milestones.${i}.title`)} 
-                        className="w-full font-black text-lg outline-none border-b-2 border-transparent focus:border-primary-600 transition-all bg-transparent" 
-                      />
-                      <ErrorMessage error={formErrors.milestones?.[i]?.title} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">#{i + 1} {t('pages.milestone_title', 'Deliverable Name')}</label>
+                        <input 
+                          placeholder="e.g. Completed Mobile App Foundation" 
+                          {...register(`milestones.${i}.title`)} 
+                          className="w-full font-black text-lg outline-none border-b-2 border-transparent focus:border-primary-600 transition-all bg-transparent" 
+                        />
+                        <ErrorMessage error={formErrors.milestones?.[i]?.title} />
+                      </div>
+                      <button type="button" onClick={() => remove(i)} className="text-gray-300 hover:text-red-500 transition-colors">
+                        <Trash2 size={20} />
+                      </button>
                     </div>
-                    <button type="button" onClick={() => remove(i)} className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                      <Trash2 size={20} />
-                    </button>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.payout_amount', 'Payout (ETB)')}</label>
+                        <input 
+                          type="number" 
+                          {...register(`milestones.${i}.amount`)} 
+                          className="w-full font-black text-primary-600 text-xl outline-none bg-transparent" 
+                        />
+                        <ErrorMessage error={formErrors.milestones?.[i]?.amount} />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.due_date', 'Due Date')}</label>
+                        <input type="date" {...register(`milestones.${i}.due_date`)} className="w-full font-bold text-sm outline-none bg-transparent" />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-3xl">
                     <div>
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.payout_amount', 'Payout (ETB)')}</label>
-                      <input 
-                        type="number" 
-                        {...register(`milestones.${i}.amount`)} 
-                        className="w-full font-black text-primary-600 text-xl outline-none bg-transparent" 
-                      />
-                      <ErrorMessage error={formErrors.milestones?.[i]?.amount} />
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.completion_type', 'What is done?')}</label>
+                      <select {...register(`milestones.${i}.completion_type`)} className="select select-xs w-full rounded-lg h-10 border-none bg-white font-bold">
+                        <option value="delivery">Physical Delivery</option>
+                        <option value="service_performed">Service Performed</option>
+                        <option value="document_submitted">Document Submitted</option>
+                        <option value="inspection_passed">Inspection Passed</option>
+                        <option value="certificate_issued">Certificate Issued</option>
+                        <option value="ownership_transferred">Ownership Transferred</option>
+                        <option value="system_deployed">System Deployed</option>
+                      </select>
                     </div>
                     <div>
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.due_date', 'Due Date')}</label>
-                      <input type="date" {...register(`milestones.${i}.due_date`)} className="w-full font-bold text-sm outline-none bg-transparent" />
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.verification_auth', 'Who verifies?')}</label>
+                      <select {...register(`milestones.${i}.verification_authority`)} className="select select-xs w-full rounded-lg h-10 border-none bg-white font-bold">
+                        <option value="buyer">Buyer</option>
+                        <option value="mutual">Mutual (Both)</option>
+                        <option value="platform_mediator">Platform Mediator</option>
+                        <option value="licensed_third_party">Licensed 3rd Party</option>
+                        <option value="government_body">Government Body</option>
+                        <option value="system_verification">System Check</option>
+                      </select>
                     </div>
-                  </div>
+                    <div>
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.release_trigger', 'When to pay?')}</label>
+                      <select {...register(`milestones.${i}.release_trigger`)} className="select select-xs w-full rounded-lg h-10 border-none bg-white font-bold">
+                        <option value="buyer_approval">Buyer Approval</option>
+                        <option value="inspection_passed">Inspection Passed</option>
+                        <option value="certificate_issued">Certificate Issued</option>
+                        <option value="document_verified">Document Verified</option>
+                        <option value="auto_accept">Auto-Accept</option>
+                        <option value="time_expiry">Time Expiry</option>
+                        <option value="court_order">Court Order</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.evidence_required', 'Evidence Type')}</label>
+                      <div className="flex flex-wrap gap-1">
+                        {['photo', 'video', 'document', 'signature'].map(et => (
+                          <label key={et} className="cursor-pointer">
+                            <input type="checkbox" value={et} {...register(`milestones.${i}.evidence_types`)} className="sr-only peer" />
+                            <span className="px-2 py-1 bg-white border rounded text-[8px] font-black uppercase peer-checked:bg-primary-600 peer-checked:text-white peer-checked:border-primary-600 transition-all">{et}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {watch(`milestones.${i}.release_trigger`) === 'inspection_passed' && (
+                      <div className="col-span-2">
+                         <label className="text-[9px] font-black text-primary-600 uppercase tracking-widest mb-1 block">{t('pages.inspection_window', 'Inspection Period (Days)')}</label>
+                         <input type="number" {...register(`milestones.${i}.inspection_period_days`)} className="input input-xs w-full rounded-lg h-10 bg-primary-50 border-primary-200 font-black text-primary-900" />
+                         <ErrorMessage error={(formErrors.milestones as any)?.[i]?.inspection_period_days} />
+                      </div>
+                    )}
 
-                  <div className="pt-4 border-t border-gray-100">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.verification_method', 'Verification Method')}</label>
-                    <select {...register(`milestones.${i}.verification_method`)} className="select select-sm w-full rounded-xl bg-gray-50 border-none h-10">
-                      <option value="buyer_approval">Buyer Approval</option>
-                      <option value="mediator_approval">Mediator Approval</option>
-                      <option value="evidence_based">Evidence Submission</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">{t('pages.acceptance_criteria', 'Acceptance Criteria')}</label>
-                    <textarea 
-                      {...register(`milestones.${i}.acceptance_criteria`)} 
-                      rows={2}
-                      className="textarea textarea-sm w-full rounded-xl bg-gray-50 border-none h-16 leading-tight" 
-                      placeholder="What defines success for this milestone?"
-                    />
+                    {watch(`milestones.${i}.release_trigger`) === 'auto_accept' && (
+                      <div className="col-span-2">
+                         <label className="text-[9px] font-black text-primary-600 uppercase tracking-widest mb-1 block">{t('pages.auto_accept_window', 'Auto-Accept After (Days)')}</label>
+                         <input type="number" {...register(`milestones.${i}.auto_accept_days`)} className="input input-xs w-full rounded-lg h-10 bg-primary-50 border-primary-200 font-black text-primary-900" />
+                         <ErrorMessage error={(formErrors.milestones as any)?.[i]?.auto_accept_days} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <div className="mt-8 p-6 bg-primary-600 rounded-[2rem] text-white flex justify-between items-center shadow-xl shadow-primary-500/20">
+          <div className="p-6 bg-primary-600 rounded-[2rem] text-white flex justify-between items-center shadow-xl">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{t('pages.synchronized_total', 'Synchronized Total')}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{t('pages.legal_total', 'Total Legally Structured Amount')}</p>
               <p className="text-3xl font-black">{Number(amount).toLocaleString()} ETB</p>
             </div>
-            <ListChecks size={32} className="opacity-40" />
+            <Scale size={32} className="opacity-40" />
           </div>
         </div>
       );
@@ -654,18 +688,18 @@ const CreateEscrow = () => {
         <div className="space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-black text-gray-900">{t('pages.finalize_deal', 'Finalize Deal')}</h2>
-            <p className="text-gray-500 font-medium">{t('pages.review_and_launch', 'Review the agreement before securing it on-chain')}</p>
+            <p className="text-gray-500 font-medium">{t('pages.review_and_launch', 'Review the deterministic logic before anchoring on-chain')}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="p-10 bg-primary-900 text-white rounded-[3rem] shadow-2xl space-y-8">
               <div>
-                <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.contract_title', 'Contract Title')}</p>
-                <h3 className="text-2xl font-black leading-tight">{watch('title')}</h3>
+                <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.contract_title', 'Agreement ID')}</p>
+                <h3 className="text-2xl font-black leading-tight truncate">{watch('title')}</h3>
               </div>
 
               <div>
-                <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.total_etb_value', 'Total Value')}</p>
+                <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.total_etb_value', 'Escrow Value')}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-black">{Number(amount).toLocaleString()}</span>
                   <span className="text-xl font-bold opacity-60">ETB</span>
@@ -687,31 +721,32 @@ const CreateEscrow = () => {
             <div className="space-y-6">
               <div className="p-8 bg-gray-50 rounded-[2.5rem] border-2 border-white space-y-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Scale size={20} className="text-primary-600" />
-                  <h4 className="font-black uppercase text-xs tracking-widest text-gray-500">{t('pages.legal_anchoring', 'Legal Anchoring')}</h4>
+                  <Check size={20} className="text-green-600" />
+                  <h4 className="font-black uppercase text-xs tracking-widest text-gray-500">{t('pages.validation_status', 'Validation: Pass')}</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('pages.jurisdiction', 'Jurisdiction')}</p>
-                    <p className="font-bold text-sm">{watch('jurisdiction')}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('pages.logic_type', 'Escrow Logic')}</p>
+                    <p className="font-bold text-sm capitalize">{isDetailed ? 'Deterministic' : 'Standard'}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('pages.resolution', 'Resolution')}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('pages.resolution', 'Arbitration')}</p>
                     <p className="font-bold text-sm truncate">{watch('dispute_resolution')}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('pages.tamper_proof_id', 'Tamper-Proof Record ID')}</p>
-                    <p className="font-mono text-[10px] bg-white p-2 rounded-lg border border-gray-200 break-all text-primary-700">
-                      Keccak256:0x{Math.random().toString(16).slice(2, 10)}...{Math.random().toString(16).slice(2, 10)}
-                    </p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('pages.legal_integrity', 'Legal Integrity')}</p>
+                    <div className="flex items-center gap-2 font-mono text-[9px] bg-white p-3 rounded-xl border border-gray-200 text-primary-700">
+                       <Scale size={12} />
+                       Keccak256 Anchored (Ethereum Status Layer)
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 bg-blue-50 rounded-[2rem] border-2 border-blue-100 flex gap-4">
-                <Info className="text-blue-600 shrink-0" />
-                <p className="text-xs text-blue-800 leading-relaxed font-medium">
-                  {t('pages.final_legal_warning', 'By launching, you agree to the conditions stated. This agreement is cryptographically signed by your account upon initiation.')}
+              <div className="p-6 bg-amber-50 rounded-[2rem] border-2 border-amber-100 flex gap-4">
+                <AlertTriangle className="text-amber-600 shrink-0" />
+                <p className="text-[10px] text-amber-800 leading-relaxed font-bold">
+                  {t('pages.legal_binding_warning', 'By launching, you acknowledge that all release triggers are deterministic and based on the selected enums. Fraudulent submission of evidence is punishable by law.')}
                 </p>
               </div>
             </div>
@@ -748,7 +783,6 @@ const CreateEscrow = () => {
 
         {/* Content Container */}
         <div className="bg-white rounded-[3.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-gray-100 p-8 sm:p-16 min-h-[65vh] flex flex-col relative overflow-hidden">
-          {/* Subtle Background Pattern */}
           <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
             <Scale size={300} />
           </div>
@@ -782,7 +816,7 @@ const CreateEscrow = () => {
                 disabled={isSubmitting || !isValid} 
                 className="btn btn-primary px-12 h-16 rounded-[2rem] font-black uppercase text-sm tracking-widest shadow-2xl shadow-primary-500/40 flex items-center gap-3"
               >
-                {isSubmitting ? t('pages.launching', 'Launching...') : t('pages.launch_agreement', 'Launch Secure Deal')}
+                {isSubmitting ? t('pages.launching', 'Launching...') : t('pages.launch_agreement', 'Secure Agreement')}
                 <Check size={20} />
               </button>
             )}

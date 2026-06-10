@@ -8,13 +8,13 @@ import (
 
 type Escrow struct {
 	gorm.Model
-	ID                 uint        `json:"id" gorm:"primaryKey"`
-	BuyerID            uint        `json:"buyer_id" gorm:"not null"`
-	SellerID           uint        `json:"seller_id" gorm:"not null"`
-	MediatorID         *uint       `json:"mediator_id,omitempty"`
-	Amount             uint        `json:"amount" gorm:"not null"`
-	PlatformFee        uint        `json:"platform_fee"`
-	Status             string      `json:"status" gorm:"default:'Pending'" validate:"oneof=Pending Verifying Funded Active Released Disputed Canceled Refunded"`
+	ID                 uint         `json:"id" gorm:"primaryKey"`
+	BuyerID            uint         `json:"buyer_id" gorm:"not null"`
+	SellerID           uint         `json:"seller_id" gorm:"not null"`
+	MediatorID         *uint        `json:"mediator_id,omitempty"`
+	Amount             uint         `json:"amount" gorm:"not null"`
+	PlatformFee        uint         `json:"platform_fee"`
+	Status             EscrowStatus `json:"status" gorm:"default:'pending'"`
 
 	// Core Agreement Fields
 	Title              string      `json:"title,omitempty"`
@@ -61,12 +61,13 @@ type Escrow struct {
 	SellerSignature    string      `json:"seller_signature,omitempty"`
 
 	// Dispute & Resolution
-	DisputeReason      string      `json:"dispute_reason,omitempty"`
-	DisputeStatus      string      `json:"dispute_status,omitempty" gorm:"default:'None'"`
-	ResolvedByID       *uint       `json:"resolved_by_id,omitempty"`
-	ResolutionNote     string      `json:"resolution_note,omitempty"`
-	ReceiptURL         string      `json:"receipt_url,omitempty"`
-	TransactionRef     *string     `json:"transaction_ref,omitempty" gorm:"uniqueIndex"`
+	DisputeReason      string         `json:"dispute_reason,omitempty"`
+	DisputeStatus      DisputeStatus  `json:"dispute_status,omitempty" gorm:"default:'none'"`
+	ResolutionType     ResolutionType `json:"resolution_type,omitempty" gorm:"default:'none'"`
+	ResolvedByID       *uint          `json:"resolved_by_id,omitempty"`
+	ResolutionNote     string         `json:"resolution_note,omitempty"`
+	ReceiptURL         string         `json:"receipt_url,omitempty"`
+	TransactionRef     *string        `json:"transaction_ref,omitempty" gorm:"uniqueIndex"`
 
 	// Status & Lifecycle
 	Active             bool        `json:"active" gorm:"default:false"`

@@ -42,43 +42,58 @@ func (h *MilestoneHandler) GetMilestonesByEscrow(c *fiber.Ctx) error {
 // CreateMilestone creates a new milestone for an escrow
 func (h *MilestoneHandler) CreateMilestone(c *fiber.Ctx) error {
 	var req struct {
-		EscrowID           uint                   `json:"escrow_id"`
-		Title              string                 `json:"title"`
-		Description        string                 `json:"description"`
-		Amount             uint                   `json:"amount"`
-		DueDate            *string                `json:"due_date"`
-		OrderIndex         int                    `json:"order_index"`
-		ApproverID         *uint                  `json:"approver_id"`
-		VerificationMethod string                 `json:"verification_method"`
-		AutoRelease        bool                   `json:"auto_release"`
-		RequiredApprovals  int                    `json:"required_approvals"`
-		ConditionType      string                 `json:"condition_type"`
-		AcceptanceCriteria string                 `json:"acceptance_criteria"`
-		RejectionConditions string                `json:"rejection_conditions"`
-		CureTerms          string                 `json:"cure_terms"`
-		RevisionWindow     int                    `json:"revision_window"`
+		EscrowID              uint                         `json:"escrow_id"`
+		Title                 string                       `json:"title"`
+		Description           string                       `json:"description"`
+		Amount                uint                         `json:"amount"`
+		DueDate               *string                      `json:"due_date"`
+		OrderIndex            int                          `json:"order_index"`
+		ApproverID            *uint                        `json:"approver_id"`
+		CompletionType        models.CompletionType        `json:"completion_type"`
+		VerificationAuthority models.VerificationAuthority `json:"verification_authority"`
+		ReleaseTrigger        models.ReleaseTrigger        `json:"release_trigger"`
+		EvidenceTypes         []string                     `json:"evidence_types"`
+		AutoAcceptDays        int                          `json:"auto_accept_days"`
+		InspectionPeriodDays  int                          `json:"inspection_period_days"`
+		RequiredApprovals     int                          `json:"required_approvals"`
+		AcceptanceCriteria    string                       `json:"acceptance_criteria"`
+		RejectionConditions   string                       `json:"rejection_conditions"`
+		CureTerms             string                       `json:"cure_terms"`
+		RevisionWindow        int                          `json:"revision_window"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	evidenceTypesStr := ""
+	if len(req.EvidenceTypes) > 0 {
+		for i, et := range req.EvidenceTypes {
+			if i > 0 { evidenceTypesStr += "," }
+			evidenceTypesStr += et
+		}
+	}
+
 	milestone := models.Milestone{
-		EscrowID:           req.EscrowID,
-		Title:              req.Title,
-		Description:        req.Description,
-		Amount:             req.Amount,
-		DueDate:            req.DueDate,
-		OrderIndex:         req.OrderIndex,
-		ApproverID:         req.ApproverID,
-		VerificationMethod: req.VerificationMethod,
-		AutoRelease:        req.AutoRelease,
-		RequiredApprovals:  req.RequiredApprovals,
-		ConditionType:      req.ConditionType,
-		AcceptanceCriteria: req.AcceptanceCriteria,
-		RejectionConditions: req.RejectionConditions,
-		CureTerms:          req.CureTerms,
-		RevisionWindow:     req.RevisionWindow,
+		EscrowID:              req.EscrowID,
+		Title:                 req.Title,
+		Description:           req.Description,
+		Amount:                req.Amount,
+		DueDate:               req.DueDate,
+		OrderIndex:            req.OrderIndex,
+		ApproverID:            req.ApproverID,
+		CompletionType:        req.CompletionType,
+		VerificationAuthority: req.VerificationAuthority,
+		ReleaseTrigger:        req.ReleaseTrigger,
+		EvidenceTypes:         evidenceTypesStr,
+		AutoAcceptDays:        req.AutoAcceptDays,
+		InspectionPeriodDays:  req.InspectionPeriodDays,
+		RequiredApprovals:     req.RequiredApprovals,
+		AcceptanceCriteria:    req.AcceptanceCriteria,
+		RejectionConditions:   req.RejectionConditions,
+		CureTerms:             req.CureTerms,
+		RevisionWindow:        req.RevisionWindow,
+		Status:                models.MilestonePending,
 	}
 
 	if err := h.DB.Create(&milestone).Error; err != nil {
@@ -120,20 +135,23 @@ func (h *MilestoneHandler) UpdateMilestone(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		Title              string  `json:"title"`
-		Description        string  `json:"description"`
-		Amount             uint    `json:"amount"`
-		DueDate            *string `json:"due_date"`
-		OrderIndex         int     `json:"order_index"`
-		ApproverID         *uint   `json:"approver_id"`
-		VerificationMethod string  `json:"verification_method"`
-		AutoRelease        bool    `json:"auto_release"`
-		RequiredApprovals  int     `json:"required_approvals"`
-		ConditionType      string  `json:"condition_type"`
-		AcceptanceCriteria string  `json:"acceptance_criteria"`
-		RejectionConditions string `json:"rejection_conditions"`
-		CureTerms          string  `json:"cure_terms"`
-		RevisionWindow     int     `json:"revision_window"`
+		Title                 string                       `json:"title"`
+		Description           string                       `json:"description"`
+		Amount                uint                         `json:"amount"`
+		DueDate               *string                      `json:"due_date"`
+		OrderIndex            int                          `json:"order_index"`
+		ApproverID            *uint                        `json:"approver_id"`
+		CompletionType        models.CompletionType        `json:"completion_type"`
+		VerificationAuthority models.VerificationAuthority `json:"verification_authority"`
+		ReleaseTrigger        models.ReleaseTrigger        `json:"release_trigger"`
+		EvidenceTypes         []string                     `json:"evidence_types"`
+		AutoAcceptDays        int                          `json:"auto_accept_days"`
+		InspectionPeriodDays  int                          `json:"inspection_period_days"`
+		RequiredApprovals     int                          `json:"required_approvals"`
+		AcceptanceCriteria    string                       `json:"acceptance_criteria"`
+		RejectionConditions   string                       `json:"rejection_conditions"`
+		CureTerms             string                       `json:"cure_terms"`
+		RevisionWindow        int                          `json:"revision_window"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -146,10 +164,22 @@ func (h *MilestoneHandler) UpdateMilestone(c *fiber.Ctx) error {
 	if req.DueDate != nil { milestone.DueDate = req.DueDate }
 	milestone.OrderIndex = req.OrderIndex
 	if req.ApproverID != nil { milestone.ApproverID = req.ApproverID }
-	if req.VerificationMethod != "" { milestone.VerificationMethod = req.VerificationMethod }
-	milestone.AutoRelease = req.AutoRelease
+	if req.CompletionType != "" { milestone.CompletionType = req.CompletionType }
+	if req.VerificationAuthority != "" { milestone.VerificationAuthority = req.VerificationAuthority }
+	if req.ReleaseTrigger != "" { milestone.ReleaseTrigger = req.ReleaseTrigger }
+	
+	if len(req.EvidenceTypes) > 0 {
+		evidenceTypesStr := ""
+		for i, et := range req.EvidenceTypes {
+			if i > 0 { evidenceTypesStr += "," }
+			evidenceTypesStr += et
+		}
+		milestone.EvidenceTypes = evidenceTypesStr
+	}
+
+	if req.AutoAcceptDays > 0 { milestone.AutoAcceptDays = req.AutoAcceptDays }
+	if req.InspectionPeriodDays > 0 { milestone.InspectionPeriodDays = req.InspectionPeriodDays }
 	if req.RequiredApprovals > 0 { milestone.RequiredApprovals = req.RequiredApprovals }
-	if req.ConditionType != "" { milestone.ConditionType = req.ConditionType }
 	if req.AcceptanceCriteria != "" { milestone.AcceptanceCriteria = req.AcceptanceCriteria }
 	if req.RejectionConditions != "" { milestone.RejectionConditions = req.RejectionConditions }
 	if req.CureTerms != "" { milestone.CureTerms = req.CureTerms }
@@ -188,8 +218,8 @@ func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only the seller can submit the milestone"})
 	}
 
-	if milestone.Status != models.MilestoneFunded {
-		return c.Status(400).JSON(fiber.Map{"error": "Milestone must be funded before submission"})
+	if milestone.Status != models.MilestoneFunded && milestone.Status != models.MilestonePending {
+		return c.Status(400).JSON(fiber.Map{"error": "Milestone must be funded or pending before submission"})
 	}
 
 	// Log to blockchain for audit trail (court compliance)
@@ -328,9 +358,7 @@ func (h *MilestoneHandler) RejectMilestone(c *fiber.Ctx) error {
 
 // Helper function to generate hash for blockchain recording
 func (h *MilestoneHandler) generateHash(data string) string {
-	// Simple hash generation - in production, use proper cryptographic hashing
-	// This is a placeholder implementation
-	return "0x" + data[:min(len(data), 32)] // Just taking first 32 chars as hex
+	return "0x" + data[:min(len(data), 32)]
 }
 
 func min(a, b int) int {

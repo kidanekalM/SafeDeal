@@ -241,8 +241,8 @@ const AllEscrows = () => {
             {filteredEscrows.map((escrow, idx) => {
               console.log("Escrow object:", escrow);
               const isQuick = !escrow.milestones || escrow.milestones.length === 0;
-              const isPending = escrow.status === 'Pending';
-              const isActive = escrow.status === 'Funded';
+              const isPending = escrow.status === 'pending';
+              const isActive = escrow.status === 'funded';
               
               let statusTestId = undefined;
               if (isQuick && isPending) statusTestId = 'escrow-card-quick-pending';
@@ -337,13 +337,13 @@ const AllEscrows = () => {
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">
-                  {escrows.filter(e => e.status === 'Pending' || e.status === 'Funded').length}
+                  {escrows.filter(e => e.status === 'pending' || e.status === 'funded').length}
                 </p>
                 <p className="text-sm text-gray-600">{t('pages.active', 'Active')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">
-                  {escrows.filter(e => e.status === 'Released').length}
+                  {escrows.filter(e => e.status === 'completed').length}
                 </p>
                 <p className="text-sm text-gray-600">{t('pages.completed', 'Completed')}</p>
               </div>

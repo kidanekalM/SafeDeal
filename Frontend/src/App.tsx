@@ -140,6 +140,7 @@ function App() {
                 type: notificationData.type || 'info',
                 title: notificationData.title || 'New Notification',
                 message: notificationData.message || 'You have a new notification.',
+                is_read: notificationData.read || false,
                 read: notificationData.read || false,
                 metadata: notificationData.metadata,
                 created_at: notificationData.created_at || new Date().toISOString()

@@ -52,7 +52,7 @@ const NotificationToast = ({ isEnabled = true }: NotificationToastProps) => {
               type: notificationData.type || 'info',
               title: notificationData.title || 'New Notification',
               message: notificationData.message || 'You have a new notification.',
-              read: false,
+              read: false, is_read: false,
               metadata: notificationData.metadata,
               created_at: notificationData.created_at || new Date().toISOString()
             };
