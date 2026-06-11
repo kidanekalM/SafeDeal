@@ -270,9 +270,9 @@ const AllEscrows = () => {
                         <p className="text-sm text-gray-600">
                           {formatRelativeTime(escrow.created_at || escrow.CreatedAt || new Date().toISOString())}
                         </p>
-                        {escrow.conditions && (
+                        {escrow.Conditions && (
                           <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                            {escrow.conditions}
+                            {escrow.Conditions}
                           </p>
                         )}
                       </div>

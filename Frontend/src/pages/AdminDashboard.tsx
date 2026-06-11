@@ -321,10 +321,10 @@ const AdminDashboard = () => {
                 <span className="text-gray-600">Created</span>
                 <span className="text-gray-900">{formatDate(selectedEscrow.created_at)}</span>
               </div>
-              {selectedEscrow.conditions && (
+              {selectedEscrow.Conditions && (
                 <div className="text-sm">
                   <div className="text-gray-600 mb-1">Conditions</div>
-                  <div className="text-gray-900 whitespace-pre-wrap">{selectedEscrow.conditions}</div>
+                  <div className="text-gray-900 whitespace-pre-wrap">{selectedEscrow.Conditions}</div>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4 text-sm">

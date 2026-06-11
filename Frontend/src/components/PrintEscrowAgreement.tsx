@@ -86,7 +86,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">TERMS & CONDITIONS</h2>
         <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
-          {escrow.conditions}
+          {escrow.Conditions}
         </div>
       </section>
 

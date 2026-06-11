@@ -16,21 +16,19 @@ type Milestone struct {
 	SubmittedAt    *string         `json:"submitted_at,omitempty"`
 	ApprovedAt     *string         `json:"approved_at,omitempty"`
 	DeliverableURL *string         `json:"deliverable_url,omitempty"`
-	ContentHash    string          `json:"content_hash,omitempty"`
-	FilePath       string          `json:"file_path,omitempty"`
 
-	// 🧱 5. MINIMUM LEGALLY STRONG ESCROW (REQUIRED FIELDS)
-	CompletionType        CompletionType        `json:"completion_type"`
-	VerificationAuthority VerificationAuthority `json:"verification_authority"`
-	ReleaseTrigger        ReleaseTrigger        `json:"release_trigger"`
-	EvidenceTypes         string                `json:"evidence_types"` // Comma-separated or JSON array string of EvidenceType
+	// 🧱 Internal Legal Enforcement (System Controlled)
+	CompletionType        CompletionType        `json:"completion_type" gorm:"default:'delivery'"`
+	VerificationAuthority VerificationAuthority `json:"verification_authority" gorm:"default:'buyer'"`
+	ReleaseTrigger        ReleaseTrigger        `json:"release_trigger" gorm:"default:'buyer_approval'"`
+	EvidenceTypes         string                `json:"evidence_types" gorm:"default:'document,photo'"` 
 	
-	// 🧩 3. BUSINESS LOGIC RULES
+	// 🧩 Business Logic (System Managed)
 	AutoAcceptDays       int `json:"auto_accept_days" gorm:"default:0"`
 	InspectionPeriodDays int `json:"inspection_period_days" gorm:"default:7"`
 	RequiredApprovals    int `json:"required_approvals" gorm:"default:1"`
 
-	// Enhanced Normalized Condition Fields
+	// Detailed data
 	AcceptanceCriteria string      `json:"acceptance_criteria,omitempty"`
 	RejectionConditions string     `json:"rejection_conditions,omitempty"`
 	CureTerms          string      `json:"cure_terms,omitempty"`

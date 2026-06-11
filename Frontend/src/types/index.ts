@@ -60,7 +60,7 @@ export type MilestoneStatus = 'pending' | 'funded' | 'submitted' | 'under_review
 export type DisputeStatus = 'none' | 'open' | 'mediation' | 'arbitration' | 'resolved' | 'closed';
 export type ResolutionType = 'none' | 'release_funds' | 'refund_funds' | 'partial_release' | 'hold_funds' | 'cancel_contract';
 
-// 🧾 2. ESCROW LOGIC ENUMS
+// 🧾 2. ESCROW LOGIC ENUMS (Internal)
 export type CompletionType = 'delivery' | 'service_performed' | 'document_submitted' | 'inspection_passed' | 'certificate_issued' | 'ownership_transferred' | 'system_deployed';
 export type ReleaseTrigger = 'buyer_approval' | 'seller_confirmation' | 'inspection_passed' | 'certificate_issued' | 'document_verified' | 'auto_accept' | 'time_expiry' | 'court_order' | 'arbitration_award';
 export type VerificationAuthority = 'buyer' | 'seller' | 'mutual' | 'platform_mediator' | 'licensed_third_party' | 'government_body' | 'system_verification';
@@ -74,10 +74,25 @@ export interface Escrow {
     amount: number;
     platform_fee: number;
     status: EscrowStatus;
-    conditions?: string;
+    
+    // 🎨 User Intent Fields
+    escrow_type: 'item' | 'project';
+    title: string;
+    description: string;
+    delivery_date?: string;
+    inspection_period: number;
+    
+    // 📜 Contract Management
+    contract_version?: string;
+    generated_contract?: string;
+    buyer_accepted_at?: string;
+    seller_accepted_at?: string;
+
+    // 🧱 Internal Framework
     jurisdiction?: string;
     governing_law?: string;
     dispute_resolution?: string;
+    
     dispute_reason?: string;
     dispute_status?: DisputeStatus;
     resolution_type?: ResolutionType;
@@ -85,9 +100,7 @@ export interface Escrow {
     receipt_url?: string;
     blockchain_tx_hash?: string;
     blockchain_escrow_id?: number;
-    title?: string;
-    sub_type?: string;
-    inspection_period?: number;
+    
     active: boolean;
     is_locked: boolean;
     is_detailed: boolean;
@@ -108,6 +121,8 @@ export interface Escrow {
 
     // Compatibility
     CreatedAt?: string;
+    Conditions?: string;
+    sub_type?: string;
 }
 
 export interface Milestone {
@@ -124,21 +139,16 @@ export interface Milestone {
     approved_at?: string;
     deliverable_url?: string;
     
-    // Structured Logic
+    // Structured Logic (System Defaults)
     completion_type: CompletionType;
     verification_authority: VerificationAuthority;
     release_trigger: ReleaseTrigger;
-    evidence_types: string; // Comma separated list of EvidenceType
+    evidence_types: string; 
     
     // Business Logic
     auto_accept_days?: number;
     inspection_period_days?: number;
     required_approvals?: number;
-    
-    acceptance_criteria?: string;
-    rejection_conditions?: string;
-    cure_terms?: string;
-    revision_window?: number;
     
     extra_data?: string;
     created_at: string;
@@ -154,14 +164,18 @@ export interface CreateEscrowRequest {
     buyer_email?: string;
     seller_email?: string;
     mediator_email?: string;
+    
     amount: number;
-    conditions: string;
     title: string;
-    sub_type?: string;
-    inspection_period?: number;
+    description: string;
+    escrow_type: 'item' | 'project';
+    delivery_date?: string;
+    inspection_period: number;
+    
     jurisdiction?: string;
     governing_law?: string;
     dispute_resolution?: string;
+    
     extra_data?: string;
     milestones?: Partial<Milestone>[];
 }

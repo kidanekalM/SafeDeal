@@ -16,39 +16,28 @@ type Escrow struct {
 	PlatformFee        uint         `json:"platform_fee"`
 	Status             EscrowStatus `json:"status" gorm:"default:'pending'"`
 
-	// Core Agreement Fields
+	// 🎨 User Intent Fields (Simplified UI)
+	EscrowType         string      `json:"escrow_type" gorm:"default:'item'"` // 'item' or 'project'
 	Title              string      `json:"title,omitempty"`
-	SubType            string      `json:"sub_type,omitempty"`
-	EscrowType         string      `json:"escrow_type" gorm:"default:'service-for-payment'"`
-	AgreementReference string      `json:"agreement_reference,omitempty"`
-	AgreementURI       string      `json:"agreement_uri,omitempty"`
-	GoverningRules     string      `json:"governing_rules,omitempty"`
-	InspectionPeriod   int         `json:"inspection_period,omitempty"`
-	Conditions         string      `json:"conditions,omitempty"`
-	Jurisdiction       string      `json:"jurisdiction,omitempty"`
-	GoverningLaw       string      `json:"governing_law,omitempty"`
-	DisputeResolution  string      `json:"dispute_resolution,omitempty"`
+	Description        string      `json:"description,omitempty" gorm:"type:text"`
+	DeliveryDate       *time.Time  `json:"delivery_date,omitempty"`
+	InspectionPeriod   int         `json:"inspection_period" gorm:"default:3"` // in days
+	
+	// 📜 Contract Management
+	ContractVersion    string      `json:"contract_version,omitempty" gorm:"default:'1.0'"`
+	GeneratedContract  string      `json:"generated_contract,omitempty" gorm:"type:text"`
+	BuyerAcceptedAt    *time.Time  `json:"buyer_accepted_at,omitempty"`
+	SellerAcceptedAt   *time.Time  `json:"seller_accepted_at,omitempty"`
 
-	// Enhanced Detailed Data Points (Maintained for handler compatibility)
-	DeliveryMethod     string      `json:"delivery_method,omitempty"`
-	CompletionDate     *time.Time  `json:"completion_date,omitempty"`
-	QualityStandards   string      `json:"quality_standards,omitempty"`
-	ConfidentialityTerms string    `json:"confidentiality_terms,omitempty"`
-	LiabilityTerms     string      `json:"liability_terms,omitempty"`
-	AdditionalRequirements string  `json:"additional_requirements,omitempty"`
-	PaymentConditions    string    `json:"payment_conditions,omitempty"`
-	VerificationMethod   string    `json:"verification_method,omitempty"`
-	TerminationConditions string    `json:"termination_conditions,omitempty"`
-	DisputeResolutionMethod string `json:"dispute_resolution_method,omitempty"`
-	LegalNotes           string    `json:"legal_notes,omitempty"`
-	WorkDescription        string     `json:"work_description,omitempty"`
-	PerformancePeriodStart *time.Time `json:"performance_period_start,omitempty"`
-	PerformancePeriodEnd   *time.Time `json:"performance_period_end,omitempty"`
+	// 🧱 Internal Legal Framework (Deterministic Defaults)
+	Jurisdiction       string      `json:"jurisdiction,omitempty" gorm:"default:'Ethiopia'"`
+	GoverningLaw       string      `json:"governing_law,omitempty" gorm:"default:'Commercial Code of Ethiopia'"`
+	DisputeResolution  string      `json:"dispute_resolution,omitempty" gorm:"default:'AI Arbitration via SafeDeal'"`
 
 	// Flexible JSON storage
 	ExtraData          string      `json:"extra_data,omitempty" gorm:"type:jsonb"`
 
-	// Normalized Condition & Legal Fields
+	// Logic Flags
 	AutoRelease          bool      `json:"auto_release" gorm:"default:false"`
 	RequiredApprovals    int       `json:"required_approvals" gorm:"default:1"`
 	
@@ -57,9 +46,14 @@ type Escrow struct {
 	BlockchainTxHash   string      `json:"blockchain_tx_hash,omitempty"`
 	BlockchainEscrowID uint        `json:"blockchain_escrow_id,omitempty"`
 	ContractHash       string      `json:"contract_hash,omitempty"`
-	BuyerSignature     string      `json:"buyer_signature,omitempty"`
-	SellerSignature    string      `json:"seller_signature,omitempty"`
 
+	// Legacy / Compatibility (Maintained for handler stability)
+	Conditions         string      `json:"conditions,omitempty"`
+	SubType            string      `json:"sub_type,omitempty"`
+	AgreementReference string      `json:"agreement_reference,omitempty"`
+	DeliveryMethod     string      `json:"delivery_method,omitempty"`
+	CompletionDate     *time.Time  `json:"completion_date,omitempty"`
+	
 	// Dispute & Resolution
 	DisputeReason      string         `json:"dispute_reason,omitempty"`
 	DisputeStatus      DisputeStatus  `json:"dispute_status,omitempty" gorm:"default:'none'"`
@@ -82,17 +76,6 @@ type Escrow struct {
 	Mediator           *User       `json:"mediator,omitempty" gorm:"foreignKey:MediatorID"`
 	Milestones         []Milestone `json:"milestones,omitempty" gorm:"foreignKey:EscrowID"`
 	Obligations        []Obligation `json:"obligations,omitempty" gorm:"foreignKey:EscrowID"`
-	AuthorizedReps     []AuthorizedRep `json:"authorized_reps,omitempty" gorm:"foreignKey:EscrowID"`
-}
-
-type AuthorizedRep struct {
-	gorm.Model
-	EscrowID      uint   `json:"escrow_id"`
-	Address       string `json:"address"`
-	ParentParty   string `json:"parent_party"` // depositor/beneficiary/agent
-	Scope         string `json:"scope"`        // view/approve/dispute
-	AddedBy       string `json:"added_by"`
-	Active        bool   `json:"active" gorm:"default:true"`
 }
 
 type Obligation struct {
