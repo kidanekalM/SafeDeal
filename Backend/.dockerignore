@@ -1,0 +1,14 @@
+.git
+node_modules
+dist
+main
+backend
+backend_bin
+backend_monolithic
+server
+*.log
+*.db
+.env
+.aider*
+.cursor
+.vscode

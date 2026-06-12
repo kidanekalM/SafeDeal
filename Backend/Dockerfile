@@ -2,38 +2,41 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# Install git which is required for go mod download
+# Install git for dependency resolution
 RUN apk add --no-cache git
 
-# Copy go mod files
+# Copy dependency files
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Build the binary
+# Build a statically linked binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server cmd/main.go
 
 FROM alpine:latest
 
-# Install ca-certificates and timezone data
-RUN apk --no-cache add ca-certificates tzdata
+# Install essential utilities
+RUN apk --no-cache add ca-certificates tzdata curl
 
-WORKDIR /app
+# Hugging Face Spaces environment requirements
+RUN adduser -D -u 1000 user
+WORKDIR /home/user/app
 
-# Copy the binary from builder stage
-COPY --from=builder /app/server /app/server
+# Copy the binary
+COPY --from=builder /app/server .
+RUN chown user:user server && chmod +x server
 
-# Create a non-root user for Hugging Face
-RUN adduser -D -u 1000 user && chown -R user:user /app
 USER user
 
-# Expose port 7860 (Hugging Face default)
+# Port configuration
 ENV PORT=7860
 EXPOSE 7860
 
-# Run the binary using absolute path
-CMD ["/app/server"]
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:7860/ || exit 1
+
+# Start the server
+CMD ["./server"]
