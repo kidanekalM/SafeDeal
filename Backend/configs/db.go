@@ -7,6 +7,7 @@ import (
 
 	"backend_monolithic/internal/models"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -15,13 +16,15 @@ var DB *gorm.DB
 func InitDB() *gorm.DB {
 	var err error
 
-	// Use the provided PostgreSQL connection string
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL environment variable is not set")
+		fmt.Println("⚠️ DATABASE_URL not set. Falling back to local SQLite for survival mode.")
+		DB, err = gorm.Open(sqlite.Open("safedeal_fallback.db"), &gorm.Config{})
+	} else {
+		fmt.Println("🚀 Connecting to PostgreSQL...")
+		DB, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 	}
 
-	DB, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -35,11 +38,12 @@ func InitDB() *gorm.DB {
 		&models.Notification{}, 
 		&models.BankDetails{}, 
 		&models.Contact{},
-		&models.Milestone{}, // Adding the new Milestone model
+		&models.Milestone{},
 		&models.EscrowStatusEvent{},
 		&models.ActivationToken{},
+		&models.AuthorizedRep{},
 	)
 
-	fmt.Println("Successfully connected to PostgreSQL database")
+	fmt.Println("✅ Database schema migrated successfully")
 	return DB
 }

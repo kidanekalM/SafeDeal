@@ -4,83 +4,70 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
-	"time"
 
 	"backend_monolithic/configs"
-	"backend_monolithic/internal/models"
+	"backend_monolithic/internal/handlers"
 	"backend_monolithic/internal/rabbitmq"
 	"backend_monolithic/internal/routes"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load environment variables
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
-
-	app := fiber.New()
-
-	// Middlewares
-	app.Use(logger.New())
-
-	// CORS middleware - move BEFORE rate limiter so 429s have CORS headers
-	allowedOrigins := []string{
-		"https://safe-deal.vercel.app",
-		"https://elida-necktieless-unaspiringly.ngrok-free.dev",
-		"http://localhost:3000",
-		"http://localhost:3001",
-		"http://127.0.0.1:3001",
-		"http://localhost:5173", // Vite default
-		"http://127.0.0.1:5173",
-	}
-
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     strings.Join(allowedOrigins, ","),
-		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-User-ID,ngrok-skip-browser-warning",
-		AllowCredentials: true,
-	}))
-
-	// Rate Limiter: Reduced for production
-	app.Use(limiter.New(limiter.Config{
-		Max:        100,
-		Expiration: 1 * time.Minute,
-	}))
+	// Load .env file
+	_ = godotenv.Load()
 
 	// Initialize database
 	db := configs.InitDB()
-	// Auto-migrate escrow-related models
-	if err := db.AutoMigrate(
-		&models.User{},
-		&models.Escrow{},
-		&models.Milestone{},
-		&models.Message{},
-		&models.Notification{},
-		&models.Transaction{},
-		&models.Review{},
-		&models.EscrowStatusEvent{},
-		&models.BankDetails{},
-		&models.ActivationToken{},
-	); err != nil {
-		log.Printf("AutoMigrate models error: %v", err)
-	}
 
-	// Initialize RabbitMQ (mock implementation)
+	// Initialize RabbitMQ
 	rabbitMQ, err := rabbitmq.NewProducer()
 	if err != nil {
-		log.Fatalf("Failed to initialize message broker: %v", err)
+		log.Printf("Warning: Failed to initialize RabbitMQ: %v", err)
 	}
-	// Note: In the mock implementation, Close() does nothing
+	defer func() {
+		if rabbitMQ != nil {
+			rabbitMQ.Close()
+		}
+	}()
 
-	// Initialize services
+	// Initialize Fiber app
+	app := fiber.New(fiber.Config{
+		AppName: "SafeDeal Monolith v1.0",
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			code := fiber.StatusInternalServerError
+			if e, ok := err.(*fiber.Error); ok {
+				code = e.Code
+			}
+			return c.Status(code).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		},
+	})
+
+	// Middleware
+	app.Use(logger.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+		AllowCredentials: true,
+	}))
+
+	// Initialize Service Container
 	serviceContainer := routes.NewServiceContainer(db, rabbitMQ)
+
+	// Add Health Check Route
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status": "SafeDeal API is running",
+			"version": "1.0-intent-based",
+			"engine": "Go Fiber",
+		})
+	})
 
 	// Setup routes
 	routes.SetupRoutes(app, serviceContainer)
