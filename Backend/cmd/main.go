@@ -78,5 +78,5 @@ func main() {
 	}
 
 	fmt.Printf("Server starting on port %s\n", port)
-	log.Fatal(app.Listen(":" + port))
+	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
