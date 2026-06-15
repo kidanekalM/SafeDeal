@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"backend_monolithic/configs"
-	"backend_monolithic/internal/handlers"
 	"backend_monolithic/internal/rabbitmq"
 	"backend_monolithic/internal/routes"
 
