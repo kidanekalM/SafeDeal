@@ -22,7 +22,7 @@ type Escrow struct {
 	Description        string      `json:"description,omitempty" gorm:"type:text"`
 	DeliveryDate       *time.Time  `json:"delivery_date,omitempty"`
 	InspectionPeriod   int         `json:"inspection_period" gorm:"default:3"` // in days
-	
+
 	// 📜 Contract Management
 	ContractVersion    string      `json:"contract_version,omitempty" gorm:"default:'1.0'"`
 	GeneratedContract  string      `json:"generated_contract,omitempty" gorm:"type:text"`
@@ -40,7 +40,7 @@ type Escrow struct {
 	// Logic Flags
 	AutoRelease          bool      `json:"auto_release" gorm:"default:false"`
 	RequiredApprovals    int       `json:"required_approvals" gorm:"default:1"`
-	
+
 	// Blockchain / Security
 	EscrowHash         string      `json:"escrow_hash,omitempty" gorm:"uniqueIndex;size:66"`
 	BlockchainTxHash   string      `json:"blockchain_tx_hash,omitempty"`
@@ -53,7 +53,7 @@ type Escrow struct {
 	AgreementReference string      `json:"agreement_reference,omitempty"`
 	DeliveryMethod     string      `json:"delivery_method,omitempty"`
 	CompletionDate     *time.Time  `json:"completion_date,omitempty"`
-	
+
 	// Dispute & Resolution
 	DisputeReason      string         `json:"dispute_reason,omitempty"`
 	DisputeStatus      DisputeStatus  `json:"dispute_status,omitempty" gorm:"default:'none'"`
@@ -71,23 +71,34 @@ type Escrow struct {
 	Snapshot           string      `json:"snapshot,omitempty"`
 
 	// Associations
-	Buyer              *User       `json:"buyer,omitempty" gorm:"foreignKey:BuyerID"`
-	Seller             *User       `json:"seller,omitempty" gorm:"foreignKey:SellerID"`
-	Mediator           *User       `json:"mediator,omitempty" gorm:"foreignKey:MediatorID"`
-	Milestones         []Milestone `json:"milestones,omitempty" gorm:"foreignKey:EscrowID"`
-	Obligations        []Obligation `json:"obligations,omitempty" gorm:"foreignKey:EscrowID"`
+	Buyer              *User           `json:"buyer,omitempty" gorm:"foreignKey:BuyerID"`
+	Seller             *User           `json:"seller,omitempty" gorm:"foreignKey:SellerID"`
+	Mediator           *User           `json:"mediator,omitempty" gorm:"foreignKey:MediatorID"`
+	Milestones         []Milestone     `json:"milestones,omitempty" gorm:"foreignKey:EscrowID"`
+	Obligations        []Obligation    `json:"obligations,omitempty" gorm:"foreignKey:EscrowID"`
+	AuthorizedReps     []AuthorizedRep `json:"authorized_reps,omitempty" gorm:"foreignKey:EscrowID"`
+}
+
+type AuthorizedRep struct {
+	gorm.Model
+	EscrowID    uint   `json:"escrow_id"`
+	Address     string `json:"address"`
+	ParentParty string `json:"parent_party"` // depositor/beneficiary/agent
+	Scope       string `json:"scope"`        // view/approve/dispute
+	AddedBy     string `json:"added_by"`
+	Active      bool   `json:"active" gorm:"default:true"`
 }
 
 type Obligation struct {
 	gorm.Model
-	EscrowID          uint   `json:"escrow_id"`
-	ResponsibleParty  string `json:"responsible_party"` // depositor/beneficiary/agent
-	ObligationType    string `json:"obligation_type"`   // service-performance/payment/approval
-	Title             string `json:"title"`
-	Description       string `json:"description"`
-	Status            string `json:"status" gorm:"default:'pending'"`
-	Deadline          *time.Time `json:"deadline"`
-	ExtraData         string `json:"extra_data,omitempty" gorm:"type:jsonb"`
+	EscrowID         uint   `json:"escrow_id"`
+	ResponsibleParty string `json:"responsible_party"` // depositor/beneficiary/agent
+	ObligationType   string `json:"obligation_type"`   // service-performance/payment/approval
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	Status           string `json:"status" gorm:"default:'pending'"`
+	Deadline         *time.Time `json:"deadline"`
+	ExtraData        string `json:"extra_data,omitempty" gorm:"type:jsonb"`
 }
 
 type Contact struct {
