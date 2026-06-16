@@ -106,12 +106,17 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		Title             string             `json:"title"`
 		Description       string             `json:"description"`
 		EscrowType        string             `json:"escrow_type"` // 'item' or 'project'
-		DeliveryDate      *time.Time         `json:"delivery_date,omitempty"`
+		DeliveryDate      string             `json:"delivery_date,omitempty"`
 		InspectionPeriod  int                `json:"inspection_period"`
 		Jurisdiction      string             `json:"jurisdiction"`
 		GoverningLaw      string             `json:"governing_law"`
 		DisputeResolution string             `json:"dispute_resolution"`
-		Milestones        []models.Milestone `json:"milestones,omitempty"`
+		Milestones        []struct {
+			Title       string `json:"title"`
+			Amount      uint   `json:"amount"`
+			Description string `json:"description"`
+			DueDate     string `json:"due_date"`
+		} `json:"milestones,omitempty"`
 		ExtraData         string             `json:"extra_data,omitempty"`
 	}
 
@@ -123,15 +128,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	if len(req.Milestones) > 0 {
 		var total uint = 0
-		for i := range req.Milestones {
-			m := &req.Milestones[i]
-			if m.CompletionType == "" {
-				if req.EscrowType == "item" { m.CompletionType = models.CompletionDelivery } else { m.CompletionType = models.CompletionServicePerformed }
-			}
-			if m.VerificationAuthority == "" { m.VerificationAuthority = models.AuthBuyer }
-			if m.ReleaseTrigger == "" { m.ReleaseTrigger = models.TriggerBuyerApproval }
-			if m.EvidenceTypes == "" { m.EvidenceTypes = "document,photo" }
-			if m.InspectionPeriodDays <= 0 { m.InspectionPeriodDays = 7 }
+		for _, m := range req.Milestones {
 			total += m.Amount
 		}
 		if total > 0 { req.Amount = total }
@@ -189,18 +186,34 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		h.DB.First(&sellerUser, finalSellerID)
 	}
 
+	var parsedDeliveryDate *time.Time
+	if req.DeliveryDate != "" {
+		t, err := time.Parse("2006-01-02", req.DeliveryDate)
+		if err == nil {
+			parsedDeliveryDate = &t
+		} else {
+			// Try RFC3339 as fallback
+			t, err = time.Parse(time.RFC3339, req.DeliveryDate)
+			if err == nil {
+				parsedDeliveryDate = &t
+			}
+		}
+	}
+
 	fee := uint(float64(req.Amount) * 0.02)
 	escrow := &models.Escrow{
 		BuyerID: finalBuyerID, SellerID: finalSellerID, MediatorID: req.MediatorID,
 		Amount: req.Amount, PlatformFee: fee, Status: models.EscrowPending,
 		EscrowType: req.EscrowType, Title: req.Title, Description: req.Description,
-		DeliveryDate: req.DeliveryDate, InspectionPeriod: req.InspectionPeriod,
+		DeliveryDate: parsedDeliveryDate, InspectionPeriod: req.InspectionPeriod,
 		Jurisdiction: req.Jurisdiction, GoverningLaw: req.GoverningLaw,
 		DisputeResolution: req.DisputeResolution, ExtraData: req.ExtraData,
 	}
 
 	escrow.EscrowHash = h.computeEscrowHash(escrow)
-	h.DB.Create(escrow)
+	if err := h.DB.Create(escrow).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not create escrow record"})
+	}
 	h.recordStatusEvent(escrow.ID, userID, "", string(escrow.Status), "Escrow created", escrow.BlockchainTxHash, "")
 
 	if !buyerUser.Activated { h.NotificationHandler.InviteUser(buyerUser.Email); escrow.InviteSent = true }
@@ -211,11 +224,28 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	if req.Milestones != nil {
 		for i := range req.Milestones {
-			m := &req.Milestones[i]
-			if m.ApproverID == nil { m.ApproverID = &finalBuyerID }
-			m.EscrowID = escrow.ID
-			m.Status = models.MilestonePending
-			h.DB.Create(m)
+			mReq := req.Milestones[i]
+			m := models.Milestone{
+				EscrowID: escrow.ID,
+				Title: mReq.Title,
+				Amount: mReq.Amount,
+				Description: mReq.Description,
+				Status: models.MilestonePending,
+				OrderIndex: i,
+				ApproverID: &finalBuyerID,
+				CompletionType: models.CompletionServicePerformed,
+				VerificationAuthority: models.AuthBuyer,
+				ReleaseTrigger: models.TriggerBuyerApproval,
+				EvidenceTypes: "document,photo",
+				InspectionPeriodDays: 7,
+			}
+			if mReq.DueDate != "" {
+				m.DueDate = &mReq.DueDate
+			}
+			if req.EscrowType == "item" {
+				m.CompletionType = models.CompletionDelivery
+			}
+			h.DB.Create(&m)
 		}
 	}
 
