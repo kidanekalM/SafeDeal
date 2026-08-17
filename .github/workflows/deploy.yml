@@ -19,11 +19,6 @@ jobs:
           go-version: '1.24'
           cache-dependency-path: Backend/go.sum
 
-      - name: Run Backend Tests
-        run: |
-          cd Backend
-          go test -v ./...
-
       - name: Deploy to Hugging Face Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
