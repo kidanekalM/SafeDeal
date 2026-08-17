@@ -1,0 +1,88 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: Backend/go.sum
+
+      - name: Run Backend Tests
+        run: |
+          cd Backend
+          go test -v ./...
+
+      - name: Deploy to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is not set. Please add it to your GitHub Repository Secrets."
+            exit 1
+          fi
+          
+          # Default to kidanekalM/SafeDeal if HF_SPACE_NAME is not set
+          SPACE_NAME="${HF_SPACE_NAME:-kidanekalM/SafeDeal}"
+          echo "Deploying to Hugging Face Space: $SPACE_NAME"
+          
+          # 1. Create a temporary deployment directory
+          DEPLOY_DIR=$(mktemp -d)
+          echo "Created temp deploy directory: $DEPLOY_DIR"
+          
+          # 2. Copy the Backend files to the root of the deployment directory
+          cp -r Backend/* "$DEPLOY_DIR"/
+          cp Backend/.dockerignore "$DEPLOY_DIR"/
+          
+          # 3. Create the required README.md at the root of the deployment directory
+          # Hugging Face Spaces uses the frontmatter in README.md to configure the Space.
+          cat << 'EOF' > "$DEPLOY_DIR"/README.md
+          ---
+          title: SafeDeal
+          emoji: 🔒
+          colorFrom: blue
+          colorTo: indigo
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+
+          # SafeDeal Backend
+
+          Secure Escrow Platform with Intent-Based UI.
+
+          ## Deployment Details
+          - **Port:** 7860
+          - **Engine:** Go Fiber
+          - **Database:** PostgreSQL (with SQLite fallback)
+          - **Deployed Via:** GitHub Actions Workflow
+          EOF
+          
+          # 4. Initialize Git and force push to HF Spaces
+          cd "$DEPLOY_DIR"
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Rename local branch to main
+          git checkout -b main
+          
+          # Add all files and commit
+          git add .
+          git commit -m "Deploy from GitHub Actions (Commit: ${{ github.sha }})"
+          
+          # Force push to the Hugging Face Space git repository
+          git remote add space "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${SPACE_NAME}"
+          git push -f space main
