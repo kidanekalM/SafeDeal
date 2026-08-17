@@ -79,5 +79,6 @@ jobs:
           git commit -m "Deploy from GitHub Actions (Commit: ${{ github.sha }})"
           
           # Force push to the Hugging Face Space git repository
-          git remote add space "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${SPACE_NAME}"
+          git remote add space "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/golden1flying/safedeal"
+          
           git push -f space main
