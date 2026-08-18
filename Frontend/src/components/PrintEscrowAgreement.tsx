@@ -14,6 +14,22 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
     });
   };
 
+  // Prefer the authoritative contract text generated server-side.
+  if (escrow.generated_contract) {
+    return (
+      <div className="print-container bg-white p-8 max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-[#014d46]">SAFEDEAL ESCROW AGREEMENT</h1>
+          <div className="w-32 h-1 bg-[#014d46] mx-auto mb-4"></div>
+          <p className="text-gray-500">Generated document — ID: {escrow.id}</p>
+        </div>
+        <div className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
+          {escrow.generated_contract}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="print-container bg-white p-8 max-w-4xl mx-auto">
       <header className="mb-12 text-center">

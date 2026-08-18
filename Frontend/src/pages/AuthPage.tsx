@@ -16,12 +16,12 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
       <div
-        className="hidden md:flex relative items-start justify-center p-12 bg-black"
+        className="hidden md:flex relative items-stretch justify-center p-12 bg-black"
         style={{ backgroundImage: `url(${GreenGirl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
       >
         <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 max-w-xl text-white">
-          <div className="flex items-center space-x-3 mb-6 min-h-[30rem]">
+        <div className="relative z-10 max-w-xl w-full text-white flex flex-col justify-end pb-12">
+          <div className="flex items-center space-x-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-teal-900 flex items-center justify-center shadow-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>

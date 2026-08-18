@@ -40,7 +40,11 @@ const CreateEscrowSchema = z.object({
   seller_email: z.string().optional(),
   mediator_id: z.number().optional(),
   mediator_email: z.string().optional(),
-  
+
+  jurisdiction: z.string().optional(),
+  governing_law: z.string().optional(),
+  dispute_resolution: z.enum(['arbitration', 'mediation', 'court']).optional(),
+
   milestones: z.array(MilestoneSchema).optional(),
 }).refine(data => {
   if (data.escrow_type === 'item' && data.amount <= 0) return false;
@@ -80,6 +84,9 @@ const CreateEscrow = () => {
       escrow_type: 'item',
       inspection_period: 3,
       amount: 0,
+      dispute_resolution: 'arbitration',
+      jurisdiction: 'Ethiopia',
+      governing_law: 'Commercial Code of Ethiopia',
       milestones: [],
     }
   });
@@ -163,6 +170,9 @@ const CreateEscrow = () => {
         ...data,
         amount: Number(data.amount),
         inspection_period: Number(data.inspection_period),
+        jurisdiction: data.jurisdiction || 'Ethiopia',
+        governing_law: data.governing_law || 'Commercial Code of Ethiopia',
+        dispute_resolution: data.dispute_resolution || 'arbitration',
         buyer_id: creatorRole === 'buyer' ? currentUser?.id : data.buyer_id,
         seller_id: creatorRole === 'seller' ? currentUser?.id : data.seller_id,
         mediator_id: creatorRole === 'mediator' ? currentUser?.id : data.mediator_id,
@@ -275,6 +285,17 @@ const CreateEscrow = () => {
                 <input type="number" {...register('inspection_period')} className="input w-full h-14 rounded-2xl bg-gray-50 border-none font-bold pl-12" placeholder="3" />
               </div>
               <p className="text-[8px] font-medium text-gray-400 mt-2">Time after delivery to check and approve/dispute.</p>
+            </div>
+            <div className="form-control">
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">Dispute Resolution</label>
+              <div className="flex gap-2 p-1.5 bg-gray-100 rounded-2xl">
+                {(['arbitration', 'mediation', 'court'] as const).map(m => (
+                  <button key={m} type="button" onClick={() => setValue('dispute_resolution', m)} className={`px-4 py-2 rounded-xl font-black uppercase text-[10px] flex-1 transition-all ${watch('dispute_resolution') === m ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[8px] font-medium text-gray-400 mt-2">How disputes will be resolved if they arise. Arbitration is binding & faster.</p>
             </div>
           </div>
         </div>

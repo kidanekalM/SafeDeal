@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/blockchain"
+	"backend_monolithic/internal/contractgen"
 	"backend_monolithic/internal/models"
 	"backend_monolithic/internal/rabbitmq"
 
@@ -201,13 +203,20 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 	}
 
 	fee := uint(float64(req.Amount) * 0.02)
+
+	// ExtraData is a Postgres jsonb column; store valid JSON (never an empty string).
+	extraData := strings.TrimSpace(req.ExtraData)
+	if extraData == "" {
+		extraData = "{}"
+	}
+
 	escrow := &models.Escrow{
 		BuyerID: finalBuyerID, SellerID: finalSellerID, MediatorID: req.MediatorID,
 		Amount: req.Amount, PlatformFee: fee, Status: models.EscrowPending,
 		EscrowType: req.EscrowType, Title: req.Title, Description: req.Description,
 		DeliveryDate: parsedDeliveryDate, InspectionPeriod: req.InspectionPeriod,
 		Jurisdiction: req.Jurisdiction, GoverningLaw: req.GoverningLaw,
-		DisputeResolution: req.DisputeResolution, ExtraData: req.ExtraData,
+		DisputeResolution: req.DisputeResolution, ExtraData: extraData,
 	}
 
 	escrow.EscrowHash = h.computeEscrowHash(escrow)
@@ -262,6 +271,14 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 
 	var completeEscrow models.Escrow
 	h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").First(&completeEscrow, escrow.ID)
+
+	// Generate and persist the printable contract from the structured data.
+	completeEscrow.ContractVersion = "1.0"
+	completeEscrow.ContractHash = completeEscrow.EscrowHash
+	completeEscrow.GeneratedContract = contractgen.Generate(&completeEscrow)
+	h.DB.Model(&completeEscrow).Update("generated_contract", completeEscrow.GeneratedContract)
+	completeEscrow.GeneratedContract = "" // keep response lean; text is retrievable via final-agreement
+
 	return c.JSON(fiber.Map{"message": "Escrow created successfully", "data": completeEscrow})
 }
 
@@ -356,14 +373,29 @@ func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
 	userID, _ := c.Locals("userID").(uint)
-	var req struct { TransactionID string `json:"transaction_id"`; AccountSuffix string `json:"account_suffix"` }
+	var req struct{ TransactionID string `json:"transaction_id"`; AccountSuffix string `json:"account_suffix"` }
 	c.BodyParser(&req)
 	var e models.Escrow
 	h.DB.First(&e, uint(id))
 	prev := e.Status
+
+	// transaction_ref has a unique index; ensure it never collides so funding always succeeds.
+	ref := strings.TrimSpace(req.TransactionID)
+	if ref == "" {
+		ref = fmt.Sprintf("FT-%d-%d", e.ID, time.Now().UnixNano())
+	} else {
+		var count int64
+		h.DB.Model(&models.Escrow{}).Where("transaction_ref = ? AND id <> ?", ref, e.ID).Count(&count)
+		if count > 0 {
+			ref = fmt.Sprintf("%s-%d", ref, time.Now().UnixNano())
+		}
+	}
+
 	e.Status = models.EscrowFunded
-	e.TransactionRef = &req.TransactionID
-	h.DB.Save(&e)
+	e.TransactionRef = &ref
+	if err := h.DB.Save(&e).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Could not verify payment", "message": err.Error()})
+	}
 	h.recordStatusEvent(e.ID, userID, string(prev), string(models.EscrowFunded), "CBE verified", "", req.TransactionID)
 	h.DB.Model(&models.Milestone{}).Where("escrow_id = ?", e.ID).Update("status", models.MilestoneFunded)
 	return c.JSON(fiber.Map{"message": "Verified", "data": e})
@@ -453,9 +485,19 @@ func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
 func (h *EscrowHandler) DownloadFinalizedAgreement(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
 	var e models.Escrow
-	h.DB.First(&e, uint(id))
+	if err := h.DB.First(&e, uint(id)).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
+	}
+
+	// Regenerate on the fly if not persisted (backward compatible with old records).
+	if e.GeneratedContract == "" {
+		h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").First(&e, uint(id))
+		e.GeneratedContract = contractgen.Generate(&e)
+	}
+
 	c.Set("Content-Type", "text/plain")
-	return c.SendString(fmt.Sprintf("Agreement: %d", e.ID))
+	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"safedeal-agreement-%d.txt\"", e.ID))
+	return c.SendString(e.GeneratedContract)
 }
 
 func (h *EscrowHandler) RequestAIDecision(c *fiber.Ctx) error {

@@ -35,7 +35,7 @@ type Milestone struct {
 	RevisionWindow     int         `json:"revision_window,omitempty"`
 
 	// Flexible JSON storage
-	ExtraData          string      `json:"extra_data,omitempty" gorm:"type:jsonb"`
+	ExtraData          string      `json:"extra_data,omitempty" gorm:"type:text"`
 
 	// Associations
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`

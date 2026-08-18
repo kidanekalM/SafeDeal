@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +25,10 @@ import {
   Github,
   Twitter,
   Linkedin,
-  Mail
+  Mail,
+  ArrowRight,
+  ShoppingCart,
+  Briefcase
 } from 'lucide-react';
  
 import Logo from "../assets/Logo.png";
@@ -38,6 +43,9 @@ import GeminiLogo1 from "../assets/gemini.svg";
 
 const LandingPage = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [escrowType, setEscrowType] = useState<'item' | 'project'>('item');
+  const [acceptingRole, setAcceptingRole] = useState<'buyer' | 'seller'>('buyer');
 
   const steps = [
     {
@@ -444,6 +452,82 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Engaging Demo Escrow Flow */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
+              {t('pages.start_your_first_escrow')}
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {t('pages.quick_demo_what_who')}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8 sm:p-16 min-h-[50vh] flex flex-col relative overflow-hidden">
+            {/* What are you creating? */}
+            <div className="space-y-6 mb-8">
+              <div>
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4 block">
+                  {t('pages.what_are_you_doing', 'What are you doing?')}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setEscrowType('item')} 
+                    className={`p-6 rounded-2xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
+                  >
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                      <ShoppingCart size={20} />
+                    </div>
+                    <h4 className="font-black text-lg">{t('pages.buy_sell_item', 'Buy / Sell Item')}</h4>
+                    <p className="text-[10px] text-gray-400 font-medium">{t('pages.simple_5_step_flow', 'Simple 5-step flow for electronics, vehicles, etc.')}</p>
+                  </button>
+                  <button 
+                    onClick={() => setEscrowType('project')} 
+                    className={`p-6 rounded-2xl text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
+                  >
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                      <Briefcase size={20} />
+                    </div>
+                    <h4 className="font-black text-lg">{t('pages.project_service', 'Project / Service')}</h4>
+                    <p className="text-[10px] text-gray-400 font-medium">{t('pages.milestone_based_flow', 'Milestone-based flow for software, consulting, etc.')}</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Who is accepting it? */}
+              <div>
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4 block">
+                  {t('pages.who_is_involved', 'Who is involved?')}
+                </h3>
+                <div className="flex gap-4">
+                  {[ 'buyer', 'seller' ].map(role => (
+                    <button 
+                      key={role} 
+                      onClick={() => setAcceptingRole(role as 'buyer' | 'seller')}
+                      className={`px-8 py-3 rounded-2xl font-black uppercase text-[10px] transition-all border-2 border-${acceptingRole === role ? 'primary-600' : 'gray-200'} ${acceptingRole === role ? 'text-primary-600 bg-primary-50' : 'text-gray-400'}`}
+                    >
+                      {t(`pages.${role}`, role)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Start Creating Button */}
+            <div className="mt-8 pt-8 border-t border-gray-100">
+              <button 
+                onClick={() => navigate('/create-escrow')} 
+                className="btn btn-primary px-8 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3"
+              >
+                {t('components.get_started')}
+                <ArrowRight size={18} className="ml-2" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works - Visual Process */}
       <section id="how-it-works" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -507,7 +591,7 @@ const LandingPage = () => {
             className="text-center mt-16"
           >
             <Link
-              to="/login?mode=register"
+              to="/create-escrow"
               className="btn bg-[#005356] text-white hover:bg-[#005356]/80 btn-lg shadow-lg hover:shadow-xl transition-all"
             >
               {t('pages.start_your_first_deal')}

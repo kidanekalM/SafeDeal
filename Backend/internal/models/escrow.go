@@ -35,7 +35,7 @@ type Escrow struct {
 	DisputeResolution  string      `json:"dispute_resolution,omitempty" gorm:"default:'AI Arbitration via SafeDeal'"`
 
 	// Flexible JSON storage
-	ExtraData          string      `json:"extra_data,omitempty" gorm:"type:jsonb"`
+	ExtraData          string      `json:"extra_data,omitempty" gorm:"type:text"`
 
 	// Logic Flags
 	AutoRelease          bool      `json:"auto_release" gorm:"default:false"`
