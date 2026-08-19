@@ -15,138 +15,135 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
     });
   };
 
-  // Prefer the authoritative contract text generated server-side.
-  if (escrow.generated_contract) {
-    return (
-      <div className="print-container bg-white p-8 max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-[#014d46]">SAFEDEAL ESCROW AGREEMENT</h1>
-          <div className="w-32 h-1 bg-[#014d46] mx-auto mb-4"></div>
-          <p className="text-gray-500">Generated document — ID: {escrow.id}</p>
+  return (
+    <div className="print-container bg-white text-gray-900 font-sans p-12 max-w-[210mm] mx-auto shadow-sm print:shadow-none">
+      {/* 1. Header */}
+      <div className="border-b-2 border-gray-900 pb-6 mb-8 flex justify-between items-start">
+        <div>
+          <div className="text-2xl font-black tracking-tight text-[#014d46] mb-1">SAFEDEAL</div>
+          <h1 className="text-2xl font-black uppercase text-gray-900 tracking-wide">Escrow Agreement</h1>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Secure Transaction & Escrow Record</p>
         </div>
-        <div className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
-          {escrow.generated_contract}
+        <div className="text-right">
+          <div className="inline-block bg-gray-100 border border-gray-300 rounded px-3 py-1 mb-2">
+            <span className="text-xs font-black uppercase tracking-wider text-gray-700">Agreement SD-{escrow.id}</span>
+          </div>
+          <div>
+            <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-300">
+              {escrow.status || 'ACTIVE'}
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-500 mt-2 font-medium">Generated: {formatDate(escrow.created_at || new Date().toISOString())}</p>
+          <p className="text-[11px] text-gray-500 font-medium">Jurisdiction: {escrow.jurisdiction || 'Ethiopia'}</p>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="print-container bg-white p-8 max-w-4xl mx-auto">
-      <div className="h-1.5 bg-[#014d46] mb-8 rounded-full"></div>
-      <header className="mb-12 text-center">
-        <h1 className="text-3xl font-bold mb-2 text-[#014d46]">SAFEDEAL ESCROW AGREEMENT</h1>
-        <div className="w-32 h-1 bg-[#014d46] mx-auto mb-4"></div>
-        <p className="text-lg text-gray-600">Agreement ID: SD-{escrow.id}</p>
-        <p className="text-gray-500">{formatDate(escrow.created_at)}</p>
-      </header>
+      {/* 2. Agreement Summary Box */}
+      <div className="bg-gray-50 border border-gray-300 rounded-xl p-6 mb-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Agreement Type</p>
+          <p className="font-bold text-gray-900">{escrow.escrow_type === 'item' ? 'Quick (Item)' : 'Detailed (Milestones)'}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Escrow Value</p>
+          <p className="font-black text-lg text-[#014d46]">{escrow.amount?.toLocaleString()} ETB</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Inspection Period</p>
+          <p className="font-bold text-gray-900">{escrow.scope?.acceptance_days || escrow.inspection_period || 5} Days</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Platform Fee</p>
+          <p className="font-bold text-gray-900">{escrow.platform_fee?.toLocaleString() || 0} ETB</p>
+        </div>
+      </div>
 
+      {/* 3. Parties */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">PARTIES TO THE AGREEMENT</h2>
-
+        <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-200">01. Parties to the Agreement</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-xs font-bold text-[#014d46] uppercase mb-2">Buyer / Depositor</p>
-            <p className="font-bold text-lg">{escrow.buyer?.first_name} {escrow.buyer?.last_name}</p>
+          <div className="border border-gray-200 rounded-xl p-5 bg-white">
+            <p className="text-[10px] font-black text-[#014d46] uppercase tracking-widest mb-1">Buyer / Depositor</p>
+            <p className="font-bold text-base text-gray-900">{escrow.buyer?.first_name} {escrow.buyer?.last_name}</p>
             <p className="text-xs text-gray-500 break-all">{escrow.buyer?.email}</p>
-            <p className="text-xs text-gray-500 mt-1">Profession: {escrow.buyer?.profession}</p>
+            <p className="text-[11px] text-gray-600 mt-1 font-medium">Profession: {escrow.buyer?.profession || 'N/A'}</p>
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-xs font-bold text-[#014d46] uppercase mb-2">Seller / Service Provider</p>
-            <p className="font-bold text-lg">{escrow.seller?.first_name} {escrow.seller?.last_name}</p>
+          <div className="border border-gray-200 rounded-xl p-5 bg-white">
+            <p className="text-[10px] font-black text-[#014d46] uppercase tracking-widest mb-1">Seller / Provider</p>
+            <p className="font-bold text-base text-gray-900">{escrow.seller?.first_name} {escrow.seller?.last_name}</p>
             <p className="text-xs text-gray-500 break-all">{escrow.seller?.email}</p>
-            <p className="text-xs text-gray-500 mt-1">Profession: {escrow.seller?.profession}</p>
+            <p className="text-[11px] text-gray-600 mt-1 font-medium">Profession: {escrow.seller?.profession || 'N/A'}</p>
           </div>
         </div>
       </section>
 
+      {/* 4. Contract Purpose */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">AGREEMENT DETAILS</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p><span className="font-bold">Title:</span> {escrow.title}</p>
-            <p><span className="font-bold">Type:</span> {escrow.escrow_type === 'item' ? 'Quick' : 'Detailed'}</p>
-            <p><span className="font-bold">Total Amount:</span> {escrow.amount?.toLocaleString()} ETB</p>
-            <p><span className="font-bold">Platform Fee:</span> {escrow.platform_fee?.toLocaleString()} ETB</p>
-          </div>
-
-          <div>
-            <p><span className="font-bold">Status:</span>
-              <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                escrow.status === 'completed' ? 'bg-green-100 text-green-800' :
-                escrow.status === 'funded' || escrow.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                escrow.status === 'disputed' ? 'bg-red-100 text-red-800' :
-                'bg-yellow-100 text-yellow-800'
-              }`}>
-                {escrow.status}
-              </span>
-            </p>
-            <p><span className="font-bold">Review Period:</span> {escrow.scope?.acceptance_days || escrow.inspection_period} days</p>
-            <p><span className="font-bold">Jurisdiction:</span> {escrow.jurisdiction}</p>
-            <p><span className="font-bold">Governing Law:</span> {escrow.governing_law}</p>
-          </div>
+        <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-200">02. Contract Purpose & Description</h2>
+        <div className="border border-gray-200 rounded-xl p-6 bg-white space-y-3">
+          <h3 className="font-black text-lg text-gray-900">{escrow.title}</h3>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{escrow.description}</p>
         </div>
       </section>
 
+      {/* 5. Deliverables / Schedule A */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">DELIVERABLES</h2>
+        <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-200">03. Deliverables & Pricing (Schedule A)</h2>
         {escrow.scope?.deliverables?.length ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse">
+          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+            <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-[#014d46] text-white">
+                <tr className="bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest border-b border-gray-200">
                   <th className="py-3 px-4 text-left">#</th>
-                  <th className="py-3 px-4 text-left">Deliverable</th>
-                  <th className="py-3 px-4 text-left">Acceptance Standard</th>
+                  <th className="py-3 px-4 text-left">What (Task / Item)</th>
+                  <th className="py-3 px-4 text-center">Amount & Unit</th>
+                  <th className="py-3 px-4 text-left">Definition of Done</th>
+                  <th className="py-3 px-4 text-right">Price (ETB)</th>
                 </tr>
               </thead>
-              <tbody>
-                {escrow.scope.deliverables.map((d, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="py-3 px-4">{i + 1}</td>
-                    <td className="py-3 px-4 font-semibold">{d.title}</td>
-                    <td className="py-3 px-4 text-sm">{d.standard_ref || 'Not specified'}</td>
+              <tbody className="divide-y divide-gray-100 text-xs">
+                {escrow.scope.deliverables.map((d: any, i: number) => (
+                  <tr key={i} className="hover:bg-gray-50">
+                    <td className="py-3 px-4 font-bold text-gray-500">0{i + 1}</td>
+                    <td className="py-3 px-4 font-black text-gray-900">{d.title}</td>
+                    <td className="py-3 px-4 text-center font-semibold text-gray-700">{d.amount || 1} {d.unit || 'flat'}</td>
+                    <td className="py-3 px-4 font-medium text-gray-600">{d.standard === 'buyer_approves' ? 'Buyer approves in app' : d.standard === 'matches_file' ? 'Matches attached file' : d.standard === 'buyer_inspects' ? 'Buyer inspects in person' : d.standard || 'Buyer approval'} {d.standard_ref ? `(${d.standard_ref})` : ''}</td>
+                    <td className="py-3 px-4 text-right font-black text-gray-900">{Number(d.price || 0).toLocaleString()} ETB</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
-            {escrow.description}
+          <div className="border border-gray-200 rounded-xl p-6 bg-white text-sm text-gray-700">
+            <p className="font-bold">Standard Single Deliverable:</p>
+            <p className="mt-1">{escrow.title} — Full value of {escrow.amount?.toLocaleString()} ETB</p>
           </div>
         )}
       </section>
 
+      {/* 6. Milestones (if any) */}
       {escrow.milestones && escrow.milestones.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">MILESTONES</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse">
+          <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-200">04. Milestone Payments</h2>
+          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+            <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-[#014d46] text-white">
-                  <th className="py-3 px-4 text-left">Title</th>
-                  <th className="py-3 px-4 text-left">Description</th>
+                <tr className="bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest border-b border-gray-200">
+                  <th className="py-3 px-4 text-left">Milestone</th>
                   <th className="py-3 px-4 text-right">Amount (ETB)</th>
                   <th className="py-3 px-4 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody>
-                {escrow.milestones.map((milestone, index) => (
-                  <tr key={milestone.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="py-3 px-4 font-semibold">{milestone.title}</td>
-                    <td className="py-3 px-4">{milestone.description}</td>
-                    <td className="py-3 px-4 text-right">{milestone.amount?.toLocaleString()}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        milestone.status === 'paid' ? 'bg-green-100 text-green-800' :
-                        milestone.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-                        milestone.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {milestone.status}
+              <tbody className="divide-y divide-gray-100 text-xs">
+                {escrow.milestones.map((m: any) => (
+                  <tr key={m.id} className="hover:bg-gray-50">
+                    <td className="py-3 px-4 font-black text-gray-900">{m.title}</td>
+                    <td className="py-3 px-4 text-right font-black text-gray-900">{m.amount?.toLocaleString()} ETB</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-800 border border-gray-300">
+                        {m.status}
                       </span>
                     </td>
                   </tr>
@@ -157,58 +154,54 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
         </section>
       )}
 
+      {/* 7. Exclusions (Schedule B) */}
       {escrow.scope?.exclusions?.length ? (
         <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">EXCLUSIONS (OUT OF SCOPE)</h2>
-          <ul className="list-disc pl-6 space-y-1">
-            {escrow.scope.exclusions.map((e, i) => <li key={i}>{e.title}</li>)}
+          <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-200">05. Exclusions (Schedule B - Out of Scope)</h2>
+          <ul className="list-disc pl-5 space-y-1 text-xs text-gray-700 font-medium">
+            {escrow.scope.exclusions.map((e: any, i: number) => <li key={i}>{e.title}</li>)}
           </ul>
         </section>
       ) : null}
 
+      {/* 8. Legal & Escrow Protection Terms */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-[#014d46]">TERMS</h2>
-        <div className="space-y-2 text-sm">
-          <p>• Funds are released only upon the Buyer's explicit approval — never automatically.</p>
-          <p>• Review period: {escrow.scope?.acceptance_days || escrow.inspection_period} days after delivery.</p>
-          {escrow.scope?.deemed_accept && <p>• Silence after the review period counts as acceptance of the deliverable.</p>}
-          {escrow.scope?.rejection_policy && <p>• Rejection: {escrow.scope.rejection_policy}</p>}
-          {escrow.scope?.breach_terms && <p>• Breach: {escrow.scope.breach_terms}</p>}
-          <p>• Dispute resolution: {escrow.dispute_resolution || 'arbitration'}</p>
+        <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-200">06. Escrow Protection & Legal Terms</h2>
+        <div className="bg-gray-50 border border-gray-300 rounded-xl p-6 text-xs text-gray-700 space-y-3 leading-relaxed">
+          <p><strong className="text-gray-900">Fund Protection:</strong> Funds are deposited into SafeDeal escrow and released only upon explicit Buyer approval or resolution. Funds are never released automatically.</p>
+          <p><strong className="text-gray-900">Inspection & Acceptance:</strong> The Buyer has {escrow.scope?.acceptance_days || escrow.inspection_period || 5} days following delivery to review and verify deliverables against agreed standards.</p>
+          <p><strong className="text-gray-900">Governing Law & Jurisdiction:</strong> This Agreement is governed by the laws of Ethiopia ({escrow.governing_law || 'Commercial Code of Ethiopia'}). Any dispute shall be resolved through {escrow.dispute_resolution || 'binding arbitration'} in Addis Ababa, Ethiopia.</p>
+          <p className="text-[11px] text-gray-500 pt-2 border-t border-gray-200 font-mono">
+            Cryptographic Verification Reference (Keccak-256): {escrow.contract_hash || escrow.escrow_hash || '0x...'}
+          </p>
         </div>
       </section>
 
-      <footer className="mt-16 pt-8 border-t-2 border-gray-300">
-        <div className="flex justify-between items-start">
-          <div className="text-center">
-            <p className="font-bold">Buyer Signature</p>
-            <div className="h-16 border-b border-gray-300 mt-4 w-48"></div>
-            <p className="font-semibold mt-2">{escrow.buyer?.first_name} {escrow.buyer?.last_name}</p>
+      {/* 9. Signatures */}
+      <section className="mt-12 pt-8 border-t-2 border-gray-900">
+        <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6 pb-1 border-b border-gray-200">07. Signatures & Acknowledgment</h2>
+        <div className="grid grid-cols-2 gap-12">
+          <div>
+            <p className="text-xs font-black uppercase text-gray-700">Buyer Acknowledgment</p>
+            <div className="h-16 border-b border-gray-400 my-4"></div>
+            <p className="font-black text-sm text-gray-900">{escrow.buyer?.first_name} {escrow.buyer?.last_name}</p>
             <p className="text-xs text-gray-500 break-all">{escrow.buyer?.email}</p>
           </div>
 
-          <div className="text-center">
-            <p className="font-bold">Seller Signature</p>
-            <div className="h-16 border-b border-gray-300 mt-4 w-48"></div>
-            <p className="font-semibold mt-2">{escrow.seller?.first_name} {escrow.seller?.last_name}</p>
+          <div>
+            <p className="text-xs font-black uppercase text-gray-700">Seller Acknowledgment</p>
+            <div className="h-16 border-b border-gray-400 my-4"></div>
+            <p className="font-black text-sm text-gray-900">{escrow.seller?.first_name} {escrow.seller?.last_name}</p>
             <p className="text-xs text-gray-500 break-all">{escrow.seller?.email}</p>
           </div>
-
-          {escrow.mediator && (
-            <div className="text-center">
-              <p className="font-bold">Mediator Signature</p>
-              <div className="h-16 border-b border-gray-300 mt-4 w-48"></div>
-              <p className="font-semibold mt-2">{escrow.mediator.first_name} {escrow.mediator.last_name}</p>
-              <p className="text-xs text-gray-500 break-all">{escrow.mediator.email}</p>
-            </div>
-          )}
         </div>
+      </section>
 
-        <div className="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-          <p>This document was digitally generated by SafeDeal Escrow Platform</p>
-          <p>All terms are protected by hybrid blockchain audit logs.</p>
-          <p className="text-xs break-all">Contract Hash: {escrow.contract_hash || escrow.escrow_hash}</p>
-        </div>
+      {/* 10. Footer */}
+      <footer className="mt-16 pt-6 border-t border-gray-300 text-center text-xs text-gray-500 font-medium">
+        <p className="font-bold text-gray-700">SAFEDEAL ESCROW AGREEMENT — SD-{escrow.id}</p>
+        <p className="mt-1">Electronically generated secure transaction record. Confidential.</p>
+        <p className="text-[10px] text-gray-400 mt-2">Page 1 of 1</p>
       </footer>
     </div>
   );
