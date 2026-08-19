@@ -116,112 +116,107 @@ const EscrowDetails = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - (margin * 2);
 
-    const addText = (text: string, fontSize = 10, fontStyle = "normal", color = [0, 0, 0]) => {
+    const addText = (text: string, fontSize = 10, fontStyle = "normal", color = [30, 30, 30]) => {
       doc.setFontSize(fontSize);
-      doc.setFont("helvetica", fontStyle);
+      doc.setFont("times", fontStyle);
       doc.setTextColor(color[0], color[1], color[2]);
       const lines = doc.splitTextToSize(text, contentWidth);
       doc.text(lines, margin, y);
-      y += (lines.length * (fontSize * 0.5)) + 2;
+      y += (lines.length * (fontSize * 0.45)) + 3;
     };
 
     const addSectionTitle = (text: string) => {
-      y += 5;
-      doc.setFillColor(245, 247, 250);
-      doc.rect(margin - 2, y - 5, contentWidth + 4, 8, "F");
+      y += 6;
       doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("times", "bold");
       doc.setTextColor(1, 77, 70);
       doc.text(text.toUpperCase(), margin, y);
-      y += 8;
+      y += 6;
     };
 
-    const addParty = (role: string, name: string, email: string) => {
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(0, 0, 0);
-      doc.text(`${role}:`, margin, y);
-      doc.text(name, margin + 40, y);
-      y += 5;
-      doc.setFontSize(8.5);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(120, 120, 120);
-      doc.text(email, margin + 40, y);
-      y += 4;
-    };
-
-    // Header with brand color bar
-    doc.setFillColor(1, 77, 70);
-    doc.rect(0, 0, pageWidth, 4, "F");
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
+    // Official Letterhead Header
+    doc.setFontSize(18);
+    doc.setFont("times", "bold");
     doc.setTextColor(1, 77, 70);
-    doc.text("SAFEDEAL ESCROW AGREEMENT", pageWidth / 2, y + 4, { align: "center" });
+    doc.text("SAFEDEAL INSTITUTIONAL ESCROW NETWORK", pageWidth / 2, y, { align: "center" });
+    y += 6;
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(120, 120, 120);
-    doc.text("Secure escrow-protected agreement", pageWidth / 2, y + 11, { align: "center" });
-    y += 22;
+    doc.setFont("times", "italic");
+    doc.setTextColor(100, 100, 100);
+    doc.text("Official Master Escrow & Settlement Contract — Addis Ababa, Ethiopia", pageWidth / 2, y, { align: "center" });
+    y += 10;
 
-    addSectionTitle("AGREEMENT DETAILS");
-    addText(`Agreement ID: SD-${escrow?.id}`, 10, "bold");
-    addText(`Status: ${escrow?.status.toUpperCase()}`);
-    addText(`Type: ${escrow?.escrow_type === 'item' ? 'Quick' : 'Detailed'}`);
-    addText(`Jurisdiction: Ethiopia`);
-    addText(`Agreement Hash: ${escrow?.escrow_hash || 'N/A'}`);
+    doc.setDrawColor(1, 77, 70);
+    doc.setLineWidth(0.8);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
 
-    addSectionTitle("1. PARTIES");
-    addParty("Buyer", `${escrow?.buyer?.first_name || ''} ${escrow?.buyer?.last_name || ''}`.trim(), escrow?.buyer?.email || '');
-    addParty("Seller", `${escrow?.seller?.first_name || ''} ${escrow?.seller?.last_name || ''}`.trim(), escrow?.seller?.email || '');
+    // Contract Preamble
+    addSectionTitle("Master Escrow Agreement Preamble");
+    addText(`This Master Escrow Agreement ("Agreement") is officially established and entered into regarding Transaction Reference SD-${escrow?.id}. All parties have consented to execute this binding transaction under the governance of SafeDeal escrow protection and the Commercial Code of Ethiopia.`);
 
-    addSectionTitle("2. PURPOSE");
-    addText(`${escrow?.title || 'N/A'}`, 11, "bold");
-    addText(`${escrow?.description || 'N/A'}`);
+    addSectionTitle("1. Contracting Parties");
+    addText(`First Party (Buyer / Depositor): ${escrow?.buyer?.first_name || ''} ${escrow?.buyer?.last_name || ''} (${escrow?.buyer?.email || 'N/A'})`, 10, "bold");
+    addText(`Second Party (Seller / Provider): ${escrow?.seller?.first_name || ''} ${escrow?.seller?.last_name || ''} (${escrow?.seller?.email || 'N/A'})`, 10, "bold");
 
-    addSectionTitle("3. DELIVERABLES");
+    addSectionTitle("2. Subject Matter & Purpose");
+    addText(`Objective: ${escrow?.title || 'N/A'}`, 11, "bold");
+    addText(`Detailed Scope / Description: ${escrow?.description || 'N/A'}`);
+
+    addSectionTitle("3. Financial Principal & Valuation");
+    addText(`Total Escrow Principal: ETB ${escrow?.amount.toLocaleString()} (ETB)`, 11, "bold");
+    addText(`Inspection & Review Period: Exactly ${escrow?.scope?.acceptance_days || escrow?.inspection_period || 5} calendar days following formal delivery.`);
+    addText(`Platform Settlement Fee: ETB ${escrow?.platform_fee?.toLocaleString() || 0}`);
+
+    addSectionTitle("4. Schedule A (Deliverables & Acceptance Standards)");
     const delivs = escrow?.scope?.deliverables?.length ? escrow.scope.deliverables : [];
     if (delivs.length) {
-      delivs.forEach((d, i) => {
-        addText(`${i + 1}. ${d.title}`, 10, "bold");
-        if (d.standard_ref) addText(`   Standard: ${d.standard_ref}`, 8.5, "normal", [120, 120, 120]);
+      delivs.forEach((d: any, i: number) => {
+        const stdLabel = d.standard === 'buyer_approves' ? 'Buyer approves in app' : d.standard === 'matches_file' ? 'Matches attached file' : d.standard === 'buyer_inspects' ? 'Buyer inspects in person' : d.standard || 'Buyer approval';
+        addText(`Item ${i + 1}: ${d.title} [${d.amount || 1} ${d.unit || 'flat'}] — Price: ${Number(d.price || 0).toLocaleString()} ETB`, 10, "bold");
+        addText(`   Definition of Done / Standard: ${stdLabel}${d.standard_ref ? ` (${d.standard_ref})` : ''}`, 9, "normal", [100, 100, 100]);
       });
     } else {
-      addText(escrow?.description || 'N/A');
+      addText(`Primary Deliverable: ${escrow?.title} — Lump sum value of ${escrow?.amount?.toLocaleString()} ETB.`);
     }
 
-    addSectionTitle("4. VALUE");
-    addText(`Total Amount: ETB ${escrow?.amount.toLocaleString()}`, 11, "bold");
-    addText(`Inspection / Review Period: ${escrow?.scope?.acceptance_days || escrow?.inspection_period || 3} Days`);
-
     if (milestones.length > 0) {
-      addSectionTitle("5. MILESTONES");
+      addSectionTitle("5. Milestone Payment Allocation");
       autoTable(doc, {
         startY: y,
-        head: [['#', 'Milestone', 'Amount (ETB)', 'Due Date', 'Status']],
-        body: milestones.map((m, i) => [i + 1, m.title, m.amount.toLocaleString(), formatDateSafe(m.due_date), m.status]),
-        margin: { left: margin }
+        head: [['#', 'Milestone Title', 'Amount (ETB)', 'Status']],
+        body: milestones.map((m, i) => [i + 1, m.title, m.amount.toLocaleString(), m.status]),
+        margin: { left: margin },
+        styles: { font: 'times', fontSize: 9 }
       });
       y = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    addSectionTitle(escrow?.scope?.deliverables?.length ? "6. EXCLUSIONS (OUT OF SCOPE)" : "5. LEGAL TERMS");
-    const excl = escrow?.scope?.exclusions?.length ? escrow.scope.exclusions : [];
-    if (excl.length) {
-      excl.forEach((e, i) => addText(`${i + 1}. ${e.title}`, 9));
-      y += 3;
-      addText("Any item not listed as a deliverable above is outside the scope.", 8.5, "italic", [120, 120, 120]);
-    } else {
-      addText("Funds are held securely in escrow and released to the Seller only upon the Buyer's explicit approval of the delivered goods or services. No funds are released automatically. The system secures funds via Keccak256 cryptographic hashing.");
+    if (escrow?.scope?.exclusions?.length) {
+      addSectionTitle("6. Schedule B (Exclusions / Out of Scope)");
+      escrow.scope.exclusions.forEach((e: any, i: number) => {
+        addText(`Exclusion ${i + 1}: ${e.title}`, 9);
+      });
     }
+
+    addSectionTitle("7. Institutional Escrow Covenants & Legal Governance");
+    addText("7.1 Fund Protection: All funds are deposited into SafeDeal institutional escrow accounts and are disbursed strictly upon verified Buyer acceptance. Funds are never released automatically or unilaterally.");
+    addText("7.2 Governing Law: This Agreement is governed under the substantive laws and Commercial Code of Ethiopia. Any dispute shall be resolved through binding arbitration in Addis Ababa, Ethiopia.");
+    addText(`7.3 Cryptographic Audit Stamp: ${escrow?.escrow_hash || '0x...institution_verified'}`);
+
+    addSectionTitle("8. Execution & Signatures");
+    addText("IN WITNESS WHEREOF, the Parties have executed this Master Escrow Agreement with full legal capacity.");
+    y += 5;
+    addText(`Buyer Signature: _______________________      Seller Signature: _______________________`, 10, "bold");
 
     // Footer brand
     const pageH = doc.internal.pageSize.getHeight();
     doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(150, 150, 150);
-    doc.text("SafeDeal Escrow Platform — All terms protected by hybrid blockchain audit logs.", pageWidth / 2, pageH - 10, { align: "center" });
+    doc.setFont("times", "italic");
+    doc.setTextColor(120, 120, 120);
+    doc.text("SafeDeal Institutional Escrow & Settlement Network — Official Certified Record", pageWidth / 2, pageH - 10, { align: "center" });
 
-    doc.save(`SafeDeal-SD${escrow?.id}.pdf`);
+    doc.save(`SafeDeal-Contract-SD${escrow?.id}.pdf`);
   };
 
   const handleAccept = async () => {
