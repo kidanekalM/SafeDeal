@@ -266,8 +266,8 @@ const EscrowDetails = () => {
           <Link to="/escrows" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold">
             <ArrowLeft size={18} /> {t('pages.back_to_my_escrows', 'Back')}
           </Link>
-          <button onClick={handlePrint} className="btn btn-outline border-gray-200 rounded-xl flex items-center gap-2">
-            <Printer size={18} /> {t('pages.print_agreement', 'Print Agreement')}
+          <button onClick={handlePrint} className="btn btn-primary bg-primary-600 text-white font-black px-6 py-3 rounded-2xl shadow-lg hover:bg-primary-700 flex items-center gap-2">
+            <Printer size={20} /> {t('pages.print_agreement', 'Print Agreement')}
           </button>
         </div>
 
