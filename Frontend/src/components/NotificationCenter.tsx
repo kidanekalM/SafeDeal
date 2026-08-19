@@ -213,7 +213,7 @@ const NotificationCenter = ({ isOpen, onClose }: NotificationCenterProps) => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white rounded-2xl w-full max-w-2xl h-[600px] shadow-2xl flex flex-col"
+            className="bg-white rounded-3xl w-full max-w-2xl h-[600px] shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -394,7 +394,7 @@ const NotificationCenter = ({ isOpen, onClose }: NotificationCenterProps) => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden"
+              className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

@@ -118,11 +118,40 @@ export interface Escrow {
     seller?: User;
     mediator?: User;
     milestones?: Milestone[];
+    scope?: ContractScope;
 
     // Compatibility
     CreatedAt?: string;
     Conditions?: string;
     sub_type?: string;
+}
+
+export interface ContractScope {
+    id?: number;
+    escrow_id?: number;
+    acceptance_method?: string;
+    acceptance_detail?: string;
+    due_date?: string;
+    rejection_policy?: string;
+    cure_period_days?: number;
+    breach_terms?: string;
+    termination_notice_days?: number;
+    acceptance_days?: number;
+    deemed_accept?: boolean;
+    deliverables?: ContractDeliverable[];
+    exclusions?: ContractExclusion[];
+}
+
+export interface ContractDeliverable {
+    id?: number;
+    title: string;
+    standard?: string;
+    standard_ref?: string;
+}
+
+export interface ContractExclusion {
+    id?: number;
+    title: string;
 }
 
 export interface Milestone {
@@ -178,6 +207,7 @@ export interface CreateEscrowRequest {
     
     extra_data?: string;
     milestones?: Partial<Milestone>[];
+    scope?: ContractScope;
 }
 
 export type TransactionStatus = 'Pending' | 'Verifying' | 'Completed' | 'Failed' | 'Refunded';

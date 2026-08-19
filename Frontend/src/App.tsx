@@ -218,7 +218,7 @@ function App() {
       <div className="min-h-screen bg-gray-50 relative">
         {showLangModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-md p-6">
+            <div className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">{t("common.choose_your_language")}</h2>
               <p className="text-sm text-gray-600 mb-6 text-center">{t("common.select_language_prompt")}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -6,8 +6,8 @@ import {
   Search, Check, 
   ChevronLeft, Trash2,
   Scale,
-  Briefcase, ShoppingCart, Calendar, Clock,
-  User, DollarSign, TextQuote
+  Briefcase, ShoppingCart, Calendar,
+  User, DollarSign, ListChecks, FileX2, ShieldCheck, TextQuote
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -25,6 +25,29 @@ const MilestoneSchema = z.object({
   due_date: z.string().optional(),
 });
 
+const DeliverableSchema = z.object({
+  title: z.string().min(3, 'Deliverable is required'),
+  standard: z.string().optional(),
+  standard_ref: z.string().optional(),
+});
+
+const ExclusionSchema = z.object({
+  title: z.string().min(2, 'Exclusion is required'),
+});
+
+const ScopeSchema = z.object({
+  deliverables: z.array(DeliverableSchema).optional(),
+  exclusions: z.array(ExclusionSchema).optional(),
+  acceptance_method: z.string().optional(),
+  acceptance_detail: z.string().optional(),
+  acceptance_days: z.coerce.number().min(1).default(5),
+  deemed_accept: z.boolean().optional(),
+  rejection_policy: z.string().optional(),
+  cure_period_days: z.coerce.number().min(0).default(0),
+  breach_terms: z.string().optional(),
+  termination_notice_days: z.coerce.number().min(0).default(7),
+});
+
 const CreateEscrowSchema = z.object({
   creator_role: z.enum(['seller', 'buyer', 'mediator']),
   escrow_type: z.enum(['item', 'project']),
@@ -33,7 +56,7 @@ const CreateEscrowSchema = z.object({
   amount: z.coerce.number().min(0),
   delivery_date: z.string().optional(),
   inspection_period: z.coerce.number().min(1).default(3),
-  
+
   buyer_id: z.number().optional(),
   buyer_email: z.string().optional(),
   seller_id: z.number().optional(),
@@ -45,6 +68,7 @@ const CreateEscrowSchema = z.object({
   governing_law: z.string().optional(),
   dispute_resolution: z.enum(['arbitration', 'mediation', 'court']).optional(),
 
+  scope: ScopeSchema.optional(),
   milestones: z.array(MilestoneSchema).optional(),
 }).refine(data => {
   if (data.escrow_type === 'item' && data.amount <= 0) return false;
@@ -55,6 +79,22 @@ const CreateEscrowSchema = z.object({
 });
 
 type CreateEscrowForm = z.infer<typeof CreateEscrowSchema>;
+
+const ACCEPTANCE_METHODS = [
+  { value: 'buyer_approval', label: 'Buyer approval' },
+  { value: 'inspection_passed', label: 'Independent inspection passed' },
+  { value: 'test_results', label: 'Test results / measurement' },
+  { value: 'certificate', label: 'Certificate issued' },
+  { value: 'mutual', label: 'Mutual sign-off' },
+];
+
+const STANDARD_OPTIONS = [
+  { value: 'none', label: 'No special test — buyer just approves it' },
+  { value: 'page_count', label: 'Exact quantity (e.g. 5 pages, 3 items)' },
+  { value: 'named_standard', label: 'Meets a known standard (e.g. WCAG, ISO)' },
+  { value: 'numeric_threshold', label: 'Meets a target number (e.g. < 2s load)' },
+  { value: 'reference_file', label: 'Matches a sample you provide (photo/file)' },
+];
 
 const CreateEscrow = () => {
   const { t } = useTranslation();
@@ -71,7 +111,7 @@ const CreateEscrow = () => {
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting, isValid, errors: formErrors },
+    formState: { isSubmitting, errors: formErrors },
     watch,
     setValue,
     control,
@@ -88,14 +128,33 @@ const CreateEscrow = () => {
       jurisdiction: 'Ethiopia',
       governing_law: 'Commercial Code of Ethiopia',
       milestones: [],
+      scope: {
+        acceptance_method: 'buyer_approval',
+        acceptance_days: 5,
+        deemed_accept: false,
+        cure_period_days: 0,
+        termination_notice_days: 7,
+        deliverables: [],
+        exclusions: [],
+      },
     }
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'milestones' });
+  const { fields: delivFields, append: appendDeliv, remove: removeDeliv } = useFieldArray({ control, name: 'scope.deliverables' });
+  const { fields: exclFields, append: appendExcl, remove: removeExcl } = useFieldArray({ control, name: 'scope.exclusions' });
 
   const escrowType = watch('escrow_type');
   const creatorRole = watch('creator_role');
   const milestonesWatch = watch('milestones') || [];
+
+  // Seed one empty deliverable row for the project/Detailed flow (item/Quick skips deliverables).
+  useEffect(() => {
+    if (escrowType === 'project' && delivFields.length === 0) {
+      appendDeliv({ title: '', standard: 'none', standard_ref: '' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [escrowType]);
 
   // Sync amount from milestones for projects
   useEffect(() => {
@@ -106,15 +165,20 @@ const CreateEscrow = () => {
   }, [milestonesWatch, escrowType, setValue]);
 
   const steps = useMemo(() => {
-    return [
-      { id: 'type', title: 'Deal', icon: Briefcase },
-      { id: 'parties', title: 'Parties', icon: User },
-      { id: 'basics', title: 'Basics', icon: TextQuote },
-      { id: 'timeline', title: 'Timeline', icon: Clock },
-      { id: 'financial', title: 'Budget', icon: DollarSign },
-      { id: 'review', title: 'Review', icon: Check },
+    const all = [
+      { id: 'type', title: t('pages.step_deal', 'Deal'), icon: Briefcase },
+      { id: 'parties', title: t('pages.step_parties', 'Parties'), icon: User },
+      { id: 'basics', title: t('pages.step_basics', 'Basics'), icon: TextQuote },
+      { id: 'deliverables', title: t('pages.step_deliver', 'Deliver'), icon: ListChecks },
+      { id: 'acceptance', title: t('pages.step_accept', 'Accept'), icon: ShieldCheck },
+      { id: 'exclusions', title: t('pages.step_exclude', 'Exclude'), icon: FileX2 },
+      { id: 'terms', title: t('pages.step_terms', 'Terms'), icon: Scale },
+      { id: 'financial', title: t('pages.step_budget', 'Budget'), icon: DollarSign },
+      { id: 'review', title: t('pages.step_review', 'Review'), icon: Check },
     ];
-  }, []);
+    if (escrowType === 'item') return all.filter(s => s.id !== 'deliverables');
+    return all;
+  }, [t, escrowType]);
 
   const handleSearch = async (term: string, role: 'buyer' | 'seller' | 'mediator') => {
     setSearchTerm(term);
@@ -143,25 +207,27 @@ const CreateEscrow = () => {
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
     const currentId = steps[step].id;
-    
+
     if (currentId === 'type') fieldsToValidate = ['escrow_type', 'creator_role'];
     else if (currentId === 'parties') {
-      if (creatorRole === 'buyer' && !selectedSeller) { toast.error('Select a seller'); return; }
-      if (creatorRole === 'seller' && !selectedBuyer) { toast.error('Select a buyer'); return; }
-      if (creatorRole === 'mediator' && (!selectedBuyer || !selectedSeller)) { toast.error('Select both parties'); return; }
+      if (creatorRole === 'buyer' && !selectedSeller) { toast.error(t('pages.select_a_seller', 'Select a seller')); return; }
+      if (creatorRole === 'seller' && !selectedBuyer) { toast.error(t('pages.select_a_buyer', 'Select a buyer')); return; }
+      if (creatorRole === 'mediator' && (!selectedBuyer || !selectedSeller)) { toast.error(t('pages.select_both_parties', 'Select both parties')); return; }
     }
     else if (currentId === 'basics') fieldsToValidate = ['title', 'description'];
-    else if (currentId === 'timeline') fieldsToValidate = ['delivery_date', 'inspection_period'];
+    else if (currentId === 'deliverables') fieldsToValidate = ['scope.deliverables'];
+    else if (currentId === 'exclusions') fieldsToValidate = ['scope.exclusions'];
     else if (currentId === 'financial') {
       if (escrowType === 'item') fieldsToValidate = ['amount'];
       else {
-        if (milestonesWatch.length === 0) { toast.error('Add at least one milestone'); return; }
+        if (milestonesWatch.length === 0) { toast.error(t('pages.add_at_least_one_milestone', 'Add at least one milestone')); return; }
         fieldsToValidate = ['milestones'];
       }
     }
 
     const isStepValid = await trigger(fieldsToValidate as any);
     if (isStepValid) setStep(s => Math.min(s + 1, steps.length - 1));
+    else toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.'));
   };
 
   const onSubmit = async (data: CreateEscrowForm) => {
@@ -176,46 +242,60 @@ const CreateEscrow = () => {
         buyer_id: creatorRole === 'buyer' ? currentUser?.id : data.buyer_id,
         seller_id: creatorRole === 'seller' ? currentUser?.id : data.seller_id,
         mediator_id: creatorRole === 'mediator' ? currentUser?.id : data.mediator_id,
+        scope: {
+          ...data.scope,
+          acceptance_days: Number(data.scope?.acceptance_days) || 5,
+          cure_period_days: Number(data.scope?.cure_period_days) || 0,
+          termination_notice_days: Number(data.scope?.termination_notice_days) || 7,
+          deliverables: (data.scope?.deliverables || []).filter(d => d.title.trim()).map(d => ({
+            title: d.title.trim(), standard: d.standard || 'none', standard_ref: d.standard_ref || '',
+          })),
+          exclusions: (data.scope?.exclusions || []).filter(e => e.title.trim()).map(e => ({ title: e.title.trim() })),
+        },
       };
       if (data.milestones) payload.milestones = data.milestones.map((m, i) => ({ ...m, order_index: i, amount: Number(m.amount) }));
-      
+
       await escrowApi.create(payload);
       toast.success(t('pages.deal_launched', 'Deal Launched!'));
       navigate('/escrows');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to create deal');
+      toast.error(error?.response?.data?.message || t('pages.failed_to_create_deal', 'Failed to create deal'));
     }
   };
+
+  const stepTitle = (text: string, sub?: string) => (
+    <div className="text-center mb-8">
+      <h2 className="text-3xl font-black text-gray-900 mb-2">{text}</h2>
+      {sub && <p className="text-gray-500 font-medium text-sm">{sub}</p>}
+    </div>
+  );
 
   const renderStepContent = () => {
     switch (steps[step].id) {
       case 'type': return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="text-center">
-            <h2 className="text-3xl font-black text-gray-900 mb-2">{t('pages.what_are_you_doing', 'What are you doing?')}</h2>
-            <p className="text-gray-500 font-medium">{t('pages.choose_path', 'Select your deal type')}</p>
-          </div>
+        <div className="space-y-8">
+          {stepTitle(t('pages.what_are_you_doing', 'What are you doing?'), t('pages.choose_path', 'Select your deal type'))}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <button onClick={() => setValue('escrow_type', 'item')} className={`p-8 border-2 rounded-[2rem] text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
+            <button onClick={() => setValue('escrow_type', 'item')} className={`p-8 border-2 rounded-3xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
+              <div className={`w-12 h-12 rounded-3xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
                 <ShoppingCart size={24} />
               </div>
-              <h3 className="text-lg font-black">{t('pages.buy_sell_item', 'Buy / Sell Item')}</h3>
-              <p className="text-[10px] text-gray-400 font-medium">Simple 5-step flow for electronics, vehicles, etc.</p>
+              <h3 className="text-lg font-black">{t('pages.buy_sell_item', 'Quick')}</h3>
+              <p className="text-[10px] text-gray-400 font-medium">{t('pages.simple_5_step_flow', 'A single deliverable with clear acceptance terms. For goods, vehicles, one-off items.')}</p>
               {escrowType === 'item' && <Check size={18} className="absolute top-6 right-6 text-primary-600" />}
             </button>
-            <button onClick={() => setValue('escrow_type', 'project')} className={`p-8 border-2 rounded-[2rem] text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
+            <button onClick={() => setValue('escrow_type', 'project')} className={`p-8 border-2 rounded-3xl text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
+              <div className={`w-12 h-12 rounded-3xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
                 <Briefcase size={24} />
               </div>
-              <h3 className="text-lg font-black">{t('pages.project_service', 'Project / Service')}</h3>
-              <p className="text-[10px] text-gray-400 font-medium">Milestone-based flow for software, consulting, etc.</p>
+              <h3 className="text-lg font-black">{t('pages.project_service', 'Detailed')}</h3>
+              <p className="text-[10px] text-gray-400 font-medium">{t('pages.milestone_based_flow', 'Multiple deliverables and milestone payments. For software, services, consulting.')}</p>
               {escrowType === 'project' && <Check size={18} className="absolute top-6 right-6 text-primary-600" />}
             </button>
           </div>
           <div className="pt-6 border-t border-gray-100 flex flex-col items-center">
              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4">{t('pages.your_role', 'Your Role')}</label>
-             <div className="flex gap-2 p-1.5 bg-gray-100 rounded-2xl">
+             <div className="flex gap-2 p-1.5 bg-gray-100 rounded-3xl">
                 {['buyer', 'seller', 'mediator'].map(r => (
                   <button key={r} onClick={() => setValue('creator_role', r as any)} className={`px-6 py-2 rounded-xl font-black uppercase text-[10px] transition-all ${creatorRole === r ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}>
                     {t(`pages.${r}`, r)}
@@ -228,9 +308,7 @@ const CreateEscrow = () => {
 
       case 'parties': return (
         <div className="space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-black text-gray-900 mb-2">{t('pages.who_is_involved', 'Who is involved?')}</h2>
-          </div>
+          {stepTitle(t('pages.who_is_involved', 'Who is involved?'))}
           <div className="max-w-md mx-auto space-y-6">
             {(creatorRole === 'seller' || creatorRole === 'mediator') && (
               <PartySearchField label={t('pages.the_buyer', 'Buyer Email')} selected={selectedBuyer} role="buyer" searchTerm={searchTerm} activeSearchRole={activeSearchRole} searchResults={searchResults} onSearch={handleSearch} onSelect={selectUser} onClear={() => { setSelectedBuyer(null); setValue('buyer_id', undefined); }} />
@@ -247,55 +325,121 @@ const CreateEscrow = () => {
 
       case 'basics': return (
         <div className="space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-black text-gray-900 mb-2">{t('pages.agreement_basics', 'Basics')}</h2>
-          </div>
+          {stepTitle(t('pages.what_is_it', 'What is it?'), t('pages.what_is_it_sub', 'A clear name and short description.'))}
           <div className="max-w-md mx-auto space-y-6">
             <div className="form-control">
-              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{escrowType === 'item' ? 'Item Name' : 'Project Title'}</label>
-              <input type="text" {...register('title')} className="input w-full h-14 rounded-2xl bg-gray-50 border-none font-bold px-6" placeholder={escrowType === 'item' ? "e.g. MacBook Pro M3" : "e.g. Website Development"} />
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{escrowType === 'item' ? t('pages.item_name', 'Item Name') : t('pages.project_title', 'Project Title')}</label>
+              <input type="text" {...register('title')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder={escrowType === 'item' ? t('pages.title_placeholder_item', 'e.g. MacBook Pro M3') : t('pages.title_placeholder_project', 'e.g. Website Development')} />
               {formErrors.title && <p className="text-red-500 text-[9px] mt-1 font-bold uppercase">{formErrors.title.message}</p>}
             </div>
             <div className="form-control">
-              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">Description</label>
-              <textarea rows={4} {...register('description')} className="textarea w-full rounded-2xl bg-gray-50 border-none font-medium p-6" placeholder="Provide key details..." />
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.description', 'Description')}</label>
+              <textarea rows={4} {...register('description')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.description_placeholder', 'Provide key details...')} />
               {formErrors.description && <p className="text-red-500 text-[9px] mt-1 font-bold uppercase">{formErrors.description.message}</p>}
+            </div>
+            <div className="form-control">
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.delivery_date', 'Delivery Date')}</label>
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                <input type="date" {...register('delivery_date')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold pl-12" />
+              </div>
             </div>
           </div>
         </div>
       );
 
-      case 'timeline': return (
+      case 'deliverables': return (
         <div className="space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-black text-gray-900 mb-2">{t('pages.agreement_timeline', 'Timeline')}</h2>
+          {stepTitle(t('pages.what_is_delivered', 'What exactly is delivered?'), t('pages.what_is_delivered_sub', 'One row per item. Each must have a checkable standard.'))}
+          <div className="max-w-2xl mx-auto space-y-3">
+            {delivFields.map((f, i) => (
+              <div key={f.id} className="p-5 bg-white border-2 border-gray-100 rounded-3xl space-y-3 relative group">
+                <button type="button" onClick={() => removeDeliv(i)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500"><Trash2 size={16} /></button>
+                <input placeholder={t('pages.deliverable_placeholder', 'Deliverable (e.g. Homepage design)')} {...register(`scope.deliverables.${i}.title`)} className="w-full font-black text-sm outline-none border-b-2 border-transparent focus:border-primary-600 transition-all bg-transparent" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">{t('pages.acceptance_standard', 'Acceptance Standard')}</label>
+                    <select {...register(`scope.deliverables.${i}.standard`)} className="w-full h-11 rounded-3xl bg-gray-50 border-none font-bold text-sm px-4">
+                      {STANDARD_OPTIONS.map(o => <option key={o.value} value={o.value}>{t(`pages.standard_${o.value}`, o.label)}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">{t('pages.standard_detail', 'Standard Detail')}</label>
+                    <input placeholder={watch(`scope.deliverables.${i}.standard`) === 'none' ? t('pages.not_required', 'Not required') : t('pages.standard_ref_placeholder', 'e.g. 5 pages, WCAG 2.1 AA, < 2s')} {...register(`scope.deliverables.${i}.standard_ref`)} className="w-full h-11 rounded-3xl bg-gray-50 border-none font-bold text-sm px-4" />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button type="button" onClick={() => appendDeliv({ title: '', standard: 'none', standard_ref: '' })} className="w-full py-3 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-primary-600 hover:text-primary-600 font-black text-sm">{t('pages.add_deliverable', '+ Add Deliverable')}</button>
           </div>
+        </div>
+      );
+
+      case 'acceptance': return (
+        <div className="space-y-8">
+          {stepTitle(t('pages.how_done_confirmed', "How is 'done' confirmed?"), t('pages.how_done_confirmed_sub', 'Make it checkable, not a feeling.'))}
           <div className="max-w-md mx-auto space-y-6">
             <div className="form-control">
-              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">Delivery Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                <input type="date" {...register('delivery_date')} className="input w-full h-14 rounded-2xl bg-gray-50 border-none font-bold pl-12" />
-              </div>
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.acceptance_method', 'Acceptance Method')}</label>
+              <select {...register('scope.acceptance_method')} className="w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6">
+                {ACCEPTANCE_METHODS.map(m => <option key={m.value} value={m.value}>{t(`pages.accept_method_${m.value}`, m.label)}</option>)}
+              </select>
             </div>
             <div className="form-control">
-              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">Inspection Period (Days)</label>
-              <div className="relative">
-                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                <input type="number" {...register('inspection_period')} className="input w-full h-14 rounded-2xl bg-gray-50 border-none font-bold pl-12" placeholder="3" />
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.acceptance_detail_optional', 'Acceptance Detail (optional)')}</label>
+              <textarea rows={3} {...register('scope.acceptance_detail')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.acceptance_detail_placeholder', 'e.g. Buyer confirms in the app that the delivered item matches its standard')} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-control">
+                <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.days_to_review', 'Days to Review')}</label>
+                <input type="number" {...register('scope.acceptance_days')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" defaultValue={5} />
               </div>
-              <p className="text-[8px] font-medium text-gray-400 mt-2">Time after delivery to check and approve/dispute.</p>
+              <div className="form-control">
+                <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.cure_period_days', 'Cure Period (Days)')}</label>
+                <input type="number" {...register('scope.cure_period_days')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder="0" />
+              </div>
+            </div>
+            <label className="flex items-start gap-3 bg-white border-2 border-gray-100 rounded-3xl p-4 cursor-pointer">
+              <input type="checkbox" {...register('scope.deemed_accept')} className="mt-1 w-5 h-5 accent-primary-600" />
+              <div>
+                <p className="font-black text-sm">{t('pages.deemed_accept_label', 'Silence after the review period counts as Acceptance')}</p>
+                <p className="text-[9px] text-gray-400 font-medium">{t('pages.deemed_accept_sub', 'Recommended. Prevents the other party from stalling. Funds still require your explicit release.')}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+      );
+
+      case 'exclusions': return (
+        <div className="space-y-8">
+          {stepTitle(t('pages.what_is_not_included', 'What is NOT included?'), t('pages.what_is_not_included_sub', 'List what is out of scope so there is no surprise.'))}
+          <div className="max-w-xl mx-auto space-y-3">
+            {exclFields.map((f, i) => (
+              <div key={f.id} className="flex items-center gap-3 p-4 bg-white border-2 border-gray-100 rounded-3xl">
+                <input placeholder={t('pages.exclusion_placeholder', 'e.g. Mobile app version, extra pages, logo design')} {...register(`scope.exclusions.${i}.title`)} className="flex-1 font-bold text-sm outline-none border-b-2 border-transparent focus:border-primary-600 transition-all bg-transparent" />
+                <button type="button" onClick={() => removeExcl(i)} className="text-gray-300 hover:text-red-500"><Trash2 size={16} /></button>
+              </div>
+            ))}
+            <button type="button" onClick={() => appendExcl({ title: '' })} className="w-full py-3 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-primary-600 hover:text-primary-600 font-black text-sm">{t('pages.add_exclusion', '+ Add Exclusion')}</button>
+          </div>
+        </div>
+      );
+
+      case 'terms': return (
+        <div className="space-y-8">
+          {stepTitle(t('pages.breaking_deal', 'Breaking the deal'), t('pages.breaking_deal_sub', 'What happens if either side does not perform.'))}
+          <div className="max-w-md mx-auto space-y-6">
+            <div className="form-control">
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.rejection_policy', 'Rejection Policy')}</label>
+              <textarea rows={3} {...register('scope.rejection_policy')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.rejection_policy_placeholder', 'e.g. Buyer can request 2 revisions free; further changes are paid via a Change Order.')} />
             </div>
             <div className="form-control">
-              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">Dispute Resolution</label>
-              <div className="flex gap-2 p-1.5 bg-gray-100 rounded-2xl">
-                {(['arbitration', 'mediation', 'court'] as const).map(m => (
-                  <button key={m} type="button" onClick={() => setValue('dispute_resolution', m)} className={`px-4 py-2 rounded-xl font-black uppercase text-[10px] flex-1 transition-all ${watch('dispute_resolution') === m ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}>
-                    {m}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[8px] font-medium text-gray-400 mt-2">How disputes will be resolved if they arise. Arbitration is binding & faster.</p>
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.breach_terms', 'Breach Terms')}</label>
+              <textarea rows={3} {...register('scope.breach_terms')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.breach_terms_placeholder', 'e.g. If the Seller fails to deliver, the Buyer may cancel and be refunded.')} />
+            </div>
+            <div className="form-control">
+              <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.termination_notice_days', 'Termination Notice (Days)')}</label>
+              <input type="number" {...register('scope.termination_notice_days')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" defaultValue={7} />
             </div>
           </div>
         </div>
@@ -303,13 +447,11 @@ const CreateEscrow = () => {
 
       case 'financial': return (
         <div className="space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-black text-gray-900 mb-2">{escrowType === 'item' ? 'Total Amount' : 'Milestones'}</h2>
-          </div>
-          
+          {stepTitle(escrowType === 'item' ? t('pages.total_amount_step', 'Total Amount') : t('pages.milestones_step', 'Milestones'))}
+
           {escrowType === 'item' ? (
-            <div className="max-w-md mx-auto p-10 bg-primary-50 rounded-[2.5rem] border-4 border-white shadow-xl">
-               <label className="text-[9px] font-black text-primary-600 uppercase tracking-widest block mb-4">Contract Amount (ETB)</label>
+            <div className="max-w-md mx-auto p-10 bg-primary-50 rounded-3xl border-4 border-white shadow-xl">
+               <label className="text-[9px] font-black text-primary-600 uppercase tracking-widest block mb-4">{t('pages.contract_amount_etb', 'Contract Amount (ETB)')}</label>
                <div className="relative">
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 font-black text-primary-200 text-3xl">ETB</div>
                   <input type="number" {...register('amount')} className="input w-full h-20 bg-transparent border-none font-black text-5xl text-primary-900 pl-20 pr-0 outline-none focus:ring-0" placeholder="0" />
@@ -318,25 +460,25 @@ const CreateEscrow = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="flex justify-between items-center px-4">
-                <p className="text-sm font-black text-primary-600 uppercase tracking-widest">Total: {Number(watch('amount')).toLocaleString()} ETB</p>
-                <button type="button" onClick={() => append({ title: '', amount: 0 })} className="btn btn-primary btn-sm rounded-xl font-black">+ Add Milestone</button>
+              <div className="flex justify-between items-center px-4 max-w-2xl mx-auto">
+                <p className="text-sm font-black text-primary-600 uppercase tracking-widest">{t('pages.total_label', 'Total: {{amount}} ETB', { amount: Number(watch('amount')).toLocaleString() })}</p>
+                <button type="button" onClick={() => append({ title: '', amount: 0 })} className="btn btn-primary btn-sm rounded-xl font-black">{t('pages.add_milestone', '+ Add Milestone')}</button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[45vh] p-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[45vh] p-2 max-w-2xl mx-auto">
                 {fields.map((f, i) => (
                   <div key={f.id} className="p-6 bg-white border-2 border-gray-100 rounded-3xl relative group">
                     <div className="space-y-4">
                       <div className="flex justify-between">
-                         <input placeholder="Deliverable name..." {...register(`milestones.${i}.title`)} className="w-full font-black text-sm outline-none border-b border-transparent focus:border-primary-600 transition-all bg-transparent" />
+                         <input placeholder={t('pages.milestone_deliverable_placeholder', 'Deliverable name...')} {...register(`milestones.${i}.title`)} className="w-full font-black text-sm outline-none border-b border-transparent focus:border-primary-600 transition-all bg-transparent" />
                          <button type="button" onClick={() => remove(i)} className="text-gray-300 hover:text-red-500 ml-2"><Trash2 size={16} /></button>
                       </div>
                       <div className="flex gap-2">
                         <div className="flex-1">
-                          <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Amount</label>
+                          <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">{t('pages.amount', 'Amount')}</label>
                           <input type="number" {...register(`milestones.${i}.amount`)} className="w-full font-black text-primary-600 outline-none bg-transparent" placeholder="0" />
                         </div>
                         <div className="w-24">
-                          <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Due</label>
+                          <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">{t('pages.due', 'Due')}</label>
                           <input type="date" {...register(`milestones.${i}.due_date`)} className="w-full font-bold text-[10px] outline-none bg-transparent" />
                         </div>
                       </div>
@@ -353,35 +495,38 @@ const CreateEscrow = () => {
         const data = watch();
         return (
           <div className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-black text-gray-900 mb-2">Legal Review</h2>
-            </div>
+            {stepTitle(t('pages.legal_review', 'Legal Review'))}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-               <div className="p-8 bg-primary-900 text-white rounded-[2.5rem] shadow-xl space-y-8">
+               <div className="p-8 bg-primary-900 text-white rounded-3xl shadow-xl space-y-8">
                   <div>
-                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-2">Agreement Summary</p>
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.agreement_summary', 'Agreement Summary')}</p>
                     <h3 className="text-xl font-black leading-tight">{data.title}</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
                     <div>
-                      <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">Budget</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{t('pages.budget', 'Budget')}</p>
                       <p className="text-lg font-black">{Number(data.amount).toLocaleString()} ETB</p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">Target</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{t('pages.target', 'Target')}</p>
                       <p className="text-sm font-bold">{data.delivery_date || 'N/A'}</p>
                     </div>
                   </div>
                </div>
 
-               <div className="p-8 bg-gray-50 rounded-[2.5rem] border-2 border-white space-y-4">
+               <div className="p-8 bg-gray-50 rounded-3xl border-2 border-white space-y-4">
                   <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
-                    <Scale size={14} className="text-primary-600" /> System Clauses
+                    <Scale size={14} className="text-primary-600" /> {t('pages.system_clauses', 'System Clauses')}
                   </h4>
                   <div className="space-y-3 text-[11px] font-bold text-gray-600 leading-relaxed">
-                    <p>• <span className="text-gray-900">Buyer</span> has <span className="text-primary-600">{data.inspection_period} days</span> to inspect deliverables.</p>
-                    <p>• <span className="italic">Auto-Release:</span> Funds move automatically if no dispute is raised within inspection window.</p>
-                    {escrowType === 'project' && <p>• Payments released milestone-by-milestone upon approval.</p>}
+                    {escrowType === 'project' ? (
+                      <p>• <span className="text-gray-900">{t('pages.review_deliverables', 'Deliverables')}</span>: {(data.scope?.deliverables || []).filter((d: any) => d.title.trim()).length} item(s) with standards.</p>
+                    ) : (
+                      <p>• <span className="text-gray-900">{t('pages.deliverable_placeholder', 'Deliverable')}</span>: {data.title || data.description}</p>
+                    )}
+                    <p>• <span className="text-gray-900">{t('pages.acceptance', 'Acceptance')}</span>: {t('pages.review_acceptance', 'review within {{days}} days{{silence}}', { days: data.scope?.acceptance_days || 5, silence: data.scope?.deemed_accept ? t('pages.review_acceptance_silence', '; silence = accepted') : '' })}.</p>
+                    <p>• <span className="italic">{t('pages.release', 'Release')}:</span> {t('pages.review_release', 'Funds are released only upon your explicit approval — never automatically.')}</p>
+                    {escrowType === 'project' && <p>{t('pages.review_milestone_release', '• Payments released milestone-by-milestone upon approval.')}</p>}
                   </div>
                </div>
             </div>
@@ -397,7 +542,7 @@ const CreateEscrow = () => {
       <div className="max-w-5xl mx-auto py-8 px-4 pb-32">
         {/* Simplified Header */}
         <div className="flex items-center justify-between mb-8">
-          <button onClick={() => step === 0 ? navigate(-1) : setStep(s => s - 1)} className="p-4 bg-white shadow-lg rounded-2xl hover:bg-gray-50 border border-gray-100 group">
+          <button onClick={() => step === 0 ? navigate(-1) : setStep(s => s - 1)} className="p-4 bg-white shadow-lg rounded-3xl hover:bg-gray-50 border border-gray-100 group">
             <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           </button>
           <div className="flex-1 max-w-md mx-8 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -407,7 +552,7 @@ const CreateEscrow = () => {
         </div>
 
         {/* Unified Content Box */}
-        <div className="bg-white rounded-[3rem] shadow-2xl border border-gray-100 p-8 sm:p-16 min-h-[50vh] flex flex-col relative overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 sm:p-16 min-h-[50vh] flex flex-col relative overflow-hidden">
           <div className="relative flex-1">
             <AnimatePresence mode="wait">
               <motion.div key={steps[step].id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
@@ -418,11 +563,11 @@ const CreateEscrow = () => {
 
           <div className="mt-12 flex justify-center">
             {step < steps.length - 1 ? (
-              <button onClick={nextStep} className="btn btn-primary px-12 h-16 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3">
+              <button onClick={nextStep} className="btn btn-primary px-12 h-16 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3">
                 {t('pages.continue', 'Continue')} →
               </button>
             ) : (
-              <button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || !isValid} className="btn btn-primary px-12 h-16 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 flex items-center gap-3">
+              <button onClick={handleSubmit(onSubmit, () => toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.')))} disabled={isSubmitting} className="btn btn-primary px-12 h-16 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 flex items-center gap-3">
                 {isSubmitting ? 'Launching...' : 'Secure Launch'}
                 <Check size={18} />
               </button>
@@ -435,39 +580,40 @@ const CreateEscrow = () => {
 };
 
 const PartySearchField = ({ label, selected, role, searchTerm, activeSearchRole, searchResults, onSearch, onSelect, onClear, isOptional = false }: any) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block flex justify-between">
         <span>{label}</span>
-        {isOptional && <span className="lowercase italic opacity-60">(Optional)</span>}
+        {isOptional && <span className="lowercase italic opacity-60">{t('pages.optional', '(Optional)')}</span>}
       </label>
       {selected ? (
-        <div className="flex items-center justify-between p-4 bg-primary-50 rounded-2xl border-2 border-primary-600 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-600 text-white flex items-center justify-center font-black text-xs uppercase">{selected.first_name[0]}</div>
-            <div>
+        <div className="flex items-center justify-between p-4 bg-primary-50 rounded-3xl border-2 border-primary-600 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-primary-600 text-white flex items-center justify-center font-black text-xs uppercase shrink-0">{selected.first_name[0]}</div>
+            <div className="min-w-0">
               <p className="font-black text-sm text-gray-900">{selected.first_name} {selected.last_name}</p>
-              <p className="text-[10px] text-primary-700 font-bold">{selected.email}</p>
+              <p className="text-[10px] text-primary-700 font-bold truncate">{selected.email}</p>
             </div>
           </div>
-          <button onClick={onClear} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
+          <button onClick={onClear} className="p-2 text-gray-400 hover:text-red-500 shrink-0"><Trash2 size={18} /></button>
         </div>
       ) : (
         <div className="relative">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input type="text" placeholder={`Enter ${role} email...`} className="input w-full h-14 rounded-2xl pl-12 bg-gray-50 border-none font-bold text-sm" value={activeSearchRole === role ? searchTerm : ''} onChange={e => onSearch(e.target.value, role)} />
+          <input type="text" placeholder={t('pages.enter_email_placeholder', 'Enter {{role}} email...', { role: String(t(`pages.${role}`, role)).toLowerCase() })} className="input w-full h-14 rounded-3xl pl-12 bg-gray-50 border-none font-bold text-sm" value={activeSearchRole === role ? searchTerm : ''} onChange={e => onSearch(e.target.value, role)} />
           {activeSearchRole === role && searchResults.length > 0 && (
-            <div className="absolute z-50 w-full mt-2 border border-gray-100 rounded-2xl overflow-hidden shadow-xl bg-white">
+            <div className="absolute z-50 w-full mt-2 border border-gray-100 rounded-3xl overflow-hidden shadow-xl bg-white">
               {searchResults.map((u: any) => (
                 <button key={u.id || u.email} onClick={() => onSelect(u, role)} className="w-full p-4 hover:bg-primary-50 border-b border-gray-50 last:border-0 text-left transition-all flex justify-between items-center">
-                   <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-black text-[10px]">{u.first_name[0]}</div>
-                      <div>
+                   <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-black text-[10px] shrink-0">{u.first_name[0]}</div>
+                      <div className="min-w-0">
                         <p className="font-black text-xs text-gray-900">{u.first_name} {u.last_name}</p>
-                        <p className="text-[9px] text-gray-400 font-bold">{u.email}</p>
+                        <p className="text-[9px] text-gray-400 font-bold truncate">{u.email}</p>
                       </div>
                    </div>
-                   {u.id === 0 && <span className="text-[8px] font-black text-blue-500">Invite</span>}
+                   {u.id === 0 && <span className="text-[8px] font-black text-blue-500 shrink-0">{t('pages.invite', 'Invite')}</span>}
                 </button>
               ))}
             </div>

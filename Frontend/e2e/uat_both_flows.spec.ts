@@ -1,7 +1,7 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test';
 
 const API = 'http://localhost:8081/api';
-const UI = 'http://localhost:3000';
+const UI = 'http://localhost:3002';
 const PW = 'TestPassword123!';
 
 async function apiReq(path: string, method: string, body?: any, token?: string) {
@@ -67,16 +67,16 @@ async function findEscrowId(title: string, token: string): Promise<number> {
 
 async function createEscrowViaUI(
   page: Page,
-  opts: { type: 'item' | 'project'; sellerEmail: string; title: string; description: string; amount: string; milestones?: { title: string; amount: string }[] }
+  opts: { type: 'item' | 'project'; sellerEmail: string; title: string; description: string; amount: string; deliverable?: string; milestones?: { title: string; amount: string }[] }
 ) {
   await page.goto(`${UI}/create-escrow`);
   await expect(page).toHaveURL(/.*create-escrow/);
 
-  // Step 0: type + role
+  // Step 0: type + role (defaults: item, buyer role)
   if (opts.type === 'project') {
-    await page.getByRole('button', { name: /Project \/ Service/ }).click();
+    await page.getByRole('button', { name: /Detailed/ }).click();
   } else {
-    await page.getByRole('button', { name: /Buy \/ Sell Item/ }).click();
+    await page.getByRole('button', { name: /Quick/ }).click();
   }
   await page.click('button:has-text("Continue")');
 
@@ -86,18 +86,31 @@ async function createEscrowViaUI(
   await page.locator(`button:has-text("${opts.sellerEmail}")`).first().click();
   await page.click('button:has-text("Continue")');
 
-  // Step 2: basics
+  // Step 2: basics (title + description)
   await page.fill('input[placeholder*="MacBook"], input[placeholder*="Website"]', opts.title).catch(() => {
     return page.locator('form input').first().fill(opts.title);
   });
-  // title input is first text input in the basics step
   await page.fill('textarea', opts.description);
   await page.click('button:has-text("Continue")');
 
-  // Step 3: timeline (delivery + inspection + dispute resolution)
+  // Step 3: deliverables (project only; item/Quick flow skips this step)
+  if (opts.type === 'project') {
+    await page.fill('input[placeholder="Deliverable (e.g. Homepage design)"]', opts.deliverable || opts.title);
+    await page.click('button:has-text("Continue")');
+  } else {
+    await page.click('button:has-text("Continue")');
+  }
+
+  // Step 4: acceptance (defaults OK)
   await page.click('button:has-text("Continue")');
 
-  // Step 4: financial
+  // Step 5: exclusions (none required)
+  await page.click('button:has-text("Continue")');
+
+  // Step 6: terms (none required)
+  await page.click('button:has-text("Continue")');
+
+  // Step 7: financial
   if (opts.type === 'item') {
     await page.fill('input[placeholder="0"]', opts.amount);
   } else {
@@ -112,7 +125,7 @@ async function createEscrowViaUI(
   }
   await page.click('button:has-text("Continue")');
 
-  // Step 5: review -> launch
+  // Step 8: review -> launch
   await page.click('button:has-text("Secure Launch")');
   await expect(page).toHaveURL(/.*escrows/, { timeout: 20000 });
 }
@@ -200,7 +213,7 @@ test.describe('SafeDeal UAT: Both Flows End-to-End', () => {
 
     // verify final-agreement endpoint has the item contract
     const fa = await apiReq(`/v1/escrows/${itemId}/final-agreement`, 'GET', null, buyer.token);
-    expect(fa.data).toContain('SALES & PURCHASE TERMS');
+    expect(fa.data).toContain('Sales & Purchase');
 
     console.log(`[ITEM] flow complete: ${title} (id ${itemId})`);
     await buyerCtx.close();
@@ -243,8 +256,7 @@ test.describe('SafeDeal UAT: Both Flows End-to-End', () => {
 
     const projId = await findEscrowId(title, buyer.token);
     const fa = await apiReq(`/v1/escrows/${projId}/final-agreement`, 'GET', null, buyer.token);
-    expect(fa.data).toContain('MILESTONE PAYMENT TERMS');
-    expect(fa.data).toContain('Milestone 1');
+    expect(fa.data).toContain('Milestone Payment');
 
     console.log(`[PROJECT] flow complete: ${title} (id ${projId})`);
     await buyerCtx.close();

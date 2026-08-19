@@ -119,6 +119,25 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			Description string `json:"description"`
 			DueDate     string `json:"due_date"`
 		} `json:"milestones,omitempty"`
+		Scope *struct {
+			AcceptanceMethod    string `json:"acceptance_method"`
+			AcceptanceDetail    string `json:"acceptance_detail"`
+			DueDate             string `json:"due_date"`
+			RejectionPolicy     string `json:"rejection_policy"`
+			CurePeriodDays      int    `json:"cure_period_days"`
+			BreachTerms         string `json:"breach_terms"`
+			TerminationNoticeDays int  `json:"termination_notice_days"`
+			AcceptanceDays      int    `json:"acceptance_days"`
+			DeemedAccept        bool   `json:"deemed_accept"`
+			Deliverables        []struct {
+				Title       string `json:"title"`
+				Standard    string `json:"standard"`
+				StandardRef string `json:"standard_ref"`
+			} `json:"deliverables"`
+			Exclusions []struct {
+				Title string `json:"title"`
+			} `json:"exclusions"`
+		} `json:"scope,omitempty"`
 		ExtraData         string             `json:"extra_data,omitempty"`
 	}
 
@@ -269,8 +288,63 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		}
 	}
 
+	// Persist the structured contract scope (six-question skeleton).
+	if req.Scope != nil {
+		s := req.Scope
+		scope := &models.ContractScope{
+			EscrowID:              escrow.ID,
+			AcceptanceMethod:      s.AcceptanceMethod,
+			AcceptanceDetail:      s.AcceptanceDetail,
+			DueDate:               s.DueDate,
+			RejectionPolicy:       s.RejectionPolicy,
+			CurePeriodDays:        s.CurePeriodDays,
+			BreachTerms:           s.BreachTerms,
+			TerminationNoticeDays: s.TerminationNoticeDays,
+			AcceptanceDays:        s.AcceptanceDays,
+			DeemedAccept:          s.DeemedAccept,
+		}
+		if scope.AcceptanceMethod == "" {
+			scope.AcceptanceMethod = "buyer_approval"
+		}
+		if scope.AcceptanceDays == 0 {
+			scope.AcceptanceDays = 5
+		}
+		if scope.TerminationNoticeDays == 0 {
+			scope.TerminationNoticeDays = 7
+		}
+		h.DB.Create(scope)
+		for i := range s.Deliverables {
+			d := s.Deliverables[i]
+			if strings.TrimSpace(d.Title) == "" {
+				continue
+			}
+			if d.Standard == "" {
+				d.Standard = "none"
+			}
+			h.DB.Create(&models.ContractDeliverable{
+				ScopeID:     scope.ID,
+				Title:       d.Title,
+				Standard:    d.Standard,
+				StandardRef: d.StandardRef,
+				OrderIndex:  i,
+			})
+		}
+		for i := range s.Exclusions {
+			e := s.Exclusions[i]
+			if strings.TrimSpace(e.Title) == "" {
+				continue
+			}
+			h.DB.Create(&models.ContractExclusion{
+				ScopeID:    scope.ID,
+				Title:      e.Title,
+				OrderIndex: i,
+			})
+		}
+		escrow.Scope = scope
+	}
+
 	var completeEscrow models.Escrow
-	h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").First(&completeEscrow, escrow.ID)
+	h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Scope").Preload("Scope.Deliverables").Preload("Scope.Exclusions").First(&completeEscrow, escrow.ID)
 
 	// Generate and persist the printable contract from the structured data.
 	completeEscrow.ContractVersion = "1.0"
@@ -285,7 +359,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 func (h *EscrowHandler) GetEscrowByID(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
 	var escrow models.Escrow
-	if err := h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Milestones.Approver").First(&escrow, uint(id)).Error; err != nil {
+	if err := h.DB.Preload("Buyer").Preload("Seller").Preload("Mediator").Preload("Milestones").Preload("Milestones.Approver").Preload("Scope").Preload("Scope.Deliverables").Preload("Scope.Exclusions").First(&escrow, uint(id)).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
 	}
 	return c.JSON(escrow)

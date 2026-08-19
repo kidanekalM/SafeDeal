@@ -111,7 +111,7 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 gradient-primary rounded-[2rem] p-8 text-white shadow-2xl shadow-[#014d46]/20 relative overflow-hidden"
+            className="lg:col-span-2 gradient-primary rounded-3xl p-8 text-white shadow-2xl shadow-[#014d46]/20 relative overflow-hidden"
           >
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-2">
@@ -120,10 +120,10 @@ const Dashboard = () => {
               </div>
               <p className="text-teal-50 opacity-90 max-w-md">{t('pages.your_secure_gateway_to_trust_based_transactions', 'Your secure gateway to trust-based transactions is active and protected.')}</p>
               <div className="mt-8 flex gap-4">
-                <Link to="/create-escrow" data-testid="create-escrow-button" className="bg-white text-[#014d46] px-6 py-3 rounded-2xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">
+                <Link to="/create-escrow" data-testid="create-escrow-button" className="bg-white text-[#014d46] px-6 py-3 rounded-3xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">
                   <Zap size={18} /> {t('pages.start_new_deal', 'Start New Deal')}
                 </Link>
-                <button onClick={() => loadData()} className="bg-teal-800/30 text-white px-6 py-3 rounded-2xl font-bold hover:bg-teal-800/50 transition-all flex items-center gap-2 border border-teal-400/30">
+                <button onClick={() => loadData()} className="bg-teal-800/30 text-white px-6 py-3 rounded-3xl font-bold hover:bg-teal-800/50 transition-all flex items-center gap-2 border border-teal-400/30">
                   <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} /> {t('pages.refresh', 'Refresh')}
                 </button>
               </div>
@@ -142,7 +142,7 @@ const Dashboard = () => {
               {nextActions.map(action => (
                 <Link key={action.id} to={`/escrow/${action.id}`} className="bg-white border-2 border-orange-100 rounded-3xl p-5 flex items-center justify-between hover:shadow-xl hover:border-orange-200 transition-all group">
                   <div className="flex items-center gap-4">
-                    <div className="p-4 bg-orange-50 rounded-2xl text-orange-600 group-hover:scale-110 transition-transform">
+                    <div className="p-4 bg-orange-50 rounded-3xl text-orange-600 group-hover:scale-110 transition-transform">
                       {action.status === 'pending' ? <CreditCard size={22} /> : <CheckCircle size={22} />}
                     </div>
                     <div>
@@ -164,9 +164,9 @@ const Dashboard = () => {
             { label: t('pages.total_volume', 'Total Volume'), val: formatCurrency(stats?.total_amount || 0), icon: TrendingUp, color: 'text-blue-600' },
             { label: t('pages.disputed', 'Disputed'), val: stats?.disputed_escrows, icon: AlertCircle, color: 'text-red-600' },
           ].map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }} className="bg-white p-6 rounded-[2rem] border-2 border-gray-50 shadow-sm">
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }} className="bg-white p-6 rounded-3xl border-2 border-gray-50 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-2xl bg-gray-50 ${s.color}`}><s.icon size={20} /></div>
+                <div className={`p-3 rounded-3xl bg-gray-50 ${s.color}`}><s.icon size={20} /></div>
                 {statsLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-200" />}
               </div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{s.label}</p>
@@ -182,7 +182,7 @@ const Dashboard = () => {
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">{t('pages.recent_transactions', 'Recent Transactions')}</h3>
               <Link to="/escrows" className="text-[10px] font-black text-[#014d46] uppercase hover:underline">{t('pages.view_all_history', 'View All History')}</Link>
             </div>
-            <div className="bg-white rounded-[2.5rem] border-2 border-gray-50 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-3xl border-2 border-gray-50 shadow-sm overflow-hidden">
               {isLoading ? (
                 <div className="p-20 text-center"><LoadingSpinner /></div>
               ) : escrows.length === 0 ? (
@@ -195,7 +195,7 @@ const Dashboard = () => {
                   {escrows.slice(0, 5).map((escrow) => (
                     <Link key={escrow.id} to={`/escrow/${escrow.id}`} className="flex items-center justify-between p-6 hover:bg-gray-50 transition-all group">
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-2xl ${getStatusColor(escrow.status)}`}>{getStatusIcon(escrow.status)}</div>
+                        <div className={`p-3 rounded-3xl ${getStatusColor(escrow.status)}`}>{getStatusIcon(escrow.status)}</div>
                         <div>
                           <p className="font-black text-gray-900 text-sm">{escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}</p>
                           <p className="text-[10px] font-bold text-gray-400 uppercase">{formatRelativeTime(escrow.created_at)}</p>
@@ -215,7 +215,7 @@ const Dashboard = () => {
           {/* Quick Support / Info */}
           <div className="space-y-6">
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] px-2">{t('pages.safedeal_hub', 'SafeDeal Hub')}</h3>
-            <div className="bg-[#014d46] rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden group">
+            <div className="bg-[#014d46] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden group">
               <div className="relative z-10">
                 <Award className="text-teal-300 mb-4" size={32} />
                 <h4 className="text-lg font-black leading-tight">{t('pages.become_a_top_rated_provider', 'Become a Top-Rated Provider')}</h4>
@@ -225,7 +225,7 @@ const Dashboard = () => {
               <TrendingUp className="absolute -right-4 -bottom-4 h-32 w-32 text-white opacity-5 group-hover:scale-110 transition-transform" />
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm">
+            <div className="bg-white rounded-3xl p-8 border-2 border-gray-50 shadow-sm">
               <h4 className="font-black text-gray-900 text-sm mb-4">{t('pages.security_overview', 'Security Overview')}</h4>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">

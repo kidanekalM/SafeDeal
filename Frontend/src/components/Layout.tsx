@@ -138,7 +138,7 @@ const Layout = ({ children }: LayoutProps) => {
                 
                 {/* Dropdown Menu */}
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
                     <div className="px-4 py-3 border-b border-gray-50 mb-1">
                       <p className="text-sm font-black text-gray-900 truncate">{user?.first_name} {user?.last_name}</p>
                       <p className="text-xs font-bold text-gray-400 truncate">{user?.email}</p>
@@ -225,7 +225,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-4 px-6 py-4 rounded-2xl text-base font-bold transition-all group hover:shadow-lg hover:scale-[1.02] ${
+                  className={`flex items-center space-x-4 px-6 py-4 rounded-3xl text-base font-bold transition-all group hover:shadow-lg hover:scale-[1.02] ${
                     isActive(item.href)
                       ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-2xl scale-[1.02]'
                       : 'text-gray-700 hover:bg-gray-50 hover:shadow-md bg-white/80'
@@ -243,7 +243,7 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="px-6 py-4 space-y-2">
             <Link 
               to="/profile" 
-              className="w-full flex items-center space-x-3 p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-all"
+              className="w-full flex items-center space-x-3 p-3 rounded-3xl bg-gray-50 hover:bg-gray-100 transition-all"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Settings className="h-5 w-5 text-gray-500" />

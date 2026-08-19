@@ -77,6 +77,7 @@ type Escrow struct {
 	Milestones         []Milestone     `json:"milestones,omitempty" gorm:"foreignKey:EscrowID"`
 	Obligations        []Obligation    `json:"obligations,omitempty" gorm:"foreignKey:EscrowID"`
 	AuthorizedReps     []AuthorizedRep `json:"authorized_reps,omitempty" gorm:"foreignKey:EscrowID"`
+	Scope              *ContractScope  `json:"scope,omitempty" gorm:"foreignKey:EscrowID"`
 }
 
 type AuthorizedRep struct {

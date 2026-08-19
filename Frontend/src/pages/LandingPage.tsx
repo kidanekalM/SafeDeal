@@ -218,9 +218,9 @@ const LandingPage = () => {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="relative h-[400px] md:h-[500px] lg:h-[600px] hidden sm:block"
       >
-        <img src={PhoneNum} alt="" className='border-2 border-transparent rounded-2xl w-auto h-80 relative left-[275px] top-[60px] z-10' />
+        <img src={PhoneNum} alt="" className='border-2 border-transparent rounded-3xl w-auto h-80 relative left-[275px] top-[60px] z-10' />
 
-        <img src={Transfer} alt="" className='border-2 border-transparent rounded-2xl w-auto h-[450px] relative bottom-[155px] left-10' />
+        <img src={Transfer} alt="" className='border-2 border-transparent rounded-3xl w-auto h-[450px] relative bottom-[155px] left-10' />
       </motion.div>
     </div>
   </div>
@@ -236,7 +236,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6 }}
               className="text-center"
             >
-              <div className="w-16 h-16 bg-[#005356]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#005356]/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-8 w-8 text-[#005356]" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">1,458+</div>
@@ -249,7 +249,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-center"
             >
-              <div className="w-16 h-16 bg-[#005356]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#005356]/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
                 <Users className="h-8 w-8 text-[#005356]" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">850+</div>
@@ -262,7 +262,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-center"
             >
-              <div className="w-16 h-16 bg-[#005356]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#005356]/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
                 <Shield className="h-8 w-8 text-[#005356]" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">100%</div>
@@ -275,7 +275,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-center"
             >
-              <div className="w-16 h-16 bg-[#005356]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#005356]/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
                 <Globe className="h-8 w-8 text-[#005356]" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">24/7</div>
@@ -304,7 +304,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6 }}
               className="bg-white rounded-3xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow"
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-[#005356] to-[#007a7d] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#005356] to-[#007a7d] rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <Shield className="h-10 w-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('pages.secure')}</h3>
@@ -317,7 +317,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="bg-white rounded-3xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow"
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-[#005356] to-[#007a7d] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#005356] to-[#007a7d] rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <Zap className="h-10 w-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('pages.fast')}</h3>
@@ -330,7 +330,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-white rounded-3xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow"
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-[#005356] to-[#007a7d] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#005356] to-[#007a7d] rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <Globe className="h-10 w-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('pages.global')}</h3>
@@ -359,7 +359,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
+                className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 border border-white/20"
               >
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -376,7 +376,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
+                className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 border border-white/20"
               >
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -393,7 +393,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
+                className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 border border-white/20"
               >
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -438,7 +438,7 @@ const LandingPage = () => {
                     <motion.div
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4"
+                      className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-4"
                     >
                       <Shield className="h-10 w-10 text-[#005356]" />
                     </motion.div>
@@ -474,22 +474,22 @@ const LandingPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button 
                     onClick={() => setEscrowType('item')} 
-                    className={`p-6 rounded-2xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
+                    className={`p-6 rounded-3xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
                   >
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                    <div className={`w-10 h-10 rounded-3xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
                       <ShoppingCart size={20} />
                     </div>
-                    <h4 className="font-black text-lg">{t('pages.buy_sell_item', 'Buy / Sell Item')}</h4>
+                    <h4 className="font-black text-lg">{t('pages.buy_sell_item', 'Quick')}</h4>
                     <p className="text-[10px] text-gray-400 font-medium">{t('pages.simple_5_step_flow', 'Simple 5-step flow for electronics, vehicles, etc.')}</p>
                   </button>
                   <button 
                     onClick={() => setEscrowType('project')} 
-                    className={`p-6 rounded-2xl text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
+                    className={`p-6 rounded-3xl text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50 text-primary-600' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
                   >
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                    <div className={`w-10 h-10 rounded-3xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
                       <Briefcase size={20} />
                     </div>
-                    <h4 className="font-black text-lg">{t('pages.project_service', 'Project / Service')}</h4>
+                    <h4 className="font-black text-lg">{t('pages.project_service', 'Detailed')}</h4>
                     <p className="text-[10px] text-gray-400 font-medium">{t('pages.milestone_based_flow', 'Milestone-based flow for software, consulting, etc.')}</p>
                   </button>
                 </div>
@@ -505,7 +505,7 @@ const LandingPage = () => {
                     <button 
                       key={role} 
                       onClick={() => setAcceptingRole(role as 'buyer' | 'seller')}
-                      className={`px-8 py-3 rounded-2xl font-black uppercase text-[10px] transition-all border-2 border-${acceptingRole === role ? 'primary-600' : 'gray-200'} ${acceptingRole === role ? 'text-primary-600 bg-primary-50' : 'text-gray-400'}`}
+                      className={`px-8 py-3 rounded-3xl font-black uppercase text-[10px] transition-all border-2 border-${acceptingRole === role ? 'primary-600' : 'gray-200'} ${acceptingRole === role ? 'text-primary-600 bg-primary-50' : 'text-gray-400'}`}
                     >
                       {t(`pages.${role}`, role)}
                     </button>
@@ -518,7 +518,7 @@ const LandingPage = () => {
             <div className="mt-8 pt-8 border-t border-gray-100">
               <button 
                 onClick={() => navigate('/create-escrow')} 
-                className="btn btn-primary px-8 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3"
+                className="btn btn-primary px-8 h-14 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3"
               >
                 {t('components.get_started')}
                 <ArrowRight size={18} className="ml-2" />
@@ -568,7 +568,7 @@ const LandingPage = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.2 + 0.5 }}
-                    className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                    className="w-16 h-16 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-4"
                   >
                     {step.icon}
                   </motion.div>
@@ -625,9 +625,9 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+                className="bg-white rounded-3xl p-6 text-center shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
               >
-                <div className="w-16 h-16 bg-[#005356]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#005356]/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
                   {item.icon}
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
@@ -667,7 +667,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gray-50 rounded-2xl p-8 relative"
+                className="bg-gray-50 rounded-3xl p-8 relative"
               >
                 {/* Quote decoration */}
                 <div className="absolute top-4 right-4 text-[#005356]/20">
@@ -739,7 +739,7 @@ const LandingPage = () => {
             {/* Brand Section */}
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-[#005356] rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#005356] rounded-3xl flex items-center justify-center">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
                 <span className="text-2xl font-bold">{t('components.safedeal')}</span>

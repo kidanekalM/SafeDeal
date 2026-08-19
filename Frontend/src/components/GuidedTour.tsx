@@ -63,7 +63,7 @@ const GuidedTour = () => {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border-2 border-[#014d46]/10 relative"
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-[#014d46]/10 relative"
         >
           <button
             onClick={handleClose}
@@ -78,7 +78,7 @@ const GuidedTour = () => {
                 key={currentStep}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-20 h-20 bg-[#e6f7f4] rounded-[2rem] flex items-center justify-center text-[#014d46]"
+                className="w-20 h-20 bg-[#e6f7f4] rounded-3xl flex items-center justify-center text-[#014d46]"
               >
                 <StepIcon size={40} />
               </motion.div>
@@ -113,7 +113,7 @@ const GuidedTour = () => {
               </button>
               <button
                 onClick={handleNext}
-                className="flex-[2] py-4 bg-[#014d46] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-[#014d46]/20 flex items-center justify-center gap-2 group"
+                className="flex-[2] py-4 bg-[#014d46] text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-[#014d46]/20 flex items-center justify-center gap-2 group"
               >
                 {currentStep === steps.length - 1 ? (
                   <>Get Started <CheckCircle size={18} /></>

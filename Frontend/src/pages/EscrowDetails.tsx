@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -131,38 +131,71 @@ const EscrowDetails = () => {
       doc.rect(margin - 2, y - 5, contentWidth + 4, 8, "F");
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(30, 41, 59);
+      doc.setTextColor(1, 77, 70);
       doc.text(text.toUpperCase(), margin, y);
       y += 8;
     };
 
-    // Header
+    const addParty = (role: string, name: string, email: string) => {
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${role}:`, margin, y);
+      doc.text(name, margin + 40, y);
+      y += 5;
+      doc.setFontSize(8.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(120, 120, 120);
+      doc.text(email, margin + 40, y);
+      y += 4;
+    };
+
+    // Header with brand color bar
+    doc.setFillColor(1, 77, 70);
+    doc.rect(0, 0, pageWidth, 4, "F");
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("SAFEDEAL ESCROW AGREEMENT", pageWidth / 2, y, { align: "center" });
-    y += 15;
+    doc.setTextColor(1, 77, 70);
+    doc.text("SAFEDEAL ESCROW AGREEMENT", pageWidth / 2, y + 4, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(120, 120, 120);
+    doc.text("Secure escrow-protected agreement", pageWidth / 2, y + 11, { align: "center" });
+    y += 22;
 
     addSectionTitle("AGREEMENT DETAILS");
     addText(`Agreement ID: SD-${escrow?.id}`, 10, "bold");
     addText(`Status: ${escrow?.status.toUpperCase()}`);
-    addText(`Type: ${escrow?.escrow_type === 'item' ? 'Buy / Sell Item' : 'Project / Service'}`);
+    addText(`Type: ${escrow?.escrow_type === 'item' ? 'Quick' : 'Detailed'}`);
     addText(`Jurisdiction: Ethiopia`);
+    addText(`Agreement Hash: ${escrow?.escrow_hash || 'N/A'}`);
 
     addSectionTitle("1. PARTIES");
-    addText(`Buyer: ${escrow?.buyer?.first_name} ${escrow?.buyer?.last_name} (${escrow?.buyer?.email})`);
-    addText(`Seller: ${escrow?.seller?.first_name} ${escrow?.seller?.last_name} (${escrow?.seller?.email})`);
+    addParty("Buyer", `${escrow?.buyer?.first_name || ''} ${escrow?.buyer?.last_name || ''}`.trim(), escrow?.buyer?.email || '');
+    addParty("Seller", `${escrow?.seller?.first_name || ''} ${escrow?.seller?.last_name || ''}`.trim(), escrow?.seller?.email || '');
 
-    addSectionTitle("2. CONTRACT PURPOSE");
-    addText(`Title: ${escrow?.title || 'N/A'}`, 10, "bold");
-    addText(`Description: ${escrow?.description || 'N/A'}`);
+    addSectionTitle("2. PURPOSE");
+    addText(`${escrow?.title || 'N/A'}`, 11, "bold");
+    addText(`${escrow?.description || 'N/A'}`);
 
-    addSectionTitle("3. CONTRACT VALUE");
+    addSectionTitle("3. DELIVERABLES");
+    const delivs = escrow?.scope?.deliverables?.length ? escrow.scope.deliverables : [];
+    if (delivs.length) {
+      delivs.forEach((d, i) => {
+        addText(`${i + 1}. ${d.title}`, 10, "bold");
+        if (d.standard_ref) addText(`   Standard: ${d.standard_ref}`, 8.5, "normal", [120, 120, 120]);
+      });
+    } else {
+      addText(escrow?.description || 'N/A');
+    }
+
+    addSectionTitle("4. VALUE");
     addText(`Total Amount: ETB ${escrow?.amount.toLocaleString()}`, 11, "bold");
-    addText(`Inspection Period: ${escrow?.inspection_period || 3} Days`);
+    addText(`Inspection / Review Period: ${escrow?.scope?.acceptance_days || escrow?.inspection_period || 3} Days`);
 
     if (milestones.length > 0) {
-      addSectionTitle("4. MILESTONES");
-      (doc as any).autoTable({
+      addSectionTitle("5. MILESTONES");
+      autoTable(doc, {
         startY: y,
         head: [['#', 'Milestone', 'Amount (ETB)', 'Due Date', 'Status']],
         body: milestones.map((m, i) => [i + 1, m.title, m.amount.toLocaleString(), formatDateSafe(m.due_date), m.status]),
@@ -171,8 +204,22 @@ const EscrowDetails = () => {
       y = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    addSectionTitle("5. LEGAL TERMS");
-    addText("Funds are released upon Buyer approval or expiration of the inspection period. The system automatically secures funds via Keccak256 cryptographic hashing.");
+    addSectionTitle(escrow?.scope?.deliverables?.length ? "6. EXCLUSIONS (OUT OF SCOPE)" : "5. LEGAL TERMS");
+    const excl = escrow?.scope?.exclusions?.length ? escrow.scope.exclusions : [];
+    if (excl.length) {
+      excl.forEach((e, i) => addText(`${i + 1}. ${e.title}`, 9));
+      y += 3;
+      addText("Any item not listed as a deliverable above is outside the scope.", 8.5, "italic", [120, 120, 120]);
+    } else {
+      addText("Funds are held securely in escrow and released to the Seller only upon the Buyer's explicit approval of the delivered goods or services. No funds are released automatically. The system secures funds via Keccak256 cryptographic hashing.");
+    }
+
+    // Footer brand
+    const pageH = doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(150, 150, 150);
+    doc.text("SafeDeal Escrow Platform — All terms protected by hybrid blockchain audit logs.", pageWidth / 2, pageH - 10, { align: "center" });
 
     doc.save(`SafeDeal-SD${escrow?.id}.pdf`);
   };
@@ -220,17 +267,17 @@ const EscrowDetails = () => {
             <ArrowLeft size={18} /> {t('pages.back_to_my_escrows', 'Back')}
           </Link>
           <button onClick={handlePrint} className="btn btn-outline border-gray-200 rounded-xl flex items-center gap-2">
-            <Printer size={18} /> {t('pages.print_agreement', 'Print Contract')}
+            <Printer size={18} /> {t('pages.print_agreement', 'Print Agreement')}
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                <div className="p-10 border-b border-gray-100 bg-gray-50/50">
                   <div className="flex justify-between items-start gap-6">
                     <div className="space-y-4">
-                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${escrow.escrow_type === 'item' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                       <div className={`w-14 h-14 rounded-3xl flex items-center justify-center ${escrow.escrow_type === 'item' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
                           {escrow.escrow_type === 'item' ? <ShoppingCart size={28} /> : <Briefcase size={28} />}
                        </div>
                        <div>
@@ -240,7 +287,7 @@ const EscrowDetails = () => {
                           </p>
                        </div>
                     </div>
-                    <div className={`px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest border-2 ${getStatusColor(escrow.status)}`}>
+                    <div className={`px-8 py-3 rounded-3xl text-xs font-black uppercase tracking-widest border-2 ${getStatusColor(escrow.status)}`}>
                        {t(`pages.${escrow.status}`, escrow.status)}
                     </div>
                   </div>
@@ -248,43 +295,43 @@ const EscrowDetails = () => {
 
                <div className="p-10 space-y-10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                     <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Deal Amount</label>
+                     <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t('pages.total_amount', 'Deal Amount')}</label>
                         <p className="text-4xl font-black text-gray-900">{formatCurrency(escrow.amount)}</p>
                      </div>
-                     <div className="p-8 bg-primary-900 rounded-[2rem] text-white">
-                        <label className="text-[10px] font-black opacity-40 uppercase tracking-widest block mb-2">Target Date</label>
+                     <div className="p-8 bg-primary-900 rounded-3xl text-white">
+                        <label className="text-[10px] font-black opacity-40 uppercase tracking-widest block mb-2">{t('pages.target', 'Target Date')}</label>
                         <p className="text-2xl font-black">{formatDateSafe(escrow.delivery_date)}</p>
                      </div>
                   </div>
 
                   <div className="space-y-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2"><FileText size={20} className="text-primary-600" /> Contract Description</h3>
-                    <div className="p-8 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                    <h3 className="text-xl font-bold flex items-center gap-2"><FileText size={20} className="text-primary-600" /> {t('pages.contract_description', 'Contract Description')}</h3>
+                    <div className="p-8 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                        <p className="text-gray-700 leading-relaxed font-medium text-lg italic">"{escrow.description}"</p>
                     </div>
                   </div>
 
                   {milestones.length > 0 && (
                     <div className="space-y-6">
-                       <h3 className="text-xl font-bold flex items-center gap-2"><ListChecks size={20} className="text-primary-600" /> Milestone Plan</h3>
+                       <h3 className="text-xl font-bold flex items-center gap-2"><ListChecks size={20} className="text-primary-600" /> {t('pages.milestones', 'Milestone Plan')}</h3>
                        <div className="space-y-4">
                           {milestones.map((m, idx) => (
-                            <div key={m.id} className="p-6 bg-white border border-gray-100 rounded-[2rem] hover:shadow-md transition-all flex justify-between items-center">
+                            <div key={m.id} className="p-6 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all flex justify-between items-center">
                                <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-black text-gray-400">#{idx+1}</div>
                                   <div>
                                      <h4 className="font-bold text-gray-900">{m.title}</h4>
-                                     <p className="text-xs text-gray-400 font-bold">Due: {formatDateSafe(m.due_date)} • {m.status}</p>
+                                     <p className="text-xs text-gray-400 font-bold">{t('pages.due', 'Due')}: {formatDateSafe(m.due_date)} • {m.status}</p>
                                   </div>
                                </div>
                                <div className="flex items-center gap-6">
                                   <span className="font-black text-xl text-primary-600">{formatCurrency(m.amount)}</span>
                                   {isSeller && (m.status === 'funded' || m.status === 'pending') && (
-                                    <button onClick={() => handleMilestoneSubmit(m.id)} className="btn btn-primary btn-sm rounded-xl px-6 font-black uppercase text-[10px]">Submit Work</button>
+                                    <button onClick={() => handleMilestoneSubmit(m.id)} className="btn btn-primary btn-sm rounded-xl px-6 font-black uppercase text-[10px]">{t('pages.submit_work', 'Submit Work')}</button>
                                   )}
                                   {isBuyer && m.status === 'submitted' && (
-                                    <button onClick={() => handleMilestoneApprove(m.id)} className="btn btn-success btn-sm rounded-xl px-6 font-black uppercase text-[10px] text-white">Approve</button>
+                                    <button onClick={() => handleMilestoneApprove(m.id)} className="btn btn-success btn-sm rounded-xl px-6 font-black uppercase text-[10px] text-white">{t('pages.approve', 'Approve')}</button>
                                   )}
                                </div>
                             </div>
@@ -296,63 +343,63 @@ const EscrowDetails = () => {
             </div>
 
             {/* Actions */}
-            <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 p-10 text-center space-y-6 no-print">
-               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Governance Actions</h3>
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-10 text-center space-y-6 no-print">
+               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{t('pages.governance_actions', 'Governance Actions')}</h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {isBuyer && escrow.status === "pending" && (
                     <>
-                      <button onClick={handleInitiatePayment} className="btn btn-primary h-20 rounded-[1.5rem] font-black uppercase tracking-widest flex items-center gap-3 justify-center group shadow-xl shadow-primary-500/20">
-                        <Zap size={24} className="group-hover:scale-110 transition-all" /> Pay with Chapa
+                      <button onClick={handleInitiatePayment} className="btn btn-primary h-20 rounded-3xl font-black uppercase tracking-widest flex items-center gap-3 justify-center group shadow-xl shadow-primary-500/20">
+                        <Zap size={24} className="group-hover:scale-110 transition-all" /> {t('pages.pay_with_chapa', 'Pay with Chapa')}
                       </button>
-                      <button onClick={() => setShowCBEModal(true)} className="btn btn-outline h-20 rounded-[1.5rem] font-black uppercase tracking-widest flex items-center gap-3 justify-center border-gray-200">
-                        <Shield size={24} /> CBE Direct Verify
+                      <button onClick={() => setShowCBEModal(true)} className="btn btn-outline h-20 rounded-3xl font-black uppercase tracking-widest flex items-center gap-3 justify-center border-gray-200">
+                        <Shield size={24} /> {t('pages.cbe_direct_verify', 'CBE Direct Verify')}
                       </button>
                     </>
                   )}
                   {isSeller && !escrow.active && escrow.status === "funded" && (
-                    <button onClick={handleAccept} className="sm:col-span-2 btn btn-primary h-20 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl">Accept Deal & Start Work</button>
+                    <button onClick={handleAccept} className="sm:col-span-2 btn btn-primary h-20 rounded-3xl font-black uppercase tracking-widest shadow-xl">{t('pages.accept_deal_and_start', 'Accept Deal & Start Work')}</button>
                   )}
                </div>
             </div>
           </div>
 
           <div className="space-y-8">
-             <div className="p-10 bg-white rounded-[3rem] shadow-xl border border-gray-100 space-y-10">
-                <h3 className="text-xl font-black">The Parties</h3>
+             <div className="p-10 bg-white rounded-3xl shadow-xl border border-gray-100 space-y-10">
+                <h3 className="text-xl font-black">{t('pages.the_parties', 'The Parties')}</h3>
                 <div className="space-y-8">
                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><User size={28} /></div>
-                      <div>
-                         <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Buyer / Client</p>
-                         <p className="font-bold text-gray-900 truncate">{escrow.buyer?.email}</p>
-                      </div>
+<div className="w-14 h-14 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><User size={28} /></div>
+                       <div className="min-w-0">
+                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('pages.buyer_client', 'Buyer / Client')}</p>
+                          <p className="font-bold text-gray-900 truncate">{escrow.buyer?.email}</p>
+                       </div>
                    </div>
                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><User size={28} /></div>
-                      <div>
-                         <p className="text-[10px] font-black text-green-400 uppercase tracking-widest">Seller / Provider</p>
-                         <p className="font-bold text-gray-900 truncate">{escrow.seller?.email}</p>
-                      </div>
+<div className="w-14 h-14 rounded-3xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><User size={28} /></div>
+                       <div className="min-w-0">
+                          <p className="text-[10px] font-black text-green-400 uppercase tracking-widest">{t('pages.seller_provider', 'Seller / Provider')}</p>
+                          <p className="font-bold text-gray-900 truncate">{escrow.seller?.email}</p>
+                       </div>
                    </div>
                 </div>
              </div>
 
-             <div className="p-10 bg-[#f8fafc] rounded-[3rem] shadow-xl border border-gray-200 space-y-8">
+             <div className="p-10 bg-[#f8fafc] rounded-3xl shadow-xl border border-gray-200 space-y-8">
                 <div className="flex items-center gap-3">
                    <Scale className="text-primary-600" />
-                   <h3 className="font-black text-lg">Legal Framework</h3>
+                   <h3 className="font-black text-lg">{t('pages.legal_framework', 'Legal Framework')}</h3>
                 </div>
                 <div className="space-y-6">
                    <div className="flex justify-between border-b pb-4">
-                      <span className="text-xs font-bold text-gray-400 uppercase">Inspection</span>
-                      <span className="font-black">{escrow.inspection_period} Days</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase">{t('pages.inspection', 'Inspection')}</span>
+                      <span className="font-black">{escrow.inspection_period} {t('pages.days', 'Days')}</span>
                    </div>
                    <div className="flex justify-between border-b pb-4">
-                      <span className="text-xs font-bold text-gray-400 uppercase">Jurisdiction</span>
-                      <span className="font-black">Ethiopia</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase">{t('pages.jurisdiction', 'Jurisdiction')}</span>
+                      <span className="font-black">{t('pages.ethiopia', 'Ethiopia')}</span>
                    </div>
-                   <div className="p-4 bg-white rounded-2xl border border-gray-100">
-                      <p className="text-[9px] font-black text-primary-400 uppercase mb-2">Hash Fingerprint</p>
+                   <div className="p-4 bg-white rounded-3xl border border-gray-100">
+                      <p className="text-[9px] font-black text-primary-400 uppercase mb-2">{t('pages.hash_fingerprint', 'Hash Fingerprint')}</p>
                       <p className="font-mono text-[8px] break-all text-primary-900 opacity-60 leading-tight">{escrow.escrow_hash}</p>
                    </div>
                 </div>
@@ -364,17 +411,17 @@ const EscrowDetails = () => {
 
         {showCBEModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 z-50 no-print">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3.5rem] p-12 w-full max-w-lg shadow-2xl">
-              <h3 className="text-3xl font-black mb-2">CBE Direct Verify</h3>
-              <p className="text-gray-500 font-medium mb-8">Enter Transaction ID and Account Suffix</p>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-12 w-full max-w-lg shadow-2xl">
+              <h3 className="text-3xl font-black mb-2">{t('pages.cbe_direct_verify', 'CBE Direct Verify')}</h3>
+              <p className="text-gray-500 font-medium mb-8">{t('pages.cbe_direct_verify_sub', 'Enter Transaction ID and Account Suffix')}</p>
               <div className="space-y-6 mb-10">
-                <input type="text" value={cbeTransactionId} onChange={e => setCbeTransactionId(e.target.value)} className="input w-full h-16 rounded-[1.5rem] bg-gray-50 border-none font-bold px-6" placeholder="FT..." />
-                <input type="text" value={cbeAccountSuffix} onChange={e => setCbeAccountSuffix(e.target.value)} className="input w-full h-16 rounded-[1.5rem] bg-gray-50 border-none font-bold px-6" placeholder="Account Suffix..." />
+                <input type="text" value={cbeTransactionId} onChange={e => setCbeTransactionId(e.target.value)} className="input w-full h-16 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder={t('pages.transaction_id_placeholder', 'FT...')} />
+                <input type="text" value={cbeAccountSuffix} onChange={e => setCbeAccountSuffix(e.target.value)} className="input w-full h-16 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder={t('pages.account_suffix_placeholder', 'Account Suffix...')} />
               </div>
               <div className="flex gap-4">
-                <button onClick={() => setShowCBEModal(false)} className="flex-1 btn btn-ghost h-16 rounded-2xl font-black">Cancel</button>
-                <button onClick={handleCBEVerify} disabled={isVerifyingCBE} className="flex-1 btn btn-primary h-16 rounded-2xl font-black uppercase tracking-widest">
-                  {isVerifyingCBE ? "Verifying..." : "Verify & Fund"}
+                <button onClick={() => setShowCBEModal(false)} className="flex-1 btn btn-ghost h-16 rounded-3xl font-black">{t('pages.cancel', 'Cancel')}</button>
+                <button onClick={handleCBEVerify} disabled={isVerifyingCBE} className="flex-1 btn btn-primary h-16 rounded-3xl font-black uppercase tracking-widest">
+                  {isVerifyingCBE ? t('pages.verifying', 'Verifying...') : t('pages.verify_and_fund', 'Verify & Fund')}
                 </button>
               </div>
             </motion.div>

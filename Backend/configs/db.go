@@ -42,6 +42,9 @@ func InitDB() *gorm.DB {
 		&models.EscrowStatusEvent{},
 		&models.ActivationToken{},
 		&models.AuthorizedRep{},
+		&models.ContractScope{},
+		&models.ContractDeliverable{},
+		&models.ContractExclusion{},
 	)
 
 	fmt.Println("✅ Database schema migrated successfully")

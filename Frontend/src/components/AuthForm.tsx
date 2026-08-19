@@ -115,7 +115,7 @@ const AuthForm = ({ initialMode = "login" }: AuthFormProps) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg">
+    <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg">
       {/* Tabs: Login / Register */}
       <div className="flex mb-8">
         <button

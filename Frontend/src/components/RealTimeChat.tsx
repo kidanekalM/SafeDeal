@@ -209,7 +209,7 @@ const RealTimeChat = ({ isOpen, onClose, escrowId }: RealTimeChatProps) => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white rounded-2xl w-full max-w-2xl h-[600px] shadow-2xl flex flex-col"
+            className="bg-white rounded-3xl w-full max-w-2xl h-[600px] shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -298,7 +298,7 @@ const RealTimeChat = ({ isOpen, onClose, escrowId }: RealTimeChatProps) => {
                             </p>
                           )}
                           <div
-                            className={`px-4 py-3 rounded-2xl shadow-sm ${
+                            className={`px-4 py-3 rounded-3xl shadow-sm ${
                               isOwn
                                 ? "bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-br-md"
                                 : "bg-white border border-gray-200 text-gray-900 rounded-bl-md"
@@ -409,7 +409,7 @@ const RealTimeChat = ({ isOpen, onClose, escrowId }: RealTimeChatProps) => {
                     placeholder={
                       isConnected ? "Type your message . . . ." : "Connecting..."
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all duration-200 max-h-32 min-h-[48px]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-3xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all duration-200 max-h-32 min-h-[48px]"
                     disabled={!isConnected}
                     rows={1}
                     style={{

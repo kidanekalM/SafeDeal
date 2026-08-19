@@ -72,6 +72,17 @@ export default defineConfig({
     },
   },
 
+  preview: {
+    port: 3002,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+
   define: {
     'global': 'globalThis',
   }

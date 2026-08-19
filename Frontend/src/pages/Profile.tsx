@@ -161,8 +161,8 @@ const Profile = () => {
       <div className="max-w-6xl mx-auto pb-12">
         {/* Onboarding Banner */}
         {(location.state as any)?.needsOnboarding && (
-          <div className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-[2rem] flex items-center gap-6 shadow-xl">
-            <div className="p-4 bg-yellow-100 rounded-2xl text-yellow-600">
+          <div className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-3xl flex items-center gap-6 shadow-xl">
+            <div className="p-4 bg-yellow-100 rounded-3xl text-yellow-600">
               <AlertCircle className="h-8 w-8" />
             </div>
             <div>
@@ -221,7 +221,7 @@ const Profile = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 px-6 py-4 rounded-2xl text-left transition-all font-bold ${
+                    className={`w-full flex items-center space-x-3 px-6 py-4 rounded-3xl text-left transition-all font-bold ${
                       activeTab === tab.id
                         ? "bg-primary-600 text-white shadow-xl scale-[1.02]"
                         : "text-gray-600 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100"
