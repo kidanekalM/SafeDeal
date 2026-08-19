@@ -191,7 +191,7 @@ const CreateEscrow = () => {
   }, [milestonesWatch, escrowType, setValue]);
 
   const steps = useMemo(() => {
-    const all = [
+    const detailed = [
       { id: 'type', title: t('pages.step_deal', 'Deal'), icon: Briefcase },
       { id: 'parties', title: t('pages.step_parties', 'Parties'), icon: User },
       { id: 'basics', title: t('pages.step_basics', 'Basics'), icon: TextQuote },
@@ -202,8 +202,14 @@ const CreateEscrow = () => {
       { id: 'financial', title: t('pages.step_budget', 'Budget'), icon: DollarSign },
       { id: 'review', title: t('pages.step_review', 'Review'), icon: Check },
     ];
-    if (escrowType === 'item') return all.filter(s => s.id !== 'deliverables');
-    return all;
+    const simple = [
+      { id: 'type', title: t('pages.step_deal', 'Deal'), icon: Briefcase },
+      { id: 'parties', title: t('pages.step_parties', 'Parties'), icon: User },
+      { id: 'basics', title: t('pages.step_basics', 'Basics'), icon: TextQuote },
+      { id: 'financial', title: t('pages.step_budget', 'Budget'), icon: DollarSign },
+      { id: 'review', title: t('pages.step_review', 'Review'), icon: Check },
+    ];
+    return escrowType === 'item' ? simple : detailed;
   }, [t, escrowType]);
 
   const handleSearch = async (term: string, role: 'buyer' | 'seller' | 'mediator') => {
