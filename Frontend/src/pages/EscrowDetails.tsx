@@ -125,63 +125,84 @@ const EscrowDetails = () => {
       y += (lines.length * (fontSize * 0.45)) + 3;
     };
 
-    const addSectionTitle = (text: string) => {
-      y += 6;
-      doc.setFontSize(11);
+    const addSectionTitle = (text: string, amharicTitle?: string) => {
+      y += 8;
+      doc.setFillColor(240, 245, 245);
+      doc.rect(margin, y - 5, contentWidth, 8, "F");
+      doc.setFontSize(10.5);
       doc.setFont("times", "bold");
       doc.setTextColor(1, 77, 70);
-      doc.text(text.toUpperCase(), margin, y);
-      y += 6;
+      doc.text(text.toUpperCase(), margin + 3, y);
+      if (amharicTitle) {
+        doc.setFont("times", "italic");
+        doc.setFontSize(9.5);
+        doc.text(`— ${amharicTitle}`, margin + doc.getTextWidth(text.toUpperCase()) + 6, y);
+      }
+      y += 8;
     };
 
-    // Official Letterhead Header
-    doc.setFontSize(18);
+    // Official Letterhead Header with Emblem Lock
+    doc.setFillColor(1, 77, 70);
+    doc.roundedRect(margin, y - 4, 12, 12, 3, 3, "F");
+    doc.setFontSize(12);
+    doc.setFont("times", "bold");
+    doc.setTextColor(255, 255, 255);
+    doc.text("SD", margin + 6, y + 3, { align: "center" });
+
+    doc.setFontSize(16);
     doc.setFont("times", "bold");
     doc.setTextColor(1, 77, 70);
-    doc.text("SAFEDEAL INSTITUTIONAL ESCROW NETWORK", pageWidth / 2, y, { align: "center" });
+    doc.text("SAFEDEAL INSTITUTIONAL ESCROW NETWORK", margin + 18, y + 2);
     y += 6;
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setFont("times", "italic");
     doc.setTextColor(100, 100, 100);
-    doc.text("Official Master Escrow & Settlement Contract — Addis Ababa, Ethiopia", pageWidth / 2, y, { align: "center" });
-    y += 10;
+    doc.text("የሴፍዲል ኦፊሴላዊ የውል እና የዕርከን ማረጋገጫ • Addis Ababa, Ethiopia", margin + 18, y + 2);
+    y += 12;
 
     doc.setDrawColor(1, 77, 70);
-    doc.setLineWidth(0.8);
+    doc.setLineWidth(1);
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;
 
+    // Bilingual Subtitle
+    doc.setFontSize(12);
+    doc.setFont("times", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text("MASTER ESCROW & SETTLEMENT AGREEMENT / የዕርከን ውል ማረጋገጫ", pageWidth / 2, y, { align: "center" });
+    y += 10;
+
     // Contract Preamble
-    addSectionTitle("Master Escrow Agreement Preamble");
-    addText(`This Master Escrow Agreement ("Agreement") is officially established and entered into regarding Transaction Reference SD-${escrow?.id}. All parties have consented to execute this binding transaction under the governance of SafeDeal escrow protection and the Commercial Code of Ethiopia.`);
+    addSectionTitle("Master Escrow Agreement Preamble", "የውል መግቢያ");
+    addText(`This Master Escrow Agreement ("Agreement") is officially established and entered into regarding Transaction Reference SD-${escrow?.id}. All parties have consented to execute this binding transaction under the governance of SafeDeal escrow protection and the Commercial Code of Ethiopia. / ይህ የዕርከን ውል በሴፍዲል ጥበቃ እና በኢትዮጵያ የንግድ ሕግ መሠረት የተቋቋመ ነው።`);
 
-    addSectionTitle("1. Contracting Parties");
-    addText(`First Party (Buyer / Depositor): ${escrow?.buyer?.first_name || ''} ${escrow?.buyer?.last_name || ''} (${escrow?.buyer?.email || 'N/A'})`, 10, "bold");
-    addText(`Second Party (Seller / Provider): ${escrow?.seller?.first_name || ''} ${escrow?.seller?.last_name || ''} (${escrow?.seller?.email || 'N/A'})`, 10, "bold");
+    addSectionTitle("1. Contracting Parties", "ውል ተዋዋይ ወገኖች");
+    addText(`First Party (Buyer / Depositor / ገዢ): ${escrow?.buyer?.first_name || ''} ${escrow?.buyer?.last_name || ''} (${escrow?.buyer?.email || 'N/A'})`, 10, "bold");
+    addText(`Second Party (Seller / Provider / ሻጭ): ${escrow?.seller?.first_name || ''} ${escrow?.seller?.last_name || ''} (${escrow?.seller?.email || 'N/A'})`, 10, "bold");
 
-    addSectionTitle("2. Subject Matter & Purpose");
+    addSectionTitle("2. Subject Matter & Purpose", "የውሉ ዋና ዓላማ");
     addText(`Objective: ${escrow?.title || 'N/A'}`, 11, "bold");
     addText(`Detailed Scope / Description: ${escrow?.description || 'N/A'}`);
 
-    addSectionTitle("3. Financial Principal & Valuation");
-    addText(`Total Escrow Principal: ETB ${escrow?.amount.toLocaleString()} (ETB)`, 11, "bold");
-    addText(`Inspection & Review Period: Exactly ${escrow?.scope?.acceptance_days || escrow?.inspection_period || 5} calendar days following formal delivery.`);
+    addSectionTitle("3. Financial Principal & Valuation", "የገንዘብ መጠን እና ዋጋ");
+    addText(`Total Escrow Principal: ETB ${escrow?.amount.toLocaleString()} (የተቀመጠ ገንዘብ)`, 11, "bold");
+    addText(`Inspection & Review Period: Exactly ${escrow?.scope?.acceptance_days || escrow?.inspection_period || 5} calendar days following formal delivery / የፍተሻ ጊዜ.`);
     addText(`Platform Settlement Fee: ETB ${escrow?.platform_fee?.toLocaleString() || 0}`);
 
-    addSectionTitle("4. Schedule A (Deliverables & Acceptance Standards)");
+    addSectionTitle("4. Schedule A (Deliverables & Acceptance Standards)", "መርሐ ግብር A (የሚቀርቡ ዕቃዎች እና የጥራት ደረጃዎች)");
     const delivs = escrow?.scope?.deliverables?.length ? escrow.scope.deliverables : [];
     if (delivs.length) {
       delivs.forEach((d: any, i: number) => {
         const stdLabel = d.standard === 'buyer_approves' ? 'Buyer approves in app' : d.standard === 'matches_file' ? 'Matches attached file' : d.standard === 'buyer_inspects' ? 'Buyer inspects in person' : d.standard || 'Buyer approval';
         addText(`Item ${i + 1}: ${d.title} [${d.amount || 1} ${d.unit || 'flat'}] — Price: ${Number(d.price || 0).toLocaleString()} ETB`, 10, "bold");
-        addText(`   Definition of Done / Standard: ${stdLabel}${d.standard_ref ? ` (${d.standard_ref})` : ''}`, 9, "normal", [100, 100, 100]);
+        addText(`   Definition of Done: ${stdLabel}${d.standard_ref ? ` (${d.standard_ref})` : ''}`, 9, "normal", [100, 100, 100]);
       });
     } else {
       addText(`Primary Deliverable: ${escrow?.title} — Lump sum value of ${escrow?.amount?.toLocaleString()} ETB.`);
     }
 
     if (milestones.length > 0) {
-      addSectionTitle("5. Milestone Payment Allocation");
+      addSectionTitle("5. Milestone Payment Allocation", "የክፍያ ደረጃዎች ክፍፍል");
       autoTable(doc, {
         startY: y,
         head: [['#', 'Milestone Title', 'Amount (ETB)', 'Status']],
@@ -193,21 +214,21 @@ const EscrowDetails = () => {
     }
 
     if (escrow?.scope?.exclusions?.length) {
-      addSectionTitle("6. Schedule B (Exclusions / Out of Scope)");
+      addSectionTitle("6. Schedule B (Exclusions / Out of Scope)", "መርሐ ግብር B (ያልተካተቱ)");
       escrow.scope.exclusions.forEach((e: any, i: number) => {
         addText(`Exclusion ${i + 1}: ${e.title}`, 9);
       });
     }
 
-    addSectionTitle("7. Institutional Escrow Covenants & Legal Governance");
-    addText("7.1 Fund Protection: All funds are deposited into SafeDeal institutional escrow accounts and are disbursed strictly upon verified Buyer acceptance. Funds are never released automatically or unilaterally.");
-    addText("7.2 Governing Law: This Agreement is governed under the substantive laws and Commercial Code of Ethiopia. Any dispute shall be resolved through binding arbitration in Addis Ababa, Ethiopia.");
+    addSectionTitle("7. Institutional Escrow Covenants & Legal Governance", "የዕርከን ጥበቃ እና ሕጋዊ ደንቦች");
+    addText("7.1 Fund Protection: All funds are deposited into SafeDeal institutional escrow accounts and disbursed strictly upon verified Buyer acceptance. / ገንዘቡ ደህንነቱ በተጠበቀ አካውንት ይቀመጣል።");
+    addText("7.2 Governing Law: This Agreement is governed under the Commercial Code of Ethiopia. / ውሉ በኢትዮጵያ ሕግ የሚመራ ነው።");
     addText(`7.3 Cryptographic Audit Stamp: ${escrow?.escrow_hash || '0x...institution_verified'}`);
 
-    addSectionTitle("8. Execution & Signatures");
-    addText("IN WITNESS WHEREOF, the Parties have executed this Master Escrow Agreement with full legal capacity.");
+    addSectionTitle("8. Execution & Signatures", "ፊርማ እና ማረጋገጫ");
+    addText("IN WITNESS WHEREOF, the Parties have executed this Master Escrow Agreement.");
     y += 5;
-    addText(`Buyer Signature: _______________________      Seller Signature: _______________________`, 10, "bold");
+    addText(`Buyer Signature / የገዢ ፊርማ: _______________________      Seller Signature / የሻጭ ፊርማ: _______________________`, 10, "bold");
 
     // Footer brand
     const pageH = doc.internal.pageSize.getHeight();
