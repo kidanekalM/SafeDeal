@@ -41,11 +41,15 @@ type ContractScope struct {
 // ContractDeliverable is a single countable, testable item being delivered.
 type ContractDeliverable struct {
 	gorm.Model
-	ScopeID     uint   `json:"scope_id" gorm:"not null"`
-	Title       string `json:"title" gorm:"not null"`
-	Standard    string `json:"standard" gorm:"default:'none'"` // page_count / named_standard / numeric_threshold / reference_file / none
-	StandardRef string `json:"standard_ref,omitempty"`
-	OrderIndex  int    `json:"order_index" gorm:"default:0"`
+	ScopeID        uint    `json:"scope_id" gorm:"not null"`
+	Title          string  `json:"title" gorm:"not null"` // What
+	Amount         float64 `json:"amount" gorm:"default:1"` // Amount
+	Unit           string  `json:"unit" gorm:"default:'flat'"` // pages / hours / units / sessions / cars / flat
+	Standard       string  `json:"standard" gorm:"default:'none'"` // Definition of done: matches_file / buyer_approves / buyer_inspects / written_spec
+	StandardRef    string  `json:"standard_ref,omitempty"`
+	DueDate        string  `json:"due_date,omitempty"` // By when
+	Price          uint    `json:"price" gorm:"default:0"` // Price
+	OrderIndex     int     `json:"order_index" gorm:"default:0"`
 }
 
 // ContractExclusion is a single explicitly-out-of-scope item.

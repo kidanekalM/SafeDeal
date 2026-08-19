@@ -26,9 +26,13 @@ const MilestoneSchema = z.object({
 });
 
 const DeliverableSchema = z.object({
-  title: z.string().min(3, 'Deliverable is required'),
-  standard: z.string().optional(),
+  title: z.string().min(2, 'What is required'),
+  amount: z.coerce.number().min(0.1, 'Amount required').default(1),
+  unit: z.string().default('flat'),
+  standard: z.string().default('buyer_approves'),
   standard_ref: z.string().optional(),
+  due_date: z.string().optional(),
+  price: z.coerce.number().min(0).default(0),
 });
 
 const ExclusionSchema = z.object({
@@ -88,12 +92,21 @@ const ACCEPTANCE_METHODS = [
   { value: 'mutual', label: 'Mutual sign-off' },
 ];
 
-const STANDARD_OPTIONS = [
-  { value: 'none', label: 'No special test — buyer just approves it' },
-  { value: 'page_count', label: 'Exact quantity (e.g. 5 pages, 3 items)' },
-  { value: 'named_standard', label: 'Meets a known standard (e.g. WCAG, ISO)' },
-  { value: 'numeric_threshold', label: 'Meets a target number (e.g. < 2s load)' },
-  { value: 'reference_file', label: 'Matches a sample you provide (photo/file)' },
+const DEFINITION_OF_DONE_OPTIONS = [
+  { value: 'buyer_approves', label: 'Buyer approves in app' },
+  { value: 'matches_file', label: 'Matches attached file' },
+  { value: 'buyer_inspects', label: 'Buyer inspects in person' },
+  { value: 'written_spec', label: 'Meets written spec below' },
+];
+
+const UNIT_OPTIONS = [
+  { value: 'flat', label: 'Flat (one-off)' },
+  { value: 'pages', label: 'Pages' },
+  { value: 'hours', label: 'Hours' },
+  { value: 'units', label: 'Units' },
+  { value: 'sessions', label: 'Sessions' },
+  { value: 'cars', label: 'Cars' },
+  { value: 'items', label: 'Items' },
 ];
 
 const CreateEscrow = () => {
@@ -148,10 +161,23 @@ const CreateEscrow = () => {
   const creatorRole = watch('creator_role');
   const milestonesWatch = watch('milestones') || [];
 
+  // Sync total amount from deliverables for project flow
+  useEffect(() => {
+    if (escrowType === 'project' && delivFields.length > 0) {
+      const total = delivFields.reduce((sum, _, index) => {
+        const p = Number(watch(`scope.deliverables.${index}.price`)) || 0;
+        return sum + p;
+      }, 0);
+      if (total > 0) {
+        setValue('amount', total, { shouldValidate: true });
+      }
+    }
+  }, [delivFields, escrowType, watch, setValue]);
+
   // Seed one empty deliverable row for the project/Detailed flow (item/Quick skips deliverables).
   useEffect(() => {
     if (escrowType === 'project' && delivFields.length === 0) {
-      appendDeliv({ title: '', standard: 'none', standard_ref: '' });
+      appendDeliv({ title: '', amount: 1, unit: 'flat', standard: 'buyer_approves', standard_ref: '', due_date: '', price: 0 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escrowType]);
@@ -350,27 +376,56 @@ const CreateEscrow = () => {
 
       case 'deliverables': return (
         <div className="space-y-8">
-          {stepTitle(t('pages.what_is_delivered', 'What exactly is delivered?'), t('pages.what_is_delivered_sub', 'One row per item. Each must have a checkable standard.'))}
-          <div className="max-w-2xl mx-auto space-y-3">
+          {stepTitle('What is delivered?', 'Define what, how much, definition of done, and price per row.')}
+          <div className="max-w-4xl mx-auto space-y-4">
             {delivFields.map((f, i) => (
-              <div key={f.id} className="p-5 bg-white border-2 border-gray-100 rounded-3xl space-y-3 relative group">
-                <button type="button" onClick={() => removeDeliv(i)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500"><Trash2 size={16} /></button>
-                <input placeholder={t('pages.deliverable_placeholder', 'Deliverable (e.g. Homepage design)')} {...register(`scope.deliverables.${i}.title`)} className="w-full font-black text-sm outline-none border-b-2 border-transparent focus:border-primary-600 transition-all bg-transparent" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">{t('pages.acceptance_standard', 'Acceptance Standard')}</label>
-                    <select {...register(`scope.deliverables.${i}.standard`)} className="w-full h-11 rounded-3xl bg-gray-50 border-none font-bold text-sm px-4">
-                      {STANDARD_OPTIONS.map(o => <option key={o.value} value={o.value}>{t(`pages.standard_${o.value}`, o.label)}</option>)}
+              <div key={f.id} className="p-6 bg-white border-2 border-gray-100 rounded-3xl space-y-4 relative group shadow-sm">
+                <button type="button" onClick={() => removeDeliv(i)} className="absolute top-4 right-4 text-gray-300 hover:text-red-500"><Trash2 size={18} /></button>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="md:col-span-5">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">What (Task or Item)</label>
+                    <input placeholder="e.g. Homepage design" {...register(`scope.deliverables.${i}.title`)} className="w-full h-12 px-4 rounded-2xl bg-gray-50 border-none font-black text-sm outline-none" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Amount</label>
+                    <input type="number" step="any" placeholder="1" {...register(`scope.deliverables.${i}.amount`)} className="w-full h-12 px-4 rounded-2xl bg-gray-50 border-none font-black text-sm outline-none" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Unit</label>
+                    <select {...register(`scope.deliverables.${i}.unit`)} className="w-full h-12 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none">
+                      {UNIT_OPTIONS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">{t('pages.standard_detail', 'Standard Detail')}</label>
-                    <input placeholder={watch(`scope.deliverables.${i}.standard`) === 'none' ? t('pages.not_required', 'Not required') : t('pages.standard_ref_placeholder', 'e.g. 5 pages, WCAG 2.1 AA, < 2s')} {...register(`scope.deliverables.${i}.standard_ref`)} className="w-full h-11 rounded-3xl bg-gray-50 border-none font-bold text-sm px-4" />
+                  <div className="md:col-span-3">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Price (ETB)</label>
+                    <input type="number" placeholder="0" {...register(`scope.deliverables.${i}.price`)} className="w-full h-12 px-4 rounded-2xl bg-primary-50 border-none font-black text-sm text-primary-900 outline-none" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2 border-t border-gray-100">
+                  <div className="md:col-span-6">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Definition of Done</label>
+                    <select {...register(`scope.deliverables.${i}.standard`)} className="w-full h-11 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none">
+                      {DEFINITION_OF_DONE_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="md:col-span-4">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">By When (Due Date)</label>
+                    <input type="date" {...register(`scope.deliverables.${i}.due_date`)} className="w-full h-11 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Spec Note</label>
+                    <input placeholder="Optional note" {...register(`scope.deliverables.${i}.standard_ref`)} className="w-full h-11 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none" />
                   </div>
                 </div>
               </div>
             ))}
-            <button type="button" onClick={() => appendDeliv({ title: '', standard: 'none', standard_ref: '' })} className="w-full py-3 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-primary-600 hover:text-primary-600 font-black text-sm">{t('pages.add_deliverable', '+ Add Deliverable')}</button>
+            <div className="flex justify-between items-center px-4">
+              <p className="text-xs font-black text-primary-600 uppercase tracking-widest">
+                Total from deliverables: {delivFields.reduce((sum, _, index) => sum + (Number(watch(`scope.deliverables.${index}.price`)) || 0), 0).toLocaleString()} ETB
+              </p>
+              <button type="button" onClick={() => appendDeliv({ title: '', amount: 1, unit: 'flat', standard: 'buyer_approves', standard_ref: '', due_date: '', price: 0 })} className="btn btn-primary btn-sm rounded-xl font-black">+ Add Another Row</button>
+            </div>
           </div>
         </div>
       );

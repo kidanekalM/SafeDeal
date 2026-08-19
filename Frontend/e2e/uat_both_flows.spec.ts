@@ -95,7 +95,7 @@ async function createEscrowViaUI(
 
   // Step 3: deliverables (project only; item/Quick flow skips this step)
   if (opts.type === 'project') {
-    await page.fill('input[placeholder="Deliverable (e.g. Homepage design)"]', opts.deliverable || opts.title);
+    await page.fill('input[placeholder="e.g. Homepage design"]', opts.deliverable || opts.title);
     await page.click('button:has-text("Continue")');
   } else {
     await page.click('button:has-text("Continue")');

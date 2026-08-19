@@ -145,8 +145,12 @@ export interface ContractScope {
 export interface ContractDeliverable {
     id?: number;
     title: string;
+    amount?: number;
+    unit?: string;
     standard?: string;
     standard_ref?: string;
+    due_date?: string;
+    price?: number;
 }
 
 export interface ContractExclusion {

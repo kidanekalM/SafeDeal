@@ -130,9 +130,13 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			AcceptanceDays      int    `json:"acceptance_days"`
 			DeemedAccept        bool   `json:"deemed_accept"`
 			Deliverables        []struct {
-				Title       string `json:"title"`
-				Standard    string `json:"standard"`
-				StandardRef string `json:"standard_ref"`
+				Title       string  `json:"title"`
+				Amount      float64 `json:"amount"`
+				Unit        string  `json:"unit"`
+				Standard    string  `json:"standard"`
+				StandardRef string  `json:"standard_ref"`
+				DueDate     string  `json:"due_date"`
+				Price       uint    `json:"price"`
 			} `json:"deliverables"`
 			Exclusions []struct {
 				Title string `json:"title"`
@@ -153,6 +157,14 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			total += m.Amount
 		}
 		if total > 0 { req.Amount = total }
+	} else if req.EscrowType == "project" && req.Scope != nil && len(req.Scope.Deliverables) > 0 {
+		var totalPrice uint = 0
+		for _, d := range req.Scope.Deliverables {
+			totalPrice += d.Price
+		}
+		if totalPrice > 0 {
+			req.Amount = totalPrice
+		}
 	}
 
 	var finalBuyerID, finalSellerID uint
@@ -324,8 +336,12 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 			h.DB.Create(&models.ContractDeliverable{
 				ScopeID:     scope.ID,
 				Title:       d.Title,
+				Amount:      d.Amount,
+				Unit:        d.Unit,
 				Standard:    d.Standard,
 				StandardRef: d.StandardRef,
+				DueDate:     d.DueDate,
+				Price:       d.Price,
 				OrderIndex:  i,
 			})
 		}
