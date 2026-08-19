@@ -1,5 +1,6 @@
 import React from 'react';
 import { Escrow } from '../types';
+import { ShieldCheck, Lock } from 'lucide-react';
 
 interface PrintEscrowAgreementProps {
   escrow: Escrow;
@@ -19,9 +20,16 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
     <div className="print-container bg-white text-gray-900 font-serif p-16 max-w-[210mm] mx-auto shadow-xl print:shadow-none border border-gray-200">
       {/* 1. Official Institutional Header */}
       <div className="border-b-4 border-double border-gray-900 pb-8 mb-10 flex justify-between items-center">
-        <div>
-          <div className="text-3xl font-black tracking-widest text-[#014d46] font-sans">SAFEDEAL</div>
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 mt-1">Institutional Escrow & Settlement Service</p>
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-[#014d46] text-white rounded-2xl flex items-center justify-center shadow-md">
+            <Lock size={28} className="text-emerald-300" />
+          </div>
+          <div>
+            <div className="text-3xl font-black tracking-widest text-[#014d46] font-sans flex items-center gap-2">
+              SAFEDEAL <ShieldCheck size={20} className="text-emerald-600 inline" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 mt-1">Institutional Escrow & Settlement Service</p>
+          </div>
         </div>
         <div className="text-right font-sans">
           <p className="text-xs font-black uppercase tracking-widest text-gray-900">Official Contract Record</p>

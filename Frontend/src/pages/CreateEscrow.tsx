@@ -624,13 +624,13 @@ const CreateEscrow = () => {
 
           <div className="mt-12 flex justify-center">
             {step < steps.length - 1 ? (
-              <button onClick={nextStep} className="btn btn-primary px-12 h-16 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3">
+              <button onClick={nextStep} className="btn btn-primary px-16 h-20 rounded-full font-black uppercase text-sm tracking-widest shadow-2xl shadow-primary-500/40 transition-all flex items-center gap-4 hover:scale-105">
                 {t('pages.continue', 'Continue')} →
               </button>
             ) : (
-              <button onClick={handleSubmit(onSubmit, () => toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.')))} disabled={isSubmitting} className="btn btn-primary px-12 h-16 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 flex items-center gap-3">
+              <button onClick={handleSubmit(onSubmit, () => toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.')))} disabled={isSubmitting} className="btn btn-primary px-16 h-20 rounded-full font-black uppercase text-sm tracking-widest shadow-2xl shadow-primary-500/40 transition-all flex items-center gap-4 hover:scale-105">
                 {isSubmitting ? 'Launching...' : 'Secure Launch'}
-                <Check size={18} />
+                <Check size={22} />
               </button>
             )}
           </div>
