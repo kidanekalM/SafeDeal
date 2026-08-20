@@ -16,6 +16,7 @@ import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import CreateEscrow from "./pages/CreateEscrow";
 import EscrowDetails from "./pages/EscrowDetails";
+import PrintEscrow from "./components/PrintEscrow";
 import AllEscrows from "./pages/AllEscrows";
 import TransactionHistory from "./pages/TransactionHistory";
 import UserSearch from "./pages/UserSearch";
@@ -291,6 +292,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <EscrowDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/escrow/:id/print"
+            element={
+              <ProtectedRoute>
+                <PrintEscrow />
               </ProtectedRoute>
             }
           />
