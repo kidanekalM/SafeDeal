@@ -24,7 +24,10 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': 'any-value-like-69420'
    },
-  withCredentials: true, // ✅ Enables sending HTTP-only cookies automatically
+  // NOTE: Auth is Bearer-token based (localStorage + Authorization header).
+  // The backend never sets HTTP-only cookies, so we must NOT send credentials —
+  // doing so forces CORS to require Access-Control-Allow-Credentials on preflight,
+  // which breaks cross-origin production deploys (Vercel -> HF Space).
 });
 
 let refreshPromise: Promise<string> | null = null;
