@@ -17,6 +17,7 @@ import { useLocation } from "react-router-dom";
 import { BankDetails, UpdateProfileRequest } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { BANKS } from "../lib/banks";
+import { Card, Button, Input, Select, FieldLabel } from "../components/ui";
 
 const Profile = () => {
   const { t } = useTranslation();
@@ -158,50 +159,47 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto pb-12">
-        {/* Onboarding Banner */}
+      <div className="mx-auto max-w-5xl px-4 py-6 pb-12 sm:py-8">
         {(location.state as any)?.needsOnboarding && (
-          <div className="mb-8 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-3xl flex items-center gap-6 shadow-xl">
-            <div className="p-4 bg-yellow-100 rounded-3xl text-yellow-600">
-              <AlertCircle className="h-8 w-8" />
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 shadow-sm sm:gap-5 sm:p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-yellow-100 text-yellow-600">
+              <AlertCircle className="h-6 w-6" />
             </div>
             <div>
-              <h4 className="text-xl font-black uppercase tracking-tight text-yellow-900">{t('pages.complete_your_profile', 'Complete Your Profile')}</h4>
-              <p className="text-yellow-700 text-sm opacity-80">{t('pages.you_need_to_provide_your_profession', 'You need to provide your profession and bank details before you can create or accept escrows.')}</p>
+              <h4 className="text-base font-bold text-yellow-900">{t('pages.complete_your_profile', 'Complete Your Profile')}</h4>
+              <p className="text-sm text-yellow-700 opacity-80">{t('pages.you_need_to_provide_your_profession', 'You need to provide your profession and bank details before you can create or accept escrows.')}</p>
             </div>
           </div>
         )}
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t("pages.profile_settings", "Profile Settings")}</h1>
-          <p className="text-gray-600 mt-2">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">{t("pages.profile_settings", "Profile Settings")}</h1>
+          <p className="mt-1 text-sm text-gray-600">
             {t("pages.manage_your_account_information_wallet_and_security_settings", "Manage your account information, wallet, and security settings")}
           </p>
-          <div className="mt-4 p-3 rounded-lg bg-teal-50 border border-teal-100 text-sm text-teal-900">
+          <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-teal-100 bg-teal-50 px-3 py-2 text-sm text-teal-900">
             {t("pages.trust_score", "Trust Score")}: <span className="font-bold">{user.trust_score ?? 0}</span>
             {trustInsights && (
-              <span className="ml-3 text-xs text-teal-800">
+              <span className="text-xs text-teal-800">
                 {t("pages.completed", "Completed")}: {trustInsights.completed} | {t("pages.disputed", "Disputed")}: {trustInsights.disputed} | {t("pages.refunded", "Refunded")}: {trustInsights.refunded}
               </span>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          {/* Top Tabs - Mobile Header */}
-          <div className="lg:col-span-4 block lg:hidden mb-6">
-            <div className="flex overflow-x-auto pb-2 space-x-2 scrollbar-hide">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-6">
+          <div className="block lg:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-none flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                    className={`flex flex-none items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
                       activeTab === tab.id
-                        ? "bg-primary-600 text-white shadow-lg scale-105"
-                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                        ? "bg-[#014d46] text-white"
+                        : "border border-gray-200 bg-white text-gray-600"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -212,8 +210,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Sidebar Tabs - Desktop */}
-          <div className="lg:col-span-1 lg:block hidden">
+          <div className="hidden lg:block">
             <nav className="space-y-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -221,99 +218,102 @@ const Profile = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 px-6 py-4 rounded-3xl text-left transition-all font-bold ${
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-left text-sm font-bold transition-colors ${
                       activeTab === tab.id
-                        ? "bg-primary-600 text-white shadow-xl scale-[1.02]"
-                        : "text-gray-600 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100"
+                        ? "bg-[#014d46] text-white"
+                        : "text-gray-600 hover:bg-gray-50"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
-                    <span className="font-bold">{tab.name}</span>
+                    <span>{tab.name}</span>
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             {activeTab === "profile" && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">{t('pages.personal_information', 'Personal Information')}</h3>
-                  <button onClick={fetchProfile} disabled={isFetchingProfile} className="btn btn-outline btn-sm">
-                    {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
-                  </button>
-                </div>
-                <form onSubmit={handleSubmitProfile(handleUpdateProfile)} className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.first_name', 'First Name')}</label>
-                      <input {...registerProfile("first_name", { required: true })} type="text" className="input w-full" />
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                <Card padding="sm">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-gray-900">{t('pages.personal_information', 'Personal Information')}</h3>
+                    <Button variant="outline" size="sm" onClick={fetchProfile} disabled={isFetchingProfile}>
+                      {isFetchingProfile ? t('pages.refreshing', 'Refreshing...') : t('pages.refresh', 'Refresh')}
+                    </Button>
+                  </div>
+                  <form onSubmit={handleSubmitProfile(handleUpdateProfile)} className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <FieldLabel>{t('components.first_name', 'First Name')}</FieldLabel>
+                        <Input {...registerProfile("first_name", { required: true })} type="text" />
+                      </div>
+                      <div>
+                        <FieldLabel>{t('components.last_name', 'Last Name')}</FieldLabel>
+                        <Input {...registerProfile("last_name", { required: true })} type="text" />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.last_name', 'Last Name')}</label>
-                      <input {...registerProfile("last_name", { required: true })} type="text" className="input w-full" />
+                      <FieldLabel>{t('components.profession', 'Profession')}</FieldLabel>
+                      <Input {...registerProfile("profession", { required: true })} type="text" />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('components.profession', 'Profession')}</label>
-                    <input {...registerProfile("profession", { required: true })} type="text" className="input w-full" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.email_address', 'Email Address')}</label>
-                    <input type="email" value={user.email} disabled className="input w-full bg-gray-50" />
-                  </div>
-                  <button type="submit" disabled={isUpdatingProfile} className="btn btn-primary btn-md">
-                    {isUpdatingProfile ? t('pages.updating', "Updating...") : t('pages.update_profile', "Update Profile")}
-                  </button>
-                </form>
+                    <div>
+                      <FieldLabel>{t('pages.email_address', 'Email Address')}</FieldLabel>
+                      <Input type="email" value={user.email} disabled className="bg-gray-50" />
+                    </div>
+                    <Button type="submit" disabled={isUpdatingProfile}>
+                      {isUpdatingProfile ? t('pages.updating', "Updating...") : t('pages.update_profile', "Update Profile")}
+                    </Button>
+                  </form>
+                </Card>
               </motion.div>
             )}
 
             {activeTab === "wallet" && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                <div className="card p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('pages.ethereum_wallet', 'Ethereum Wallet')}</h3>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                <Card padding="sm">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900">{t('pages.ethereum_wallet', 'Ethereum Wallet')}</h3>
                   {user.wallet_address ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <input type="text" value={user.wallet_address} readOnly className="input flex-1 font-mono text-sm" />
-                        <button onClick={() => copyToClipboard(user.wallet_address!)} className="btn btn-outline btn-sm"><Copy className="h-4 w-4" /></button>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Input type="text" value={user.wallet_address} readOnly className="font-mono" />
+                      <Button variant="outline" size="sm" onClick={() => copyToClipboard(user.wallet_address!)}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     </div>
                   ) : (
-                    <button onClick={handleCreateWallet} disabled={isCreatingWallet} className="btn btn-primary btn-md">
+                    <Button onClick={handleCreateWallet} disabled={isCreatingWallet}>
                       {isCreatingWallet ? t('pages.creating', "Creating...") : t('pages.create_wallet', "Create Wallet")}
-                    </button>
+                    </Button>
                   )}
-                </div>
+                </Card>
               </motion.div>
             )}
 
             {activeTab === "banking" && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                <div className="card p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('pages.bank_details', 'Bank Details')}</h3>
-                  <form onSubmit={handleSubmit(handleUpdateBankDetails)} className="space-y-6">
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                <Card padding="sm">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900">{t('pages.bank_details', 'Bank Details')}</h3>
+                  <form onSubmit={handleSubmit(handleUpdateBankDetails)} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.account_name', 'Account Name')}</label>
-                      <input {...register("account_name", { required: true })} className="input w-full" />
+                      <FieldLabel>{t('pages.account_name', 'Account Name')}</FieldLabel>
+                      <Input {...register("account_name", { required: true })} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.account_number', 'Account Number')}</label>
-                      <input {...register("account_number", { required: true })} className="input w-full" />
+                      <FieldLabel>{t('pages.account_number', 'Account Number')}</FieldLabel>
+                      <Input {...register("account_number", { required: true })} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('pages.bank', 'Bank')}</label>
-                      <select value={selectedBankCode || ""} onChange={(e) => setSelectedBankCode(Number(e.target.value))} className="input w-full">
+                      <FieldLabel>{t('pages.bank', 'Bank')}</FieldLabel>
+                      <Select value={selectedBankCode || ""} onChange={(e) => setSelectedBankCode(Number(e.target.value))}>
                         <option value="">Select Bank</option>
                         {BANKS.map(bank => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
-                      </select>
+                      </Select>
                     </div>
-                    <button type="submit" disabled={isLoading} className="btn btn-primary btn-md">Update Bank Details</button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? t('pages.updating', "Updating...") : t('pages.update_bank_details', 'Update Bank Details')}
+                    </Button>
                   </form>
-                </div>
+                </Card>
               </motion.div>
             )}
           </div>

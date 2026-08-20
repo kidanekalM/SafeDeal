@@ -1,7 +1,5 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -15,6 +13,9 @@ import {
   ShoppingCart,
   Briefcase,
   Zap,
+  X,
+  Loader2,
+  Download,
 } from "lucide-react";
 import { milestoneApi } from "../lib/api";
 import type { Milestone } from "../types";
@@ -27,6 +28,7 @@ import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PaymentModal from "../components/PaymentModal";
 import { motion } from "framer-motion";
+import PrintEscrowAgreement from "../components/PrintEscrowAgreement";
 
 
 const formatDateSafe = (date: string | number | Date | null | undefined) => {
@@ -49,7 +51,6 @@ const formatDateSafe = (date: string | number | Date | null | undefined) => {
 const EscrowDetails = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [escrow, setEscrow] = useState<Escrow | null>(null);
   const [payment, setPayment] = useState<EscrowPayment | null>(null);
@@ -62,6 +63,10 @@ const EscrowDetails = () => {
   const [isVerifyingCBE, setIsVerifyingCBE] = useState(false);
   
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const agreementRef = useRef<HTMLDivElement>(null);
 
   const isBuyer = Number(user?.id) === Number(escrow?.buyer_id);
   const isSeller = Number(user?.id) === Number(escrow?.seller_id);
@@ -110,148 +115,105 @@ const EscrowDetails = () => {
     }
   };
 
-  const handlePrint = () => {
-    const doc = new jsPDF();
-    let y = 20;
-    const margin = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const contentWidth = pageWidth - (margin * 2);
+  const handlePrint = async () => {
+    const root = agreementRef.current;
+    if (!root || isExporting) return;
+    setIsExporting(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
 
-    const FONT = "times";
+      const pageWidthPx = 794;
+      const pageHeightPx = 1123;
+      const scale = 2;
 
-    const addText = (text: string, fontSize = 10, fontStyle = "normal", color = [30, 30, 30]) => {
-      doc.setFontSize(fontSize);
-      doc.setFont(FONT, fontStyle);
-      doc.setTextColor(color[0], color[1], color[2]);
-      const lines = doc.splitTextToSize(text, contentWidth);
-      doc.text(lines, margin, y);
-      y += (lines.length * (fontSize * 0.45)) + 3;
-    };
+      const exportHost = document.createElement("div");
+      exportHost.style.position = "fixed";
+      exportHost.style.left = "-20000px";
+      exportHost.style.top = "0";
+      exportHost.style.zIndex = "-1";
+      document.body.appendChild(exportHost);
 
-    const addSectionTitle = (text: string) => {
-      y += 8;
-      doc.setFillColor(240, 245, 245);
-      doc.rect(margin, y - 5, contentWidth, 8, "F");
-      doc.setFontSize(10.5);
-      doc.setFont(FONT, "bold");
-      doc.setTextColor(1, 77, 70);
-      doc.text(text.toUpperCase(), margin + 3, y);
-      y += 8;
-    };
+      const clonedRoot = root.cloneNode(true) as HTMLElement;
+      const doc = clonedRoot.querySelector<HTMLElement>(".print-container");
+      if (!doc) throw new Error("print container not found");
+      doc.style.width = `${pageWidthPx}px`;
+      doc.style.maxWidth = `${pageWidthPx}px`;
+      doc.style.margin = "0";
+      doc.style.boxShadow = "none";
+      doc.style.boxSizing = "border-box";
+      doc.querySelectorAll(".no-print").forEach((el) => el.remove());
+      exportHost.appendChild(doc);
 
-    const addPageBreak = () => {
-      const pageH = doc.internal.pageSize.getHeight();
-      if (y > pageH - 40) {
-        doc.addPage();
-        y = 20;
+      const canvas = await html2canvas(doc, {
+        scale,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: pageWidthPx,
+      });
+
+      const fullHeight = canvas.height;
+      const fullCssHeight = fullHeight / scale;
+      const pageW = canvas.width;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidthMm = pdf.internal.pageSize.getWidth();
+      const mmPerPx = pageWidthMm / (pageWidthPx * scale);
+
+      const units = Array.from(
+        doc.querySelectorAll<HTMLElement>("[data-export-unit]")
+      );
+
+      const SAFETY = 40;
+      const maxPageCss = pageHeightPx - SAFETY;
+      const breaks: number[] = [0];
+      let pageStart = 0;
+      for (const u of units) {
+        const top = u.offsetTop;
+        const height = u.offsetHeight;
+        const end = top + height;
+        if (end - pageStart <= maxPageCss) continue;
+        if (top <= pageStart) continue;
+        if (height > maxPageCss) {
+          let y = Math.max(top, pageStart + pageHeightPx);
+          while (y < end) {
+            breaks.push(y);
+            pageStart = y;
+            y += pageHeightPx;
+          }
+          continue;
+        }
+        breaks.push(top);
+        pageStart = top;
       }
-    };
 
-    // Official Letterhead Header with Emblem Lock
-    doc.setFillColor(1, 77, 70);
-    doc.roundedRect(margin, y - 4, 12, 12, 3, 3, "F");
-    doc.setFontSize(12);
-    doc.setFont(FONT, "bold");
-    doc.setTextColor(255, 255, 255);
-    doc.text("SD", margin + 6, y + 3, { align: "center" });
+      const finalBreaks = [...new Set(breaks)].sort((a, b) => a - b);
 
-    doc.setFontSize(16);
-    doc.setFont(FONT, "bold");
-    doc.setTextColor(1, 77, 70);
-    doc.text("SAFEDEAL INSTITUTIONAL ESCROW NETWORK", margin + 18, y + 2);
-    y += 6;
-    doc.setFontSize(8.5);
-    doc.setFont(FONT, "italic");
-    doc.setTextColor(100, 100, 100);
-    doc.text("Official Escrow & Settlement Network  •  Addis Ababa, Ethiopia", margin + 18, y + 2);
-    y += 12;
+      const boundaries = [...finalBreaks, fullCssHeight];
+      for (let i = 0; i < boundaries.length - 1; i++) {
+        const offset = boundaries[i] * scale;
+        const sliceHeightPx = (boundaries[i + 1] - boundaries[i]) * scale;
+        const slice = document.createElement("canvas");
+        slice.width = pageW;
+        slice.height = sliceHeightPx;
+        const ctx = slice.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, slice.width, slice.height);
+        ctx.drawImage(canvas, 0, offset, pageW, sliceHeightPx, 0, 0, pageW, sliceHeightPx);
+        const pageImage = slice.toDataURL("image/jpeg", 0.92);
+        if (i > 0) pdf.addPage();
+        pdf.addImage(pageImage, "JPEG", 0, 0, pageWidthMm, sliceHeightPx * mmPerPx);
+      }
 
-    doc.setDrawColor(1, 77, 70);
-    doc.setLineWidth(1);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 10;
-
-    // Document Subtitle
-    doc.setFontSize(12);
-    doc.setFont(FONT, "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text(`MASTER ESCROW & SETTLEMENT AGREEMENT  —  Ref: SD-${escrow?.id}`, pageWidth / 2, y, { align: "center" });
-    y += 10;
-
-    // Contract Preamble
-    addSectionTitle("Preamble & Official Record");
-    addText(`This Master Escrow Agreement ("Agreement") is officially established and entered into regarding Transaction Reference SD-${escrow?.id}. All parties have consented to execute this binding transaction under the governance of SafeDeal escrow protection and the Commercial Code of Ethiopia.`);
-
-    addPageBreak();
-    addSectionTitle("1. Contracting Parties");
-    addText(`First Party (Buyer / Depositor): ${escrow?.buyer?.first_name || ''} ${escrow?.buyer?.last_name || ''} (${escrow?.buyer?.email || 'N/A'})`, 10, "bold");
-    addText(`Second Party (Seller / Provider): ${escrow?.seller?.first_name || ''} ${escrow?.seller?.last_name || ''} (${escrow?.seller?.email || 'N/A'})`, 10, "bold");
-
-    addSectionTitle("2. Subject Matter & Purpose");
-    addText(`Objective: ${escrow?.title || 'N/A'}`, 11, "bold");
-    addText(`Detailed Scope / Description: ${escrow?.description || 'N/A'}`);
-
-    addPageBreak();
-    addSectionTitle("3. Financial Principal & Valuation");
-    addText(`Total Escrow Principal: ETB ${escrow?.amount.toLocaleString()}`, 11, "bold");
-    addText(`Inspection & Review Period: Exactly ${escrow?.scope?.acceptance_days || escrow?.inspection_period || 5} calendar days following formal delivery.`);
-    addText(`Platform Settlement Fee: ETB ${escrow?.platform_fee?.toLocaleString() || 0}`);
-
-    addPageBreak();
-    addSectionTitle("4. Schedule A (Deliverables & Acceptance Standards)");
-    const delivs = escrow?.scope?.deliverables?.length ? escrow.scope.deliverables : [];
-    if (delivs.length) {
-      delivs.forEach((d: any, i: number) => {
-        addPageBreak();
-        const stdLabel = d.standard === 'buyer_approves' ? 'Buyer approves in app' : d.standard === 'matches_file' ? 'Matches attached file' : d.standard === 'buyer_inspects' ? 'Buyer inspects in person' : d.standard || 'Buyer approval';
-        addText(`Item ${i + 1}: ${d.title} [${d.amount || 1} ${d.unit || 'flat'}]  —  Price: ${Number(d.price || 0).toLocaleString()} ETB`, 10, "bold");
-        addText(`   Definition of Done: ${stdLabel}${d.standard_ref ? ` (${d.standard_ref})` : ''}`, 9, "normal", [100, 100, 100]);
-      });
-    } else {
-      addText(`Primary Deliverable: ${escrow?.title}  —  Lump sum value of ${escrow?.amount?.toLocaleString()} ETB.`);
+      document.body.removeChild(exportHost);
+      pdf.save(`SafeDeal-Agreement-SD${escrow?.id}.pdf`);
+      toast.success(t('pages.print_agreement_success', "Agreement PDF generated successfully!"));
+    } catch (error) {
+      toast.error(t('pages.print_agreement_failed', "Failed to generate PDF"));
+    } finally {
+      setIsExporting(false);
     }
-
-    if (milestones.length > 0) {
-      addPageBreak();
-      addSectionTitle("5. Milestone Payment Allocation");
-      autoTable(doc, {
-        startY: y,
-        head: [['#', 'Milestone Title', 'Amount (ETB)', 'Status']],
-        body: milestones.map((m, i) => [i + 1, m.title, m.amount.toLocaleString(), m.status]),
-        margin: { left: margin },
-        styles: { font: FONT, fontSize: 9 }
-      });
-      y = (doc as any).lastAutoTable.finalY + 10;
-    }
-
-    if (escrow?.scope?.exclusions?.length) {
-      addPageBreak();
-      addSectionTitle("6. Schedule B (Exclusions / Out of Scope)");
-      escrow.scope.exclusions.forEach((e: any, i: number) => {
-        addText(`Exclusion ${i + 1}: ${e.title}`, 9);
-      });
-    }
-
-    addPageBreak();
-    addSectionTitle("7. Institutional Escrow Covenants & Legal Governance");
-    addText("7.1 Fund Protection: All funds are deposited into SafeDeal institutional escrow accounts and disbursed strictly upon verified Buyer acceptance. Funds are never released automatically or unilaterally by the platform provider.");
-    addText("7.2 Governing Law: This Agreement is governed under the Commercial Code of Ethiopia. Any dispute shall be resolved through binding arbitration in Addis Ababa, Ethiopia.");
-    addText(`7.3 Cryptographic Audit Stamp: ${escrow?.escrow_hash || '0x...institution_verified'}`);
-
-    addPageBreak();
-    addSectionTitle("8. Execution & Signatures");
-    addText("IN WITNESS WHEREOF, the Parties have executed this Master Escrow Agreement with full legal capacity.");
-    y += 5;
-    addText(`Buyer Signature: _______________________        Seller Signature: _______________________`, 10, "bold");
-
-    // Footer brand
-    const pageH = doc.internal.pageSize.getHeight();
-    doc.setFontSize(8);
-    doc.setFont(FONT, "italic");
-    doc.setTextColor(120, 120, 120);
-    doc.text("SafeDeal Institutional Escrow & Settlement Network — Official Certified Record", pageWidth / 2, pageH - 10, { align: "center" });
-
-    doc.save(`SafeDeal-Contract-SD${escrow?.id}.pdf`);
   };
 
   const handleAccept = async () => {
@@ -292,70 +254,113 @@ const EscrowDetails = () => {
     <Layout>
       <div className="max-w-6xl mx-auto pb-12 px-4">
         {/* Header Actions */}
-        <div className="flex justify-between items-center mb-8 no-print">
+        <div className="flex justify-between items-center mb-5 no-print">
           <Link to="/escrows" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold">
             <ArrowLeft size={18} /> {t('pages.back_to_my_escrows', 'Back')}
           </Link>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(`/escrow/${id}/print`, { state: { escrow } })}
-              className="btn btn-outline border-gray-300 text-gray-700 font-bold px-5 py-3 rounded-2xl hover:bg-gray-50 flex items-center gap-2"
-            >
-              <FileText size={18} /> {t('pages.view_agreement', 'View Agreement')}
-            </button>
-            <button onClick={handlePrint} className="btn btn-primary bg-primary-600 text-white font-black px-6 py-3 rounded-2xl shadow-lg hover:bg-primary-700 flex items-center gap-2">
-              <Printer size={20} /> {t('pages.print_agreement', 'Print Agreement')}
+            <button onClick={() => setShowAgreement(true)} className="btn btn-primary bg-primary-600 text-white font-black px-6 py-3 rounded-xl shadow-md hover:bg-primary-700 flex items-center gap-2">
+              {isExporting ? <Loader2 size={20} className="animate-spin" /> : <Printer size={20} />} {isExporting ? t('pages.generating_pdf', 'Generating...') : t('pages.print_agreement', 'Print Agreement')}
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-               <div className="p-10 border-b border-gray-100 bg-gray-50/50">
+        {showAgreement && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 overflow-y-auto no-print"
+            onClick={() => { if (!isExporting) setShowAgreement(false); }}
+          >
+            <div className="min-h-full py-8 px-4 flex flex-col items-center">
+              <div
+                className="max-w-[210mm] w-full bg-white rounded-2xl shadow-xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 z-10 flex items-center justify-between bg-[#014d46] text-white px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Shield size={20} className="text-emerald-300" />
+                    <div>
+                      <p className="font-black uppercase tracking-widest text-sm">{t('pages.agreement_preview', 'Agreement Preview')}</p>
+                      <p className="text-[11px] text-emerald-100">Ref: SD-{escrow.id} • {t('pages.choose_language_then_download', 'Choose language, then download PDF')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handlePrint}
+                      disabled={isExporting}
+                      className="btn bg-white text-[#014d46] font-black px-5 py-2.5 rounded-xl hover:bg-emerald-50 flex items-center gap-2 shadow disabled:opacity-50"
+                    >
+                      {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />} {t('pages.download_pdf', 'Download PDF')}
+                    </button>
+                    <button
+                      onClick={() => setShowAgreement(false)}
+                      disabled={isExporting}
+                      className="p-2.5 rounded-xl hover:bg-white/10 disabled:opacity-50"
+                      aria-label="Close"
+                    >
+                      <X size={22} />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-6 bg-gray-100">
+                  <div ref={agreementRef} className="bg-white">
+                    <PrintEscrowAgreement escrow={escrow} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+               <div className="p-5 sm:p-8 border-b border-gray-100 bg-gray-50/50">
                   <div className="flex justify-between items-start gap-6">
-                    <div className="space-y-4">
-                       <div className={`w-14 h-14 rounded-3xl flex items-center justify-center ${escrow.escrow_type === 'item' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                     <div className="space-y-4">
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${escrow.escrow_type === 'item' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
                           {escrow.escrow_type === 'item' ? <ShoppingCart size={28} /> : <Briefcase size={28} />}
                        </div>
                        <div>
-                          <h1 className="text-4xl font-black text-gray-900 leading-tight uppercase tracking-tight">{escrow.title}</h1>
+                          <h1 className="text-3xl font-black text-gray-900 leading-tight uppercase tracking-tight">{escrow.title}</h1>
                           <p className="text-gray-500 font-bold flex items-center gap-2 mt-1">
                              <Clock size={16} /> Agreement ID: SD-{escrow.id}
                           </p>
                        </div>
                     </div>
-                    <div className={`px-8 py-3 rounded-3xl text-xs font-black uppercase tracking-widest border-2 ${getStatusColor(escrow.status)}`}>
+                    <div className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest border ${getStatusColor(escrow.status)}`}>
                        {t(`pages.${escrow.status}`, escrow.status)}
                     </div>
                   </div>
                </div>
 
-               <div className="p-10 space-y-10">
+               <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                     <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100">
+                     <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t('pages.total_amount', 'Deal Amount')}</label>
-                        <p className="text-4xl font-black text-gray-900">{formatCurrency(escrow.amount)}</p>
+                        <p className="text-3xl font-black text-gray-900">{formatCurrency(escrow.amount)}</p>
                      </div>
-                     <div className="p-8 bg-primary-900 rounded-3xl text-white">
+                     <div className="p-8 bg-primary-900 rounded-2xl text-white">
                         <label className="text-[10px] font-black opacity-40 uppercase tracking-widest block mb-2">{t('pages.target', 'Target Date')}</label>
                         <p className="text-2xl font-black">{formatDateSafe(escrow.delivery_date)}</p>
                      </div>
                   </div>
 
                   <div className="space-y-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2"><FileText size={20} className="text-primary-600" /> {t('pages.contract_description', 'Contract Description')}</h3>
-                    <div className="p-8 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                    <h3 className="text-lg font-bold flex items-center gap-2"><FileText size={20} className="text-primary-600" /> {t('pages.contract_description', 'Contract Description')}</h3>
+                    <div className="p-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                        <p className="text-gray-700 leading-relaxed font-medium text-lg italic">"{escrow.description}"</p>
                     </div>
                   </div>
 
                   {milestones.length > 0 && (
                     <div className="space-y-6">
-                       <h3 className="text-xl font-bold flex items-center gap-2"><ListChecks size={20} className="text-primary-600" /> {t('pages.milestones', 'Milestone Plan')}</h3>
+                       <h3 className="text-lg font-bold flex items-center gap-2"><ListChecks size={20} className="text-primary-600" /> {t('pages.milestones', 'Milestone Plan')}</h3>
                        <div className="space-y-4">
                           {milestones.map((m, idx) => (
-                            <div key={m.id} className="p-6 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all flex justify-between items-center">
+                            <div key={m.id} className="p-4 sm:p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-md transition-all flex justify-between items-center">
                                <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-black text-gray-400">#{idx+1}</div>
                                   <div>
@@ -381,39 +386,39 @@ const EscrowDetails = () => {
             </div>
 
             {/* Actions */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-10 text-center space-y-6 no-print">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 text-center space-y-6 no-print">
                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{t('pages.governance_actions', 'Governance Actions')}</h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {isBuyer && escrow.status === "pending" && (
                     <>
-                      <button onClick={handleInitiatePayment} className="btn btn-primary h-20 rounded-3xl font-black uppercase tracking-widest flex items-center gap-3 justify-center group shadow-xl shadow-primary-500/20">
+                      <button onClick={handleInitiatePayment} className="btn btn-primary h-12 rounded-xl font-black uppercase tracking-widest flex items-center gap-3 justify-center group shadow-md shadow-primary-500/20">
                         <Zap size={24} className="group-hover:scale-110 transition-all" /> {t('pages.pay_with_chapa', 'Pay with Chapa')}
                       </button>
-                      <button onClick={() => setShowCBEModal(true)} className="btn btn-outline h-20 rounded-3xl font-black uppercase tracking-widest flex items-center gap-3 justify-center border-gray-200">
+                      <button onClick={() => setShowCBEModal(true)} className="btn btn-outline h-12 rounded-xl font-black uppercase tracking-widest flex items-center gap-3 justify-center border-gray-200">
                         <Shield size={24} /> {t('pages.cbe_direct_verify', 'CBE Direct Verify')}
                       </button>
                     </>
                   )}
                   {isSeller && !escrow.active && escrow.status === "funded" && (
-                    <button onClick={handleAccept} className="sm:col-span-2 btn btn-primary h-20 rounded-3xl font-black uppercase tracking-widest shadow-xl">{t('pages.accept_deal_and_start', 'Accept Deal & Start Work')}</button>
+                    <button onClick={handleAccept} className="sm:col-span-2 btn btn-primary h-12 rounded-xl font-black uppercase tracking-widest shadow-md">{t('pages.accept_deal_and_start', 'Accept Deal & Start Work')}</button>
                   )}
                </div>
             </div>
           </div>
 
-          <div className="space-y-8">
-             <div className="p-10 bg-white rounded-3xl shadow-xl border border-gray-100 space-y-10">
-                <h3 className="text-xl font-black">{t('pages.the_parties', 'The Parties')}</h3>
-                <div className="space-y-8">
+          <div className="space-y-4 sm:space-y-6">
+             <div className="p-5 sm:p-8 bg-white rounded-2xl shadow-sm border border-gray-100 space-y-5 sm:space-y-6">
+                <h3 className="text-lg font-black">{t('pages.the_parties', 'The Parties')}</h3>
+                <div className="space-y-4 sm:space-y-6">
                    <div className="flex items-center gap-4">
-<div className="w-14 h-14 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><User size={28} /></div>
+<div className="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><User size={28} /></div>
                        <div className="min-w-0">
                           <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('pages.buyer_client', 'Buyer / Client')}</p>
                           <p className="font-bold text-gray-900 truncate">{escrow.buyer?.email}</p>
                        </div>
                    </div>
                    <div className="flex items-center gap-4">
-<div className="w-14 h-14 rounded-3xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><User size={28} /></div>
+<div className="w-14 h-14 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><User size={28} /></div>
                        <div className="min-w-0">
                           <p className="text-[10px] font-black text-green-400 uppercase tracking-widest">{t('pages.seller_provider', 'Seller / Provider')}</p>
                           <p className="font-bold text-gray-900 truncate">{escrow.seller?.email}</p>
@@ -422,7 +427,7 @@ const EscrowDetails = () => {
                 </div>
              </div>
 
-             <div className="p-10 bg-[#f8fafc] rounded-3xl shadow-xl border border-gray-200 space-y-8">
+             <div className="p-5 sm:p-8 bg-[#f8fafc] rounded-2xl shadow-sm border border-gray-100 space-y-4 sm:space-y-6">
                 <div className="flex items-center gap-3">
                    <Scale className="text-primary-600" />
                    <h3 className="font-black text-lg">{t('pages.legal_framework', 'Legal Framework')}</h3>
@@ -436,7 +441,7 @@ const EscrowDetails = () => {
                       <span className="text-xs font-bold text-gray-400 uppercase">{t('pages.jurisdiction', 'Jurisdiction')}</span>
                       <span className="font-black">{t('pages.ethiopia', 'Ethiopia')}</span>
                    </div>
-                   <div className="p-4 bg-white rounded-3xl border border-gray-100">
+                   <div className="p-4 bg-white rounded-2xl border border-gray-100">
                       <p className="text-[9px] font-black text-primary-400 uppercase mb-2">{t('pages.hash_fingerprint', 'Hash Fingerprint')}</p>
                       <p className="font-mono text-[8px] break-all text-primary-900 opacity-60 leading-tight">{escrow.escrow_hash}</p>
                    </div>
@@ -449,16 +454,16 @@ const EscrowDetails = () => {
 
         {showCBEModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 z-50 no-print">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-12 w-full max-w-lg shadow-2xl">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-2xl p-12 w-full max-w-lg shadow-xl">
               <h3 className="text-3xl font-black mb-2">{t('pages.cbe_direct_verify', 'CBE Direct Verify')}</h3>
               <p className="text-gray-500 font-medium mb-8">{t('pages.cbe_direct_verify_sub', 'Enter Transaction ID and Account Suffix')}</p>
               <div className="space-y-6 mb-10">
-                <input type="text" value={cbeTransactionId} onChange={e => setCbeTransactionId(e.target.value)} className="input w-full h-16 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder={t('pages.transaction_id_placeholder', 'FT...')} />
-                <input type="text" value={cbeAccountSuffix} onChange={e => setCbeAccountSuffix(e.target.value)} className="input w-full h-16 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder={t('pages.account_suffix_placeholder', 'Account Suffix...')} />
+                <input type="text" value={cbeTransactionId} onChange={e => setCbeTransactionId(e.target.value)} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" placeholder={t('pages.transaction_id_placeholder', 'FT...')} />
+                <input type="text" value={cbeAccountSuffix} onChange={e => setCbeAccountSuffix(e.target.value)} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" placeholder={t('pages.account_suffix_placeholder', 'Account Suffix...')} />
               </div>
               <div className="flex gap-4">
-                <button onClick={() => setShowCBEModal(false)} className="flex-1 btn btn-ghost h-16 rounded-3xl font-black">{t('pages.cancel', 'Cancel')}</button>
-                <button onClick={handleCBEVerify} disabled={isVerifyingCBE} className="flex-1 btn btn-primary h-16 rounded-3xl font-black uppercase tracking-widest">
+                <button onClick={() => setShowCBEModal(false)} className="flex-1 btn btn-ghost h-12 rounded-xl font-black">{t('pages.cancel', 'Cancel')}</button>
+                <button onClick={handleCBEVerify} disabled={isVerifyingCBE} className="flex-1 btn btn-primary h-12 rounded-xl font-black uppercase tracking-widest">
                   {isVerifyingCBE ? t('pages.verifying', 'Verifying...') : t('pages.verify_and_fund', 'Verify & Fund')}
                 </button>
               </div>

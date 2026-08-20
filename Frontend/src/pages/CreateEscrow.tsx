@@ -296,8 +296,8 @@ const CreateEscrow = () => {
   };
 
   const stepTitle = (text: string, sub?: string) => (
-    <div className="text-center mb-8">
-      <h2 className="text-3xl font-black text-gray-900 mb-2">{text}</h2>
+    <div className="text-center mb-6">
+      <h2 className="text-2xl font-black text-gray-900 mb-2">{text}</h2>
       {sub && <p className="text-gray-500 font-medium text-sm">{sub}</p>}
     </div>
   );
@@ -305,19 +305,19 @@ const CreateEscrow = () => {
   const renderStepContent = () => {
     switch (steps[step].id) {
       case 'type': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(t('pages.what_are_you_doing', 'What are you doing?'), t('pages.choose_path', 'Select your deal type'))}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <button onClick={() => setValue('escrow_type', 'item')} className={`p-8 border-2 rounded-3xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
-              <div className={`w-12 h-12 rounded-3xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
+            <button onClick={() => setValue('escrow_type', 'item')} className={`p-5 sm:p-8 border rounded-2xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
                 <ShoppingCart size={24} />
               </div>
               <h3 className="text-lg font-black">{t('pages.buy_sell_item', 'Quick')}</h3>
               <p className="text-[10px] text-gray-400 font-medium">{t('pages.simple_5_step_flow', 'A single deliverable with clear acceptance terms. For goods, vehicles, one-off items.')}</p>
               {escrowType === 'item' && <Check size={18} className="absolute top-6 right-6 text-primary-600" />}
             </button>
-            <button onClick={() => setValue('escrow_type', 'project')} className={`p-8 border-2 rounded-3xl text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
-              <div className={`w-12 h-12 rounded-3xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
+            <button onClick={() => setValue('escrow_type', 'project')} className={`p-5 sm:p-8 border rounded-2xl text-left transition-all relative group ${escrowType === 'project' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${escrowType === 'project' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
                 <Briefcase size={24} />
               </div>
               <h3 className="text-lg font-black">{t('pages.project_service', 'Detailed')}</h3>
@@ -327,9 +327,9 @@ const CreateEscrow = () => {
           </div>
           <div className="pt-6 border-t border-gray-100 flex flex-col items-center">
              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4">{t('pages.your_role', 'Your Role')}</label>
-             <div className="flex gap-2 p-1.5 bg-gray-100 rounded-3xl">
+             <div className="flex gap-2 p-1.5 bg-gray-100 rounded-xl">
                 {['buyer', 'seller', 'mediator'].map(r => (
-                  <button key={r} onClick={() => setValue('creator_role', r as any)} className={`px-6 py-2 rounded-xl font-black uppercase text-[10px] transition-all ${creatorRole === r ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}>
+                  <button key={r} onClick={() => setValue('creator_role', r as any)} className={`px-6 py-3 rounded-xl font-black uppercase text-[10px] transition-all ${creatorRole === r ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}>
                     {t(`pages.${r}`, r)}
                   </button>
                 ))}
@@ -339,7 +339,7 @@ const CreateEscrow = () => {
       );
 
       case 'parties': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(t('pages.who_is_involved', 'Who is involved?'))}
           <div className="max-w-md mx-auto space-y-6">
             {(creatorRole === 'seller' || creatorRole === 'mediator') && (
@@ -356,24 +356,24 @@ const CreateEscrow = () => {
       );
 
       case 'basics': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(t('pages.what_is_it', 'What is it?'), t('pages.what_is_it_sub', 'A clear name and short description.'))}
           <div className="max-w-md mx-auto space-y-6">
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{escrowType === 'item' ? t('pages.item_name', 'Item Name') : t('pages.project_title', 'Project Title')}</label>
-              <input type="text" {...register('title')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder={escrowType === 'item' ? t('pages.title_placeholder_item', 'e.g. MacBook Pro M3') : t('pages.title_placeholder_project', 'e.g. Website Development')} />
+              <input type="text" {...register('title')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" placeholder={escrowType === 'item' ? t('pages.title_placeholder_item', 'e.g. MacBook Pro M3') : t('pages.title_placeholder_project', 'e.g. Website Development')} />
               {formErrors.title && <p className="text-red-500 text-[9px] mt-1 font-bold uppercase">{formErrors.title.message}</p>}
             </div>
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.description', 'Description')}</label>
-              <textarea rows={4} {...register('description')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.description_placeholder', 'Provide key details...')} />
+              <textarea rows={4} {...register('description')} className="textarea w-full rounded-xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.description_placeholder', 'Provide key details...')} />
               {formErrors.description && <p className="text-red-500 text-[9px] mt-1 font-bold uppercase">{formErrors.description.message}</p>}
             </div>
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.delivery_date', 'Delivery Date')}</label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                <input type="date" {...register('delivery_date')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold pl-12" />
+                <input type="date" {...register('delivery_date')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold pl-12" />
               </div>
             </div>
           </div>
@@ -381,137 +381,130 @@ const CreateEscrow = () => {
       );
 
       case 'deliverables': return (
-        <div className="space-y-8">
-          {stepTitle('What is delivered?', 'Define what, how much, definition of done, and price per row.')}
+        <div className="space-y-5 sm:space-y-6">
+          {stepTitle(t('pages.what_is_delivered', 'What is delivered?'), t('pages.what_is_delivered_sub', 'Define what, how much, definition of done, and price per row.'))}
           <div className="max-w-4xl mx-auto space-y-4">
             {delivFields.map((f, i) => (
-              <div key={f.id} className="p-6 bg-white border-2 border-gray-100 rounded-3xl space-y-4 relative group shadow-sm">
+              <div key={f.id} className="p-5 sm:p-6 bg-white border border-gray-100 rounded-2xl space-y-5 relative group shadow-sm">
                 <button type="button" onClick={() => removeDeliv(i)} className="absolute top-4 right-4 text-gray-300 hover:text-red-500"><Trash2 size={18} /></button>
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4">
                   <div className="md:col-span-5">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">What (Task or Item)</label>
-                    <input placeholder="e.g. Homepage design" {...register(`scope.deliverables.${i}.title`)} className="w-full h-12 px-4 rounded-2xl bg-gray-50 border-none font-black text-sm outline-none" />
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_what', 'What (Task or Item)')}</label>
+                    <input placeholder="e.g. Homepage design" {...register(`scope.deliverables.${i}.title`)} className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none font-black text-sm outline-none focus:ring-2 focus:ring-primary-200" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Amount</label>
-                    <input type="number" step="any" placeholder="1" {...register(`scope.deliverables.${i}.amount`)} className="w-full h-12 px-4 rounded-2xl bg-gray-50 border-none font-black text-sm outline-none" />
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_amount', 'Amount')}</label>
+                    <input type="number" step="any" placeholder="1" {...register(`scope.deliverables.${i}.amount`)} className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none font-black text-sm outline-none focus:ring-2 focus:ring-primary-200" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Unit</label>
-                    <select {...register(`scope.deliverables.${i}.unit`)} className="w-full h-12 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none">
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_unit', 'Unit')}</label>
+                    <select {...register(`scope.deliverables.${i}.unit`)} className="w-full h-12 px-3 rounded-xl bg-gray-50 border-none font-bold text-xs outline-none focus:ring-2 focus:ring-primary-200">
                       {UNIT_OPTIONS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
                     </select>
                   </div>
                   <div className="md:col-span-3">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Price (ETB)</label>
-                    <input type="number" placeholder="0" {...register(`scope.deliverables.${i}.price`)} className="w-full h-12 px-4 rounded-2xl bg-primary-50 border-none font-black text-sm text-primary-900 outline-none" />
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_price', 'Price (ETB)')}</label>
+                    <input type="number" placeholder="0" {...register(`scope.deliverables.${i}.price`)} className="w-full h-12 px-4 rounded-xl bg-primary-50 border-none font-black text-sm text-primary-900 outline-none focus:ring-2 focus:ring-primary-200" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2 border-t border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 pt-5 border-t border-gray-100">
                   <div className="md:col-span-6">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Definition of Done</label>
-                    <select {...register(`scope.deliverables.${i}.standard`)} className="w-full h-11 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none">
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_standard', 'Definition of Done')}</label>
+                    <select {...register(`scope.deliverables.${i}.standard`)} className="w-full h-12 px-3 rounded-xl bg-gray-50 border-none font-bold text-xs outline-none focus:ring-2 focus:ring-primary-200">
                       {DEFINITION_OF_DONE_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                     </select>
                   </div>
                   <div className="md:col-span-4">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">By When (Due Date)</label>
-                    <input type="date" {...register(`scope.deliverables.${i}.due_date`)} className="w-full h-11 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none" />
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_due', 'By When (Due Date)')}</label>
+                    <input type="date" {...register(`scope.deliverables.${i}.due_date`)} className="w-full h-12 px-3 rounded-xl bg-gray-50 border-none font-bold text-xs outline-none focus:ring-2 focus:ring-primary-200" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-[8px] font-black text-gray-400 uppercase block mb-1">Spec Note</label>
-                    <input placeholder="Optional note" {...register(`scope.deliverables.${i}.standard_ref`)} className="w-full h-11 px-3 rounded-2xl bg-gray-50 border-none font-bold text-xs outline-none" />
+                    <label className="text-[9px] font-black text-gray-400 uppercase block mb-1.5">{t('pages.deliverable_note', 'Spec Note')}</label>
+                    <input placeholder="Optional note" {...register(`scope.deliverables.${i}.standard_ref`)} className="w-full h-12 px-3 rounded-xl bg-gray-50 border-none font-bold text-xs outline-none focus:ring-2 focus:ring-primary-200" />
                   </div>
                 </div>
               </div>
             ))}
-            <div className="flex justify-between items-center px-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 px-4">
               <p className="text-xs font-black text-primary-600 uppercase tracking-widest">
-                Total from deliverables: {delivFields.reduce((sum, _, index) => sum + (Number(watch(`scope.deliverables.${index}.price`)) || 0), 0).toLocaleString()} ETB
+                {t('pages.deliverable_total', 'Total from deliverables: {{amount}} ETB', { amount: delivFields.reduce((sum, _, index) => sum + (Number(watch(`scope.deliverables.${index}.price`)) || 0), 0).toLocaleString() })}
               </p>
-              <button type="button" onClick={() => appendDeliv({ title: '', amount: 1, unit: 'flat', standard: 'buyer_approves', standard_ref: '', due_date: '', price: 0 })} className="btn btn-primary btn-sm rounded-xl font-black">+ Add Another Row</button>
+              <button type="button" onClick={() => appendDeliv({ title: '', amount: 1, unit: 'flat', standard: 'buyer_approves', standard_ref: '', due_date: '', price: 0 })} className="btn btn-primary btn-sm rounded-xl font-black">{t('pages.add_deliverable_row', '+ Add Another Row')}</button>
             </div>
           </div>
         </div>
       );
 
       case 'acceptance': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(t('pages.how_done_confirmed', "How is 'done' confirmed?"), t('pages.how_done_confirmed_sub', 'Make it checkable, not a feeling.'))}
           <div className="max-w-md mx-auto space-y-6">
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.acceptance_method', 'Acceptance Method')}</label>
-              <select {...register('scope.acceptance_method')} className="w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6">
+              <select {...register('scope.acceptance_method')} className="w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6">
                 {ACCEPTANCE_METHODS.map(m => <option key={m.value} value={m.value}>{t(`pages.accept_method_${m.value}`, m.label)}</option>)}
               </select>
             </div>
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.acceptance_detail_optional', 'Acceptance Detail (optional)')}</label>
-              <textarea rows={3} {...register('scope.acceptance_detail')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.acceptance_detail_placeholder', 'e.g. Buyer confirms in the app that the delivered item matches its standard')} />
+              <textarea rows={3} {...register('scope.acceptance_detail')} className="textarea w-full rounded-xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.acceptance_detail_placeholder', 'e.g. Buyer confirms in the app that the delivered item matches its standard')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-control">
                 <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.days_to_review', 'Days to Review')}</label>
-                <input type="number" {...register('scope.acceptance_days')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" defaultValue={5} />
+                <input type="number" {...register('scope.acceptance_days')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" defaultValue={5} />
               </div>
               <div className="form-control">
                 <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.cure_period_days', 'Cure Period (Days)')}</label>
-                <input type="number" {...register('scope.cure_period_days')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" placeholder="0" />
+                <input type="number" {...register('scope.cure_period_days')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" placeholder="0" />
               </div>
             </div>
-            <label className="flex items-start gap-3 bg-white border-2 border-gray-100 rounded-3xl p-4 cursor-pointer">
-              <input type="checkbox" {...register('scope.deemed_accept')} className="mt-1 w-5 h-5 accent-primary-600" />
-              <div>
-                <p className="font-black text-sm">{t('pages.deemed_accept_label', 'Silence after the review period counts as Acceptance')}</p>
-                <p className="text-[9px] text-gray-400 font-medium">{t('pages.deemed_accept_sub', 'Recommended. Prevents the other party from stalling. Funds still require your explicit release.')}</p>
-              </div>
-            </label>
           </div>
         </div>
       );
 
       case 'exclusions': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(t('pages.what_is_not_included', 'What is NOT included?'), t('pages.what_is_not_included_sub', 'List what is out of scope so there is no surprise.'))}
           <div className="max-w-xl mx-auto space-y-3">
             {exclFields.map((f, i) => (
-              <div key={f.id} className="flex items-center gap-3 p-4 bg-white border-2 border-gray-100 rounded-3xl">
+              <div key={f.id} className="flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-2xl">
                 <input placeholder={t('pages.exclusion_placeholder', 'e.g. Mobile app version, extra pages, logo design')} {...register(`scope.exclusions.${i}.title`)} className="flex-1 font-bold text-sm outline-none border-b-2 border-transparent focus:border-primary-600 transition-all bg-transparent" />
                 <button type="button" onClick={() => removeExcl(i)} className="text-gray-300 hover:text-red-500"><Trash2 size={16} /></button>
               </div>
             ))}
-            <button type="button" onClick={() => appendExcl({ title: '' })} className="w-full py-3 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-primary-600 hover:text-primary-600 font-black text-sm">{t('pages.add_exclusion', '+ Add Exclusion')}</button>
+            <button type="button" onClick={() => appendExcl({ title: '' })} className="w-full py-3 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-primary-600 hover:text-primary-600 font-black text-sm">{t('pages.add_exclusion', '+ Add Exclusion')}</button>
           </div>
         </div>
       );
 
       case 'terms': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(t('pages.breaking_deal', 'Breaking the deal'), t('pages.breaking_deal_sub', 'What happens if either side does not perform.'))}
           <div className="max-w-md mx-auto space-y-6">
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.rejection_policy', 'Rejection Policy')}</label>
-              <textarea rows={3} {...register('scope.rejection_policy')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.rejection_policy_placeholder', 'e.g. Buyer can request 2 revisions free; further changes are paid via a Change Order.')} />
+              <textarea rows={3} {...register('scope.rejection_policy')} className="textarea w-full rounded-xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.rejection_policy_placeholder', 'e.g. Buyer can request 2 revisions free; further changes are paid via a Change Order.')} />
             </div>
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.breach_terms', 'Breach Terms')}</label>
-              <textarea rows={3} {...register('scope.breach_terms')} className="textarea w-full rounded-3xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.breach_terms_placeholder', 'e.g. If the Seller fails to deliver, the Buyer may cancel and be refunded.')} />
+              <textarea rows={3} {...register('scope.breach_terms')} className="textarea w-full rounded-xl bg-gray-50 border-none font-medium p-6" placeholder={t('pages.breach_terms_placeholder', 'e.g. If the Seller fails to deliver, the Buyer may cancel and be refunded.')} />
             </div>
             <div className="form-control">
               <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.termination_notice_days', 'Termination Notice (Days)')}</label>
-              <input type="number" {...register('scope.termination_notice_days')} className="input w-full h-14 rounded-3xl bg-gray-50 border-none font-bold px-6" defaultValue={7} />
+              <input type="number" {...register('scope.termination_notice_days')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" defaultValue={7} />
             </div>
           </div>
         </div>
       );
 
       case 'financial': return (
-        <div className="space-y-8">
+        <div className="space-y-5 sm:space-y-6">
           {stepTitle(escrowType === 'item' ? t('pages.total_amount_step', 'Total Amount') : t('pages.milestones_step', 'Milestones'))}
 
           {escrowType === 'item' ? (
-            <div className="max-w-md mx-auto p-10 bg-primary-50 rounded-3xl border-4 border-white shadow-xl">
+            <div className="max-w-md mx-auto p-6 sm:p-8 bg-primary-50 rounded-2xl border border-white shadow-md">
                <label className="text-[9px] font-black text-primary-600 uppercase tracking-widest block mb-4">{t('pages.contract_amount_etb', 'Contract Amount (ETB)')}</label>
                <div className="relative">
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 font-black text-primary-200 text-3xl">ETB</div>
@@ -527,7 +520,7 @@ const CreateEscrow = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[45vh] p-2 max-w-2xl mx-auto">
                 {fields.map((f, i) => (
-                  <div key={f.id} className="p-6 bg-white border-2 border-gray-100 rounded-3xl relative group">
+                  <div key={f.id} className="p-6 bg-white border border-gray-100 rounded-2xl relative group">
                     <div className="space-y-4">
                       <div className="flex justify-between">
                          <input placeholder={t('pages.milestone_deliverable_placeholder', 'Deliverable name...')} {...register(`milestones.${i}.title`)} className="w-full font-black text-sm outline-none border-b border-transparent focus:border-primary-600 transition-all bg-transparent" />
@@ -555,10 +548,10 @@ const CreateEscrow = () => {
       case 'review': {
         const data = watch();
         return (
-          <div className="space-y-8">
+          <div className="space-y-5 sm:space-y-6">
             {stepTitle(t('pages.legal_review', 'Legal Review'))}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-               <div className="p-8 bg-primary-900 text-white rounded-3xl shadow-xl space-y-8">
+               <div className="p-5 sm:p-8 bg-primary-900 text-white rounded-2xl shadow-md space-y-5 sm:space-y-6">
                   <div>
                     <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.agreement_summary', 'Agreement Summary')}</p>
                     <h3 className="text-xl font-black leading-tight">{data.title}</h3>
@@ -575,7 +568,7 @@ const CreateEscrow = () => {
                   </div>
                </div>
 
-               <div className="p-8 bg-gray-50 rounded-3xl border-2 border-white space-y-4">
+               <div className="p-5 sm:p-8 bg-gray-50 rounded-2xl border border-white space-y-4">
                   <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
                     <Scale size={14} className="text-primary-600" /> {t('pages.system_clauses', 'System Clauses')}
                   </h4>
@@ -583,9 +576,9 @@ const CreateEscrow = () => {
                     {escrowType === 'project' ? (
                       <p>• <span className="text-gray-900">{t('pages.review_deliverables', 'Deliverables')}</span>: {(data.scope?.deliverables || []).filter((d: any) => d.title.trim()).length} item(s) with standards.</p>
                     ) : (
-                      <p>• <span className="text-gray-900">{t('pages.deliverable_placeholder', 'Deliverable')}</span>: {data.title || data.description}</p>
+                      <p>• <span className="text-gray-900">{t('pages.deliverable', 'Deliverable')}</span>: {data.title || data.description}</p>
                     )}
-                    <p>• <span className="text-gray-900">{t('pages.acceptance', 'Acceptance')}</span>: {t('pages.review_acceptance', 'review within {{days}} days{{silence}}', { days: data.scope?.acceptance_days || 5, silence: data.scope?.deemed_accept ? t('pages.review_acceptance_silence', '; silence = accepted') : '' })}.</p>
+                    <p>• <span className="text-gray-900">{t('pages.acceptance', 'Acceptance')}</span>: {t('pages.review_acceptance', 'review within {{days}} days', { days: data.scope?.acceptance_days || 5 })}.</p>
                     <p>• <span className="italic">{t('pages.release', 'Release')}:</span> {t('pages.review_release', 'Funds are released only upon your explicit approval — never automatically.')}</p>
                     {escrowType === 'project' && <p>{t('pages.review_milestone_release', '• Payments released milestone-by-milestone upon approval.')}</p>}
                   </div>
@@ -600,10 +593,10 @@ const CreateEscrow = () => {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto py-8 px-4 pb-32">
+      <div className="max-w-5xl mx-auto py-6 px-4 pb-32">
         {/* Simplified Header */}
         <div className="flex items-center justify-between mb-8">
-          <button onClick={() => step === 0 ? navigate(-1) : setStep(s => s - 1)} className="p-4 bg-white shadow-lg rounded-3xl hover:bg-gray-50 border border-gray-100 group">
+          <button onClick={() => step === 0 ? navigate(-1) : setStep(s => s - 1)} className="p-3 bg-white shadow-md rounded-xl hover:bg-gray-50 border border-gray-100 group">
             <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           </button>
           <div className="flex-1 max-w-md mx-8 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -613,7 +606,7 @@ const CreateEscrow = () => {
         </div>
 
         {/* Unified Content Box */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 sm:p-16 min-h-[50vh] flex flex-col relative overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-10 min-h-[50vh] flex flex-col relative overflow-hidden">
           <div className="relative flex-1">
             <AnimatePresence mode="wait">
               <motion.div key={steps[step].id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
@@ -622,13 +615,13 @@ const CreateEscrow = () => {
             </AnimatePresence>
           </div>
 
-          <div className="mt-12 flex justify-center">
+          <div className="mt-8 flex justify-center">
             {step < steps.length - 1 ? (
-              <button onClick={nextStep} className="btn btn-primary px-12 h-16 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 transition-all flex items-center gap-3">
+              <button onClick={nextStep} className="btn btn-primary px-8 h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-md shadow-primary-500/20 transition-all flex items-center gap-3">
                 {t('pages.continue', 'Continue')} →
               </button>
             ) : (
-              <button onClick={handleSubmit(onSubmit, () => toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.')))} disabled={isSubmitting} className="btn btn-primary px-12 h-16 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary-500/30 flex items-center gap-3">
+              <button onClick={handleSubmit(onSubmit, () => toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.')))} disabled={isSubmitting} className="btn btn-primary px-8 h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-md shadow-primary-500/20 flex items-center gap-3">
                 {isSubmitting ? 'Launching...' : 'Secure Launch'}
                 <Check size={18} />
               </button>
@@ -649,7 +642,7 @@ const PartySearchField = ({ label, selected, role, searchTerm, activeSearchRole,
         {isOptional && <span className="lowercase italic opacity-60">{t('pages.optional', '(Optional)')}</span>}
       </label>
       {selected ? (
-        <div className="flex items-center justify-between p-4 bg-primary-50 rounded-3xl border-2 border-primary-600 shadow-sm">
+        <div className="flex items-center justify-between p-4 bg-primary-50 rounded-2xl border border-primary-600 shadow-sm">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-primary-600 text-white flex items-center justify-center font-black text-xs uppercase shrink-0">{selected.first_name[0]}</div>
             <div className="min-w-0">
@@ -657,14 +650,14 @@ const PartySearchField = ({ label, selected, role, searchTerm, activeSearchRole,
               <p className="text-[10px] text-primary-700 font-bold truncate">{selected.email}</p>
             </div>
           </div>
-          <button onClick={onClear} className="p-2 text-gray-400 hover:text-red-500 shrink-0"><Trash2 size={18} /></button>
+          <button onClick={onClear} className="p-2.5 text-gray-400 hover:text-red-500 shrink-0"><Trash2 size={18} /></button>
         </div>
       ) : (
         <div className="relative">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input type="text" placeholder={t('pages.enter_email_placeholder', 'Enter {{role}} email...', { role: String(t(`pages.${role}`, role)).toLowerCase() })} className="input w-full h-14 rounded-3xl pl-12 bg-gray-50 border-none font-bold text-sm" value={activeSearchRole === role ? searchTerm : ''} onChange={e => onSearch(e.target.value, role)} />
+          <input type="text" placeholder={t('pages.enter_email_placeholder', 'Enter {{role}} email...', { role: String(t(`pages.${role}`, role)).toLowerCase() })} className="input w-full h-12 rounded-xl pl-12 bg-gray-50 border-none font-bold text-sm" value={activeSearchRole === role ? searchTerm : ''} onChange={e => onSearch(e.target.value, role)} />
           {activeSearchRole === role && searchResults.length > 0 && (
-            <div className="absolute z-50 w-full mt-2 border border-gray-100 rounded-3xl overflow-hidden shadow-xl bg-white">
+            <div className="absolute z-50 w-full mt-2 border border-gray-100 rounded-xl overflow-hidden shadow-lg bg-white">
               {searchResults.map((u: any) => (
                 <button key={u.id || u.email} onClick={() => onSelect(u, role)} className="w-full p-4 hover:bg-primary-50 border-b border-gray-50 last:border-0 text-left transition-all flex justify-between items-center">
                    <div className="flex items-center gap-3 min-w-0">

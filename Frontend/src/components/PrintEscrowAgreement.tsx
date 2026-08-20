@@ -117,7 +117,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </div>
 
       {/* 1. Official Institutional Header */}
-      <div className="relative border-b-4 border-double border-gray-900 pb-8 mb-8 flex justify-between items-start">
+      <div data-export-unit className="relative border-b-2 border-gray-900 pb-8 mb-8 flex justify-between items-start">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-gradient-to-br from-[#014d46] to-emerald-700 text-white rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-emerald-100">
             <Lock size={30} className="text-emerald-200" />
@@ -137,7 +137,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </div>
 
       {/* Document Title */}
-      <div className="text-center mb-8">
+      <div data-export-unit className="text-center mb-8">
         <div className="inline-flex items-center gap-3 mb-3">
           <div className="h-px w-16 bg-gray-300" />
           <ShieldCheck size={18} className="text-[#014d46]" />
@@ -148,7 +148,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </div>
 
       {/* 2. Executive Summary Box */}
-      <div className="relative bg-gradient-to-br from-gray-50 to-white border-2 border-gray-900 p-6 mb-8 font-sans shadow-sm">
+      <div data-export-unit className="relative bg-gradient-to-br from-gray-50 to-white border-2 border-gray-900 p-6 mb-8 font-sans shadow-sm">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center divide-x divide-gray-300">
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-gray-500">{L.type}</p>
@@ -170,7 +170,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </div>
 
       {/* 3. Preamble & Parties */}
-      <section className="relative mb-8 font-sans">
+      <section data-export-unit className="relative mb-8 font-sans">
         <SectionHeading>{L.preamble}</SectionHeading>
         <p className="text-sm text-gray-800 leading-relaxed mb-4">{L.preambleBody}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -190,7 +190,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </section>
 
       {/* 4. Section 1 */}
-      <section className="relative mb-8 space-y-3">
+      <section data-export-unit className="relative mb-8 space-y-3">
         <SectionHeading>{L.s1}</SectionHeading>
         <p className="text-sm leading-relaxed text-gray-800"><strong>{L.s1a}</strong> {L.s1b}</p>
         <div className="border border-gray-300 p-5 bg-gray-50 rounded-lg">
@@ -201,7 +201,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </section>
 
       {/* 5. Section 2: Deliverables */}
-      <section className="relative mb-8">
+      <section data-export-unit className="relative mb-8">
         <SectionHeading>{L.s2}</SectionHeading>
         {escrow.scope?.deliverables?.length ? (
           <div className="border border-gray-300 rounded-lg overflow-hidden bg-white font-sans shadow-sm">
@@ -242,7 +242,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
 
       {/* 6. Section 3: Milestones */}
       {escrow.milestones && escrow.milestones.length > 0 && (
-        <section className="relative mb-8 font-sans">
+        <section data-export-unit className="relative mb-8 font-sans">
           <SectionHeading>{L.s3}</SectionHeading>
           <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
             <table className="min-w-full border-collapse text-sm">
@@ -271,7 +271,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
 
       {/* 7. Section 4: Exclusions */}
       {escrow.scope?.exclusions?.length ? (
-        <section className="relative mb-8 font-sans">
+        <section data-export-unit className="relative mb-8 font-sans">
           <SectionHeading>{L.s4}</SectionHeading>
           <ul className="list-disc pl-5 space-y-1 text-xs text-gray-800 font-medium">
             {escrow.scope.exclusions.map((e: any, i: number) => <li key={i}>{e.title}</li>)}
@@ -280,7 +280,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       ) : null}
 
       {/* 8. Section 5: Legal Terms */}
-      <section className="relative mb-8 space-y-3 font-sans">
+      <section data-export-unit className="relative mb-8 space-y-3 font-sans">
         <SectionHeading>{L.s5}</SectionHeading>
         <p className="text-sm leading-relaxed text-gray-800"><strong>{L.s51}</strong> {L.s51b}</p>
         <p className="text-sm leading-relaxed text-gray-800"><strong>{L.s52}</strong> {L.s52b}</p>
@@ -292,7 +292,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </section>
 
       {/* 9. Signatures */}
-      <section className="relative mt-12 pt-8 border-t-4 border-double border-gray-900 font-sans">
+      <section data-export-unit className="relative mt-12 pt-8 border-t-2 border-gray-900 font-sans">
         <SectionHeading>{L.s6}</SectionHeading>
         <p className="text-xs text-gray-600 mb-8 leading-relaxed">{L.witness}</p>
         <div className="grid grid-cols-2 gap-16">
@@ -314,7 +314,7 @@ const PrintEscrowAgreement: React.FC<PrintEscrowAgreementProps> = ({ escrow }) =
       </section>
 
       {/* 10. Footer */}
-      <footer className="relative mt-16 pt-6 border-t-2 border-gray-900 text-center text-xs text-gray-600 font-sans">
+      <footer data-export-unit className="relative mt-16 pt-6 border-t-2 border-gray-900 text-center text-xs text-gray-600 font-sans">
         <p className="font-black tracking-widest text-gray-900">{L.footer1}</p>
         <p className="text-[11px] mt-1">{L.footer2}</p>
         <p className="text-[10px] text-gray-400 mt-3 uppercase tracking-wider">{L.footer3}</p>

@@ -28,6 +28,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import AdminDashboard from "./AdminDashboard";
 import GuidedTour from "../components/GuidedTour";
 import VerifiedBadge from "../components/VerifiedBadge";
+import { Button, Card } from "../components/ui";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -105,143 +106,151 @@ const Dashboard = () => {
   return (
     <Layout>
       <GuidedTour />
-      <div className="space-y-8 max-w-7xl mx-auto pb-12">
-        {/* Welcome & Trust Banner */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 gradient-primary rounded-3xl p-8 text-white shadow-2xl shadow-[#014d46]/20 relative overflow-hidden"
-          >
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-3xl font-bold text-white">{t('pages.welcome', 'Welcome')}, {user?.first_name}!</h2>
-                <VerifiedBadge isVerified={!!user?.activated} className="bg-white/20 px-2 py-1 rounded-lg text-white" />
-              </div>
-              <p className="text-teal-50 opacity-90 max-w-md">{t('pages.your_secure_gateway_to_trust_based_transactions', 'Your secure gateway to trust-based transactions is active and protected.')}</p>
-              <div className="mt-8 flex gap-4">
-                <Link to="/create-escrow" data-testid="create-escrow-button" className="bg-white text-[#014d46] px-6 py-3 rounded-3xl font-bold hover:bg-teal-50 transition-all flex items-center gap-2 shadow-xl">
-                  <Zap size={18} /> {t('pages.start_new_deal', 'Start New Deal')}
-                </Link>
-                <button onClick={() => loadData()} className="bg-teal-800/30 text-white px-6 py-3 rounded-3xl font-bold hover:bg-teal-800/50 transition-all flex items-center gap-2 border border-teal-400/30">
-                  <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} /> {t('pages.refresh', 'Refresh')}
-                </button>
-              </div>
+      <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 pb-12 sm:space-y-6 sm:py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="gradient-primary relative overflow-hidden rounded-2xl p-5 text-white shadow-md sm:p-8"
+        >
+          <div className="relative z-10">
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-bold text-white sm:text-3xl">
+                {t('pages.welcome', 'Welcome')}, {user?.first_name}!
+              </h2>
+              <VerifiedBadge isVerified={!!user?.activated} className="rounded-lg bg-white/20 px-2 py-1 text-white" />
             </div>
-            <Shield className="absolute -right-8 -bottom-8 h-64 w-64 text-white opacity-5 rotate-12" />
-          </motion.div>
-        </div>
+            <p className="max-w-md text-sm text-teal-50 opacity-90">
+              {t('pages.your_secure_gateway_to_trust_based_transactions', 'Your secure gateway to trust-based transactions is active and protected.')}
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button to="/create-escrow" data-testid="create-escrow-button" className="bg-white text-[#014d46] shadow-md">
+                <Zap size={18} />
+                {t('pages.start_new_deal', 'Start New Deal')}
+              </Button>
+              <Button onClick={() => loadData()} variant="secondary" className="border border-teal-400/30 bg-teal-800/30 text-white hover:bg-teal-800/50">
+                <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+                {t('pages.refresh', 'Refresh')}
+              </Button>
+            </div>
+          </div>
+          <Shield className="absolute -bottom-8 -right-8 h-56 w-56 rotate-12 text-white opacity-5" />
+        </motion.div>
 
-        {/* Next Action Required */}
         {nextActions.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+            <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400">
               <Clock size={14} className="text-orange-500" /> {t('pages.action_required', 'Action Required')}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {nextActions.map(action => (
-                <Link key={action.id} to={`/escrow/${action.id}`} className="bg-white border-2 border-orange-100 rounded-3xl p-5 flex items-center justify-between hover:shadow-xl hover:border-orange-200 transition-all group">
-                  <div className="flex items-center gap-4">
-                    <div className="p-4 bg-orange-50 rounded-3xl text-orange-600 group-hover:scale-110 transition-transform">
-                      {action.status === 'pending' ? <CreditCard size={22} /> : <CheckCircle size={22} />}
+                <Link key={action.id} to={`/escrow/${action.id}`} className="group flex items-center justify-between rounded-2xl border border-orange-100 bg-white p-4 transition-all hover:border-orange-200 hover:shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl bg-orange-50 p-3 text-orange-600 transition-transform group-hover:scale-110">
+                      {action.status === 'pending' ? <CreditCard size={20} /> : <CheckCircle size={20} />}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-gray-900">{action.status === 'pending' ? t('pages.payment_needed', 'Payment Needed') : t('pages.acceptance_needed', 'Acceptance Needed')}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase">{action.title || `${t('pages.escrow_id', 'Escrow')} #${action.id}`} • {formatCurrency(action.amount)}</p>                    </div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {action.status === 'pending' ? t('pages.payment_needed', 'Payment Needed') : t('pages.acceptance_needed', 'Acceptance Needed')}
+                      </p>
+                      <p className="text-[10px] font-bold uppercase text-gray-400">
+                        {action.title || `${t('pages.escrow_id', 'Escrow')} #${action.id}`} • {formatCurrency(action.amount)}
+                      </p>
+                    </div>
                   </div>
-                  <ArrowRight size={20} className="text-orange-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
+                  <ArrowRight size={18} className="text-orange-200 transition-all group-hover:translate-x-1 group-hover:text-orange-500" />
                 </Link>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* Dynamic Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {[
             { label: t('pages.active_deals', 'Active Deals'), val: stats?.active_escrows, icon: Shield, color: 'text-teal-600' },
             { label: t('pages.completed', 'Completed'), val: stats?.completed_escrows, icon: CheckCircle, color: 'text-green-600' },
             { label: t('pages.total_volume', 'Total Volume'), val: formatCurrency(stats?.total_amount || 0), icon: TrendingUp, color: 'text-blue-600' },
             { label: t('pages.disputed', 'Disputed'), val: stats?.disputed_escrows, icon: AlertCircle, color: 'text-red-600' },
           ].map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }} className="bg-white p-6 rounded-3xl border-2 border-gray-50 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-3xl bg-gray-50 ${s.color}`}><s.icon size={20} /></div>
-                {statsLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-200" />}
-              </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{s.label}</p>
-              <p className="text-xl font-black text-gray-900 mt-1">{s.val ?? 0}</p>
+            <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}>
+              <Card padding="sm">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className={`rounded-xl bg-gray-50 p-2.5 ${s.color}`}><s.icon size={18} /></div>
+                  {statsLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-200" />}
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{s.label}</p>
+                <p className="mt-0.5 text-lg font-bold text-gray-900 sm:text-xl">{s.val ?? 0}</p>
+              </Card>
             </motion.div>
           ))}
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="xl:col-span-2 space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">{t('pages.recent_transactions', 'Recent Transactions')}</h3>
-              <Link to="/escrows" className="text-[10px] font-black text-[#014d46] uppercase hover:underline">{t('pages.view_all_history', 'View All History')}</Link>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 xl:col-span-2">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400">{t('pages.recent_transactions', 'Recent Transactions')}</h3>
+              <Link to="/escrows" className="text-[10px] font-bold uppercase text-[#014d46] hover:underline">{t('pages.view_all_history', 'View All History')}</Link>
             </div>
-            <div className="bg-white rounded-3xl border-2 border-gray-50 shadow-sm overflow-hidden">
+            <Card padding="none" className="overflow-hidden">
               {isLoading ? (
-                <div className="p-20 text-center"><LoadingSpinner /></div>
+                <div className="p-12 text-center"><LoadingSpinner /></div>
               ) : escrows.length === 0 ? (
-                <div className="p-20 text-center space-y-4">
-                  <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-gray-300"><Shield size={32} /></div>
-                  <p className="text-gray-400 font-bold">{t('pages.no_transactions_found', 'No transactions found')}</p>
+                <div className="space-y-3 p-12 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-gray-300"><Shield size={28} /></div>
+                  <p className="font-bold text-gray-400">{t('pages.no_transactions_found', 'No transactions found')}</p>
                 </div>
               ) : (
-                <div className="divide-y-2 divide-gray-50">
+                <div className="divide-y divide-gray-50">
                   {escrows.slice(0, 5).map((escrow) => (
-                    <Link key={escrow.id} to={`/escrow/${escrow.id}`} className="flex items-center justify-between p-6 hover:bg-gray-50 transition-all group">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-3xl ${getStatusColor(escrow.status)}`}>{getStatusIcon(escrow.status)}</div>
+                    <Link key={escrow.id} to={`/escrow/${escrow.id}`} className="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50 sm:p-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`rounded-xl p-2.5 ${getStatusColor(escrow.status)}`}>{getStatusIcon(escrow.status)}</div>
                         <div>
-                          <p className="font-black text-gray-900 text-sm">{escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}</p>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase">{formatRelativeTime(escrow.created_at)}</p>
+                          <p className="text-sm font-bold text-gray-900">{escrow.title || `${t('pages.escrow_id', 'Escrow')} #${escrow.id}`}</p>
+                          <p className="text-[10px] font-bold uppercase text-gray-400">{formatRelativeTime(escrow.created_at)}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-gray-900">{formatCurrency(escrow.amount)}</p>
-                        <p className={`text-[8px] font-black uppercase px-2 py-1 rounded-full inline-block mt-1 ${getStatusColor(escrow.status)}`}>{escrow.status}</p>
+                        <p className="font-bold text-gray-900">{formatCurrency(escrow.amount)}</p>
+                        <p className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${getStatusColor(escrow.status)}`}>{escrow.status}</p>
                       </div>
                     </Link>
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
           </motion.div>
 
-          {/* Quick Support / Info */}
-          <div className="space-y-6">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] px-2">{t('pages.safedeal_hub', 'SafeDeal Hub')}</h3>
-            <div className="bg-[#014d46] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden group">
+          <div className="space-y-3">
+            <h3 className="px-1 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400">{t('pages.safedeal_hub', 'SafeDeal Hub')}</h3>
+            <div className="group relative overflow-hidden rounded-2xl bg-[#014d46] p-5 text-white shadow-md sm:p-6">
               <div className="relative z-10">
-                <Award className="text-teal-300 mb-4" size={32} />
-                <h4 className="text-lg font-black leading-tight">{t('pages.become_a_top_rated_provider', 'Become a Top-Rated Provider')}</h4>
-                <p className="text-teal-100 text-xs mt-2 opacity-80">{t('pages.complete_deals_without_disputes', 'Complete deals without disputes to increase your trust score and unlock lower fees.')}</p>
-                <button className="mt-6 text-[10px] font-black uppercase tracking-widest bg-teal-400/20 py-2 px-4 rounded-xl border border-teal-400/30 hover:bg-teal-400/40 transition-all">{t('pages.learn_more', 'Learn More')}</button>
+                <Award className="mb-3 text-teal-300" size={28} />
+                <h4 className="text-base font-bold leading-tight">{t('pages.become_a_top_rated_provider', 'Become a Top-Rated Provider')}</h4>
+                <p className="mt-1.5 text-xs text-teal-100 opacity-80">{t('pages.complete_deals_without_disputes', 'Complete deals without disputes to increase your trust score and unlock lower fees.')}</p>
+                <button className="mt-4 rounded-xl border border-teal-400/30 bg-teal-400/20 px-4 py-3 text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-teal-400/40">
+                  {t('pages.learn_more', 'Learn More')}
+                </button>
               </div>
-              <TrendingUp className="absolute -right-4 -bottom-4 h-32 w-32 text-white opacity-5 group-hover:scale-110 transition-transform" />
+              <TrendingUp className="absolute -bottom-4 -right-4 h-28 w-28 text-white opacity-5 transition-transform group-hover:scale-110" />
             </div>
 
-            <div className="bg-white rounded-3xl p-8 border-2 border-gray-50 shadow-sm">
-              <h4 className="font-black text-gray-900 text-sm mb-4">{t('pages.security_overview', 'Security Overview')}</h4>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <p className="text-xs font-bold text-gray-600">{t('pages.encrypted_private_keys', 'Encrypted Private Keys')}</p>
+            <Card padding="sm">
+              <h4 className="mb-3 text-sm font-bold text-gray-900">{t('pages.security_overview', 'Security Overview')}</h4>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  <p className="text-xs font-semibold text-gray-600">{t('pages.encrypted_private_keys', 'Encrypted Private Keys')}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <p className="text-xs font-bold text-gray-600">{t('pages.blockchain_audit_logging', 'Blockchain Audit Logging')}</p>
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  <p className="text-xs font-semibold text-gray-600">{t('pages.blockchain_audit_logging', 'Blockchain Audit Logging')}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <p className="text-xs font-bold text-gray-600">{t('pages.ai_dispute_resolution_active', 'AI Dispute Resolution Active')}</p>
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  <p className="text-xs font-semibold text-gray-600">{t('pages.ai_dispute_resolution_active', 'AI Dispute Resolution Active')}</p>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       </div>

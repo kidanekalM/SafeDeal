@@ -23,6 +23,7 @@
         "core-js-pure": "^3.49.0",
         "date-fns": "^2.30.0",
         "framer-motion": "^10.16.5",
+        "html2canvas": "^1.4.1",
         "i18next-browser-languagedetector": "^7.0.0",
         "jspdf": "^4.2.1",
         "jspdf-autotable": "^5.0.7",

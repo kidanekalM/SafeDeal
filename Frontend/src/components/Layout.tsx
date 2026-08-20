@@ -91,7 +91,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+                className="md:hidden p-2.5 rounded-lg hover:bg-gray-100"
                 aria-label={t('components.open_menu', 'Open menu')}
               >
                 <Menu className="h-6 w-6 text-gray-600" />
@@ -105,7 +105,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
             
             {/* Center: Page Title */}
-            <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center absolute left-1/2 -translate-x-1/2 sm:relative sm:absolute-none">
+            <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center absolute left-1/2 -translate-x-1/2 sm:relative sm:left-auto sm:translate-x-0">
               {activePageName}
             </h1>
             
@@ -113,7 +113,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center space-x-2">
               <button 
                 onClick={() => setShowNotifications(true)}
-                className="p-2 text-gray-400 hover:text-gray-600 relative"
+                className="p-2.5 text-gray-400 hover:text-gray-600 relative"
                 aria-label={t('components.notifications', 'Notifications')}
               >
                 <Bell className="h-5 w-5" />
@@ -128,7 +128,7 @@ const Layout = ({ children }: LayoutProps) => {
               <div className="relative">
                 <button 
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-all group border-2 border-transparent hover:border-primary-300"
+                  className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-200 transition-all group border-2 border-transparent hover:border-primary-300"
                   aria-label={t('components.profile_menu', 'Profile menu')}
                 >
                   <span className="text-sm font-bold text-primary-700">
@@ -138,7 +138,7 @@ const Layout = ({ children }: LayoutProps) => {
                 
                 {/* Dropdown Menu */}
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
                     <div className="px-4 py-3 border-b border-gray-50 mb-1">
                       <p className="text-sm font-black text-gray-900 truncate">{user?.first_name} {user?.last_name}</p>
                       <p className="text-xs font-bold text-gray-400 truncate">{user?.email}</p>
@@ -196,7 +196,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Mobile Full Nav Drawer */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out 
+        className={`fixed inset-y-0 left-0 z-50 bg-white shadow-xl transform transition-transform duration-300 ease-in-out 
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:hidden w-80`}
       >
         <div className="flex flex-col h-full">
@@ -210,7 +210,7 @@ const Layout = ({ children }: LayoutProps) => {
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 rounded-lg hover:bg-gray-100"
+              className="p-2.5 rounded-lg hover:bg-gray-100"
               aria-label={t('components.close_menu', 'Close menu')}
             >
               <X className="h-5 w-5 text-gray-600" />
@@ -218,21 +218,21 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-6 py-8 space-y-4">
+          <nav className="flex-1 px-6 py-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-4 px-6 py-4 rounded-3xl text-base font-bold transition-all group hover:shadow-lg hover:scale-[1.02] ${
+                  className={`flex items-center space-x-4 px-6 py-4 rounded-2xl text-base font-bold transition-all group hover:shadow-md hover:scale-[1.02] ${
                     isActive(item.href)
-                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-2xl scale-[1.02]'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md scale-[1.02]'
                       : 'text-gray-700 hover:bg-gray-50 hover:shadow-md bg-white/80'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Icon className={`h-6 w-6 flex-shrink-0 ${isActive(item.href) ? 'text-white drop-shadow-lg' : 'text-primary-600 group-hover:text-primary-700'}`} />
+                  <Icon className={`h-6 w-6 flex-shrink-0 ${isActive(item.href) ? 'text-white drop-shadow-md' : 'text-primary-600 group-hover:text-primary-700'}`} />
                   <span className="font-bold leading-tight">{item.name}</span>
                 </Link>
               );
@@ -243,7 +243,7 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="px-6 py-4 space-y-2">
             <Link 
               to="/profile" 
-              className="w-full flex items-center space-x-3 p-3 rounded-3xl bg-gray-50 hover:bg-gray-100 transition-all"
+              className="w-full flex items-center space-x-3 p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-all"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Settings className="h-5 w-5 text-gray-500" />
@@ -271,7 +271,7 @@ const Layout = ({ children }: LayoutProps) => {
             
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center space-x-2 w-full px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <LogOut className="h-4 w-4" />
               <span>{t('components.sign_out', 'Sign out')}</span>
@@ -281,7 +281,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Bottom Nav - Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl p-2">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg p-2">
         <div className="grid grid-cols-5 gap-1 max-w-4xl mx-auto">
           {navigation.map((item) => {
             const Icon = item.icon;
@@ -292,7 +292,7 @@ const Layout = ({ children }: LayoutProps) => {
                 to={item.href}
                 className={`flex flex-col items-center p-2 rounded-xl text-[10px] font-bold transition-all ${
                   active
-                    ? 'bg-primary-500 text-white shadow-lg'
+                    ? 'bg-primary-500 text-white shadow-md'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-primary-600'
                 }`}
               >

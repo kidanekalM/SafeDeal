@@ -67,7 +67,7 @@ const GuidedTour = () => {
         >
           <button
             onClick={handleClose}
-            className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 transition-all z-10"
+            className="absolute top-6 right-6 p-2.5 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 transition-all z-10"
           >
             <X size={20} />
           </button>
