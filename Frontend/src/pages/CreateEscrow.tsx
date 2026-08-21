@@ -182,13 +182,27 @@ const CreateEscrow = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escrowType]);
 
-  // Sync amount from milestones for projects
   useEffect(() => {
-    if (escrowType === 'project' && milestonesWatch.length > 0) {
-      const total = milestonesWatch.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
-      setValue('amount', total, { shouldValidate: true });
+    const draftJson = localStorage.getItem('safedeal_instant_draft');
+    if (draftJson) {
+      try {
+        const draft = JSON.parse(draftJson);
+        if (draft.title) setValue('title', draft.title);
+        if (draft.amount) setValue('amount', Number(draft.amount));
+        if (draft.seller_email) {
+          // Pre-populate search term or handle email/phone
+          setSearchTerm(draft.seller_email);
+          handleSearch(draft.seller_email, 'seller');
+        }
+        // Jump straight to the final review/confirm stage (step 4 for item/Quick)
+        setStep(3); // Index 3 is 'review' for simple flow (Deal -> Parties -> Basics -> Budget -> Review)
+        localStorage.removeItem('safedeal_instant_draft');
+      } catch (e) {
+        console.error('Failed to load instant deal draft', e);
+      }
     }
-  }, [milestonesWatch, escrowType, setValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const steps = useMemo(() => {
     const detailed = [
