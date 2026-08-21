@@ -6,7 +6,13 @@ android_build
 docker-compose*.yml
 .aider*
 *.log
-/Backend/bin/
+/Backend/app.exe
+Backend/app.exe
+app.exe
+*.exe
+*.dll
+*.so
+*.dylib
 /Backend/backend
 /Backend/backend_bin
 /Backend/backend_monolithic
