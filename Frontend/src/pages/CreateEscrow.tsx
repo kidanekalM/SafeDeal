@@ -616,7 +616,7 @@ const CreateEscrow = () => {
               </button>
             ) : (
               <button onClick={handleSubmit(onSubmit, () => toast.error(t('pages.complete_required_fields', 'Please complete the required fields to continue.')))} disabled={isSubmitting} className="btn btn-primary px-8 h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-md shadow-primary-500/20 flex items-center gap-3">
-                {isSubmitting ? 'Launching...' : 'Secure Launch'}
+                {isSubmitting ? 'Sending...' : 'Send Agreement'}
                 <Check size={18} />
               </button>
             )}
@@ -649,7 +649,7 @@ const PartySearchField = ({ label, selected, role, searchTerm, activeSearchRole,
       ) : (
         <div className="relative">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input type="text" placeholder={t('pages.enter_email_placeholder', 'Enter {{role}} email...', { role: String(t(`pages.${role}`, role)).toLowerCase() })} className="input w-full h-12 rounded-xl pl-12 bg-gray-50 border-none font-bold text-sm" value={activeSearchRole === role ? searchTerm : ''} onChange={e => onSearch(e.target.value, role)} />
+           <input type="text" placeholder={t('pages.enter_email_or_phone_placeholder', 'Enter {{role}} email or phone (+251)...', { role: String(t(`pages.${role}`, role)).toLowerCase() })} className="input w-full h-12 rounded-xl pl-12 bg-gray-50 border-none font-bold text-sm" value={activeSearchRole === role ? searchTerm : ''} onChange={e => onSearch(e.target.value, role)} />
           {activeSearchRole === role && searchResults.length > 0 && (
             <div className="absolute z-50 w-full mt-2 border border-gray-100 rounded-xl overflow-hidden shadow-lg bg-white">
               {searchResults.map((u: any) => (
