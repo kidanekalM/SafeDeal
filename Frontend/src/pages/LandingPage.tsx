@@ -92,10 +92,10 @@ const LandingPage = () => {
             <Shield size={14} className="text-emerald-600" /> Works with Telebirr & CBE
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-            {i18n.language === 'am' ? 'ገንዘብዎን ወይም ዕቃዎን በደህና ይላኩ እና ይቀበሉ።' : 'Send money or goods safely.'}
+            {i18n.language === 'am' ? 'ዕቃ ወይም ገንዘብ ሲለዋወጡ ዋስትና ይኑርዎት።' : 'Trade money and goods with total safety.'}
           </h1>
           <p className="text-sm font-medium text-gray-600 max-w-sm mx-auto">
-            {i18n.language === 'am' ? 'ስምምነቱ ሳይጠናቀቅ ገንዘብዎ የተቆለፈና የተጠበቀ ነው።' : 'Your money stays locked until the deal is done. Works with Telebirr, CBE, your bank.'}
+            {i18n.language === 'am' ? 'ገንዘቡ በዕገዳ (Escrow) ይቀመጣል። ስራው ሲጠናቀቅ ወይም ዕቃው ሲረከብ ብቻ ለባለቤቱ ይለቀቃል። በቴሌብር እና በንግድ ባንክ (CBE) ይሰራል።' : 'Your money is held securely in escrow. It is only released to the seller when you confirm delivery. Works with Telebirr & CBE.'}
           </p>
         </div>
 
