@@ -12,7 +12,8 @@ type Milestone struct {
 	DueDate        *string         `json:"due_date,omitempty"`
 	Status         MilestoneStatus `json:"status" gorm:"default:'pending'"`
 	OrderIndex     int             `json:"order_index" gorm:"default:0"`
-	ApproverID     *uint           `json:"approver_id" gorm:"default:null"`
+	ApproverID     *string         `json:"approver_id" gorm:"type:varchar(36);default:null"`
+	Approver       *User           `json:"approver,omitempty" gorm:"foreignKey:ApproverID;references:ID"`
 	SubmittedAt    *string         `json:"submitted_at,omitempty"`
 	ApprovedAt     *string         `json:"approved_at,omitempty"`
 	DeliverableURL *string         `json:"deliverable_url,omitempty"`
@@ -39,5 +40,4 @@ type Milestone struct {
 
 	// Associations
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`
-	Approver *User   `json:"approver,omitempty" gorm:"foreignKey:ApproverID"`
 }

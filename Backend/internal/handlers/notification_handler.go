@@ -15,7 +15,7 @@ import (
 type NotificationHandler struct {
 	DB          *gorm.DB
 	AuthService *auth.Service
-	clients     map[uint]map[*websocket.Conn]bool
+	clients     map[string]map[*websocket.Conn]bool
 	broadcast   chan NotificationData
 	register    chan ClientConnection
 	unregister  chan *websocket.Conn
@@ -23,7 +23,7 @@ type NotificationHandler struct {
 }
 
 type NotificationData struct {
-	UserID  uint   `json:"user_id"`
+	UserID  string `json:"user_id"`
 	Type    string `json:"type"`
 	Title   string `json:"title"`
 	Message string `json:"message"`
@@ -31,14 +31,14 @@ type NotificationData struct {
 
 type ClientConnection struct {
 	Conn   *websocket.Conn
-	UserID uint
+	UserID string
 }
 
 func NewNotificationHandler(db *gorm.DB, authService *auth.Service) *NotificationHandler {
 	h := &NotificationHandler{
 		DB:          db,
 		AuthService: authService,
-		clients:     make(map[uint]map[*websocket.Conn]bool),
+		clients:     make(map[string]map[*websocket.Conn]bool),
 		broadcast:   make(chan NotificationData),
 		register:    make(chan ClientConnection),
 		unregister:  make(chan *websocket.Conn),

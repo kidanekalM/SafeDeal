@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +28,7 @@ type EscrowHandler struct {
 	NotificationHandler *NotificationHandler
 }
 
-func (h *EscrowHandler) recordStatusEvent(escrowID uint, actorID uint, fromStatus string, toStatus string, reason string, txHash string, metadata string) {
+func (h *EscrowHandler) recordStatusEvent(escrowID uint, actorID string, fromStatus string, toStatus string, reason string, txHash string, metadata string) {
 	_ = h.DB.Create(&models.EscrowStatusEvent{
 		EscrowID:   escrowID,
 		ActorID:    actorID,
@@ -39,7 +40,7 @@ func (h *EscrowHandler) recordStatusEvent(escrowID uint, actorID uint, fromStatu
 	}).Error
 }
 
-func (h *EscrowHandler) setEscrowStatus(escrow *models.Escrow, actorID uint, nextStatus models.EscrowStatus, reason string, txHash string, metadata string) error {
+func (h *EscrowHandler) setEscrowStatus(escrow *models.Escrow, actorID string, nextStatus models.EscrowStatus, reason string, txHash string, metadata string) error {
 	prev := escrow.Status
 	escrow.Status = models.EscrowStatus(nextStatus)
 	if err := h.DB.Save(escrow).Error; err != nil {
@@ -93,15 +94,15 @@ func NewEscrowHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitmq
 }
 
 func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
+	userID, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
 	var req struct {
-		BuyerID           uint               `json:"buyer_id"`
-		SellerID          uint               `json:"seller_id"` 
-		MediatorID        *uint              `json:"mediator_id,omitempty"`
+		BuyerID           string             `json:"buyer_id"`
+		SellerID          string             `json:"seller_id"` 
+		MediatorID        *string            `json:"mediator_id,omitempty"`
 		BuyerEmail        string             `json:"buyer_email,omitempty"`
 		SellerEmail       string             `json:"seller_email,omitempty"`
 		Amount            uint               `json:"amount"`
@@ -167,7 +168,7 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		}
 	}
 
-	var finalBuyerID, finalSellerID uint
+	var finalBuyerID, finalSellerID string
 	var buyerUser, sellerUser models.User
 	creatorRole := c.Query("role", "buyer")
 
@@ -183,40 +184,42 @@ func (h *EscrowHandler) CreateEscrow(c *fiber.Ctx) error {
 		finalSellerID = req.SellerID
 	}
 
-	if finalBuyerID == 0 && req.BuyerEmail != "" {
+	if finalBuyerID == "" && req.BuyerEmail != "" {
 		var existingBuyer models.User
 		if err := h.DB.Where("email = ?", req.BuyerEmail).First(&existingBuyer).Error; err == nil {
 			finalBuyerID = existingBuyer.ID
 			buyerUser = existingBuyer
 		} else {
 			placeholderBuyer := models.User{
+				ID: uuid.New().String(),
 				Email: req.BuyerEmail, FirstName: "Invited", LastName: "Buyer",
-				Password: "placeholder_password", Activated: false,
+				Password: "placeholder_password", Activated: false, Role: "user",
 			}
 			h.DB.Create(&placeholderBuyer)
 			finalBuyerID = placeholderBuyer.ID
 			buyerUser = placeholderBuyer
 		}
-	} else if finalBuyerID != 0 {
-		h.DB.First(&buyerUser, finalBuyerID)
+	} else if finalBuyerID != "" {
+		h.DB.First(&buyerUser, "id = ?", finalBuyerID)
 	}
 
-	if finalSellerID == 0 && req.SellerEmail != "" {
+	if finalSellerID == "" && req.SellerEmail != "" {
 		var existingSeller models.User
 		if err := h.DB.Where("email = ?", req.SellerEmail).First(&existingSeller).Error; err == nil {
 			finalSellerID = existingSeller.ID
 			sellerUser = existingSeller
 		} else {
 			placeholderSeller := models.User{
+				ID: uuid.New().String(),
 				Email: req.SellerEmail, FirstName: "Invited", LastName: "Seller",
-				Password: "placeholder_password", Activated: false,
+				Password: "placeholder_password", Activated: false, Role: "user",
 			}
 			h.DB.Create(&placeholderSeller)
 			finalSellerID = placeholderSeller.ID
 			sellerUser = placeholderSeller
 		}
-	} else if finalSellerID != 0 {
-		h.DB.First(&sellerUser, finalSellerID)
+	} else if finalSellerID != "" {
+		h.DB.First(&sellerUser, "id = ?", finalSellerID)
 	}
 
 	var parsedDeliveryDate *time.Time
@@ -395,10 +398,10 @@ func (h *EscrowHandler) GetMyEscrows(c *fiber.Ctx) error {
 }
 
 func (h *EscrowHandler) GetEscrowContacts(c *fiber.Ctx) error {
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var escrows []models.Escrow
 	h.DB.Where("buyer_id = ? OR seller_id = ?", userID, userID).Find(&escrows)
-	contactIDs := make(map[uint]bool)
+	contactIDs := make(map[string]bool)
 	for _, e := range escrows {
 		if e.BuyerID != userID { contactIDs[e.BuyerID] = true }
 		if e.SellerID != userID { contactIDs[e.SellerID] = true }
@@ -406,14 +409,14 @@ func (h *EscrowHandler) GetEscrowContacts(c *fiber.Ctx) error {
 	var contacts []models.User
 	for id := range contactIDs {
 		var u models.User
-		if err := h.DB.First(&u, id).Error; err == nil { contacts = append(contacts, u) }
+		if err := h.DB.First(&u, "id = ?", id).Error; err == nil { contacts = append(contacts, u) }
 	}
 	return c.JSON(contacts)
 }
 
 func (h *EscrowHandler) CancelEscrow(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var e models.Escrow
 	if err := h.DB.First(&e, uint(id)).Error; err != nil { return c.Status(404).JSON(fiber.Map{"error": "Not found"}) }
 	if e.BuyerID != userID || e.Status != models.EscrowPending { return c.Status(403).JSON(fiber.Map{"error": "Forbidden"}) }
@@ -423,7 +426,7 @@ func (h *EscrowHandler) CancelEscrow(c *fiber.Ctx) error {
 
 func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var e models.Escrow
 	h.DB.First(&e, uint(id))
 	if e.SellerID != userID { return c.Status(403).JSON(fiber.Map{"error": "Forbidden"}) }
@@ -437,7 +440,7 @@ func (h *EscrowHandler) AcceptEscrow(c *fiber.Ctx) error {
 
 func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var e models.Escrow
 	h.DB.First(&e, uint(id))
 	if e.BuyerID != userID { return c.Status(403).JSON(fiber.Map{"error": "Forbidden"}) }
@@ -449,7 +452,7 @@ func (h *EscrowHandler) ConfirmReceipt(c *fiber.Ctx) error {
 
 func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var e models.Escrow
 	h.DB.First(&e, uint(id))
 	var req struct { Reason string `json:"reason"`; Evidence string `json:"evidence"` }
@@ -462,7 +465,7 @@ func (h *EscrowHandler) CreateDispute(c *fiber.Ctx) error {
 
 func (h *EscrowHandler) VerifyCBEPayment(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var req struct{ TransactionID string `json:"transaction_id"`; AccountSuffix string `json:"account_suffix"` }
 	c.BodyParser(&req)
 	var e models.Escrow
@@ -523,7 +526,7 @@ func (h *EscrowHandler) GetStatusHistory(c *fiber.Ctx) error {
 
 func (h *EscrowHandler) ResolveDispute(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var req struct { Action string `json:"action"`; Note string `json:"note"` }
 	c.BodyParser(&req)
 	var e models.Escrow
@@ -536,7 +539,7 @@ func (h *EscrowHandler) ResolveDispute(c *fiber.Ctx) error {
 
 func (h *EscrowHandler) VerifyPayment(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var req struct { Action string `json:"action"` }
 	c.BodyParser(&req)
 	var e models.Escrow
@@ -556,13 +559,13 @@ func (h *EscrowHandler) RefundEscrow(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
 	var e models.Escrow
 	h.DB.First(&e, uint(id))
-	h.setEscrowStatus(&e, 0, "refunded", "Refunded", "", "")
+	h.setEscrowStatus(&e, "system", "refunded", "Refunded", "", "")
 	return c.JSON(fiber.Map{"message": "Refunded"})
 }
 
 func (h *EscrowHandler) UploadReceipt(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var req struct { ReceiptURL string `json:"receipt_url"` }
 	c.BodyParser(&req)
 	var e models.Escrow

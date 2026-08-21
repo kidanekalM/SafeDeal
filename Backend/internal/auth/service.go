@@ -19,7 +19,7 @@ type Service struct {
 }
 
 type Claims struct {
-	UserID uint `json:"user_id"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
@@ -27,7 +27,7 @@ func NewService(db *gorm.DB) *Service {
 	return &Service{DB: db}
 }
 
-func (s *Service) GenerateToken(userID uint) (string, error) {
+func (s *Service) GenerateToken(userID string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		UserID: userID,
@@ -79,9 +79,9 @@ func (s *Service) GetUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *Service) GetUserByID(id uint) (*models.User, error) {
+func (s *Service) GetUserByID(id string) (*models.User, error) {
 	var user models.User
-	result := s.DB.First(&user, id)
+	result := s.DB.First(&user, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")

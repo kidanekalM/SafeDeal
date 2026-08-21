@@ -1,20 +1,20 @@
 package models
 
 import (
-	"gorm.io/gorm"
+	"time"
 )
 
 type Review struct {
-	gorm.Model
 	ID         uint   `json:"id" gorm:"primaryKey"`
-	ReviewerID uint   `json:"reviewer_id" gorm:"not null"` // User leaving the review
-	RevieweeID uint   `json:"reviewee_id" gorm:"not null"` // User being reviewed
+	ReviewerID string `json:"reviewer_id" gorm:"type:varchar(36);not null"`
+	RevieweeID string `json:"reviewee_id" gorm:"type:varchar(36);not null"`
 	EscrowID   uint   `json:"escrow_id" gorm:"not null"`
-	Rating     int    `json:"rating" gorm:"check:rating >= 1 AND rating <= 5"` // 1-5 stars
+	Rating     int    `json:"rating" gorm:"check:rating >= 1 AND rating <= 5"`
 	Comment    string `json:"comment" gorm:"type:text"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 
-	// Associations
-	Reviewer *User   `json:"reviewer,omitempty" gorm:"foreignKey:ReviewerID"`
-	Reviewee *User   `json:"reviewee,omitempty" gorm:"foreignKey:RevieweeID"`
+	Reviewer *User   `json:"reviewer,omitempty" gorm:"foreignKey:ReviewerID;references:ID"`
+	Reviewee *User   `json:"reviewee,omitempty" gorm:"foreignKey:RevieweeID;references:ID"`
 	Escrow   *Escrow `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`
 }

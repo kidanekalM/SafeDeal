@@ -13,6 +13,7 @@ import (
 	"backend_monolithic/internal/auth"
 	"backend_monolithic/internal/models"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/google/uuid"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -71,7 +72,9 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	// Generate activation code
 	activationCode := fmt.Sprintf("%d", time.Now().UnixNano())
 
+	userID := uuid.New().String()
 	user := &models.User{
+		ID:             userID,
 		FirstName:      req.FirstName,
 		LastName:       req.LastName,
 		Profession:     req.Profession,
@@ -83,7 +86,8 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		BankCode:       req.BankCode,
 		BankName:       req.BankName,
 		ActivationCode: activationCode,
-		Activated:      true, // Auto-activate for testing purposes
+		Activated:      true,
+		Role:           "user",
 	}
 
 	if err := h.DB.Create(user).Error; err != nil {
@@ -380,7 +384,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) UpdateBankDetails(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
+	userID, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(401).JSON(fiber.Map{
 			"error": "Unauthorized",

@@ -1,13 +1,17 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+)
 
 type Message struct {
-	gorm.Model
-	ID        uint   `json:"id" gorm:"primaryKey"`
-	EscrowID  uint   `json:"escrow_id" gorm:"not null"`
-	SenderID  uint   `json:"sender_id" gorm:"not null"`
-	Content   string `json:"content" validate:"required,min=1,max=1000"`
-	CreatedAt string `json:"created_at"`
-	Sender    *User  `json:"sender,omitempty" gorm:"foreignKey:SenderID"`
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	EscrowID  uint      `json:"escrow_id" gorm:"not null"`
+	SenderID  string    `json:"sender_id" gorm:"type:varchar(36);not null"`
+	Content   string    `json:"content" validate:"required,min=1,max=1000"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	Sender    *User     `json:"sender,omitempty" gorm:"foreignKey:SenderID;references:ID"`
+	Escrow    *Escrow   `json:"escrow,omitempty" gorm:"foreignKey:EscrowID"`
 }

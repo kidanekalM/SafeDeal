@@ -23,7 +23,7 @@ type ChatHandler struct {
 
 type MessageData struct {
 	EscrowID uint   `json:"escrow_id"`
-	SenderID uint   `json:"sender_id"`
+	SenderID string `json:"sender_id"`
 	Content  string `json:"content"`
 }
 

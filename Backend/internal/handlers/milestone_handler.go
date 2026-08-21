@@ -30,20 +30,20 @@ func (h *MilestoneHandler) GetMilestonesByEscrow(c *fiber.Ctx) error {
 
 func (h *MilestoneHandler) CreateMilestone(c *fiber.Ctx) error {
 	var req struct {
-		EscrowID              uint                         `json:"escrow_id"`
-		Title                 string                       `json:"title"`
-		Description           string                       `json:"description"`
-		Amount                uint                         `json:"amount"`
-		DueDate               *string                      `json:"due_date"`
-		OrderIndex            int                          `json:"order_index"`
-		ApproverID            *uint                        `json:"approver_id"`
-		CompletionType        models.CompletionType        `json:"completion_type"`
+		EscrowID              uint                   `json:"escrow_id" validate:"required"`
+		Title                 string                 `json:"title" validate:"required"`
+		Description           string                 `json:"description"`
+		Amount                uint                   `json:"amount" validate:"required,gt=0"`
+		DueDate               *string                `json:"due_date,omitempty"`
+		OrderIndex            int                    `json:"order_index"`
+		ApproverID            *string                `json:"approver_id"`
+		CompletionType        models.CompletionType  `json:"completion_type"`
 		VerificationAuthority models.VerificationAuthority `json:"verification_authority"`
-		ReleaseTrigger        models.ReleaseTrigger        `json:"release_trigger"`
-		EvidenceTypes         []string                     `json:"evidence_types"`
-		AutoAcceptDays        int                          `json:"auto_accept_days"`
-		InspectionPeriodDays  int                          `json:"inspection_period_days"`
-		RequiredApprovals     int                          `json:"required_approvals"`
+		ReleaseTrigger        models.ReleaseTrigger  `json:"release_trigger"`
+		EvidenceTypes         []string               `json:"evidence_types"`
+		AutoAcceptDays        int                    `json:"auto_accept_days"`
+		InspectionPeriodDays  int                    `json:"inspection_period_days"`
+		RequiredApprovals     int                    `json:"required_approvals"`
 	}
 
 	c.BodyParser(&req)
@@ -119,7 +119,7 @@ func (h *MilestoneHandler) UpdateMilestone(c *fiber.Ctx) error {
 
 func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 
 	var milestone models.Milestone
 	h.DB.Preload("Escrow").First(&milestone, uint(id))
@@ -142,7 +142,7 @@ func (h *MilestoneHandler) SubmitMilestone(c *fiber.Ctx) error {
 
 func (h *MilestoneHandler) ApproveMilestone(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 
 	var milestone models.Milestone
 	h.DB.Preload("Escrow").First(&milestone, uint(id))
@@ -165,7 +165,7 @@ func (h *MilestoneHandler) ApproveMilestone(c *fiber.Ctx) error {
 
 func (h *MilestoneHandler) RejectMilestone(c *fiber.Ctx) error {
 	id, _ := strconv.ParseUint(c.Params("id"), 10, 32)
-	userID, _ := c.Locals("userID").(uint)
+	userID, _ := c.Locals("userID").(string)
 	var milestone models.Milestone
 	h.DB.Preload("Escrow").First(&milestone, uint(id))
 	if milestone.ApproverID != nil && *milestone.ApproverID != userID { return c.Status(403).JSON(fiber.Map{"error": "Unauthorized"}) }

@@ -7,11 +7,10 @@ import (
 )
 
 type Escrow struct {
-	gorm.Model
 	ID                 uint         `json:"id" gorm:"primaryKey"`
-	BuyerID            uint         `json:"buyer_id" gorm:"not null"`
-	SellerID           uint         `json:"seller_id" gorm:"not null"`
-	MediatorID         *uint        `json:"mediator_id,omitempty"`
+	BuyerID            string       `json:"buyer_id" gorm:"type:varchar(36);not null"`
+	SellerID           string       `json:"seller_id" gorm:"type:varchar(36);not null"`
+	MediatorID         *string      `json:"mediator_id,omitempty" gorm:"type:varchar(36)"`
 	Amount             uint         `json:"amount" gorm:"not null"`
 	PlatformFee        uint         `json:"platform_fee"`
 	Status             EscrowStatus `json:"status" gorm:"default:'pending'"`
@@ -58,7 +57,7 @@ type Escrow struct {
 	DisputeReason      string         `json:"dispute_reason,omitempty"`
 	DisputeStatus      DisputeStatus  `json:"dispute_status,omitempty" gorm:"default:'none'"`
 	ResolutionType     ResolutionType `json:"resolution_type,omitempty" gorm:"default:'none'"`
-	ResolvedByID       *uint          `json:"resolved_by_id,omitempty"`
+	ResolvedByID       *string        `json:"resolved_by_id,omitempty" gorm:"type:varchar(36)"`
 	ResolutionNote     string         `json:"resolution_note,omitempty"`
 	ReceiptURL         string         `json:"receipt_url,omitempty"`
 	TransactionRef     *string        `json:"transaction_ref,omitempty" gorm:"uniqueIndex"`
@@ -103,7 +102,9 @@ type Obligation struct {
 }
 
 type Contact struct {
-	gorm.Model
-	UserID    uint `json:"user_id" gorm:"not null"`
-	ContactID uint `json:"contact_id" gorm:"not null"`
+	ID        uint   `json:"id" gorm:"primaryKey"`
+	UserID    string `json:"user_id" gorm:"type:varchar(36);not null"`
+	ContactID string `json:"contact_id" gorm:"type:varchar(36);not null"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

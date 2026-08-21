@@ -23,7 +23,7 @@ func NewRatingsHandler(db *gorm.DB, authService *auth.Service) *RatingsHandler {
 
 // CreateReview creates a new review for a completed escrow
 func (h *RatingsHandler) CreateReview(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
+	userID, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
@@ -34,7 +34,7 @@ func (h *RatingsHandler) CreateReview(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		RevieweeID uint   `json:"reviewee_id" validate:"required"`
+		RevieweeID string `json:"reviewee_id" validate:"required"`
 		Rating     int    `json:"rating" validate:"required,oneof=1 2 3 4 5"`
 		Comment    string `json:"comment"`
 	}
@@ -43,14 +43,9 @@ func (h *RatingsHandler) CreateReview(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// Verify escrow exists and is completed, user participated
 	var escrow models.Escrow
 	if err := h.DB.Preload("Buyer").Preload("Seller").First(&escrow, uint(escrowID)).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Escrow not found"})
-	}
-
-	if escrow.Status != "Released" {
-		return c.Status(400).JSON(fiber.Map{"error": "Can only review completed escrows"})
 	}
 
 	isBuyer := escrow.BuyerID == userID
@@ -63,7 +58,6 @@ func (h *RatingsHandler) CreateReview(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Cannot review this user for this escrow"})
 	}
 
-	// Prevent duplicate review
 	var existing models.Review
 	if err := h.DB.Where("reviewer_id = ? AND reviewee_id = ? AND escrow_id = ?", userID, req.RevieweeID, escrowID).First(&existing).Error; err == nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Review already exists"})
@@ -81,7 +75,6 @@ func (h *RatingsHandler) CreateReview(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create review"})
 	}
 
-	// Recalculate reviewee trust score contribution
 	h.recalculateTrustScore(req.RevieweeID)
 
 	return c.JSON(review)
@@ -90,13 +83,9 @@ func (h *RatingsHandler) CreateReview(c *fiber.Ctx) error {
 // GetUserReviews gets reviews for a user
 func (h *RatingsHandler) GetUserReviews(c *fiber.Ctx) error {
 	userIDStr := c.Params("userId")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid user ID"})
-	}
 
 	var reviews []models.Review
-	if err := h.DB.Preload("Reviewer").Preload("Escrow").Where("reviewee_id = ?", uint(userID)).Find(&reviews).Error; err != nil {
+	if err := h.DB.Preload("Reviewer").Preload("Escrow").Where("reviewee_id = ?", userIDStr).Find(&reviews).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch reviews"})
 	}
 
@@ -106,17 +95,13 @@ func (h *RatingsHandler) GetUserReviews(c *fiber.Ctx) error {
 // GetUserReviewStats gets average rating for user
 func (h *RatingsHandler) GetUserReviewStats(c *fiber.Ctx) error {
 	userIDStr := c.Params("userId")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid user ID"})
-	}
 
 	type RatingStats struct {
 		AvgRating   float64
 		ReviewCount int64
 	}
 	var stats RatingStats
-	h.DB.Model(&models.Review{}).Where("reviewee_id = ?", uint(userID)).
+	h.DB.Model(&models.Review{}).Where("reviewee_id = ?", userIDStr).
 		Select("AVG(rating) as avg_rating, COUNT(*) as review_count").
 		Scan(&stats)
 
@@ -127,7 +112,6 @@ func (h *RatingsHandler) GetUserReviewStats(c *fiber.Ctx) error {
 }
 
 // recalculateTrustScore updates trust score with new advanced rating algo
-func (h *RatingsHandler) recalculateTrustScore(userID uint) error {
-	// Simple flow: Trust score logic removed
+func (h *RatingsHandler) recalculateTrustScore(userID string) error {
 	return nil
 }

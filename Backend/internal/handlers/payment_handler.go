@@ -35,7 +35,7 @@ func NewPaymentHandler(db *gorm.DB, authService *auth.Service, rabbitMQ *rabbitm
 }
 
 func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
+	userID, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
@@ -151,7 +151,7 @@ func (h *PaymentHandler) InitiatePayment(c *fiber.Ctx) error {
 }
 
 func (h *PaymentHandler) GetTransactions(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(uint)
+	userID, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized"})
 	}
