@@ -306,7 +306,7 @@ const CreateEscrow = () => {
     switch (steps[step].id) {
       case 'type': return (
         <div className="space-y-5 sm:space-y-6">
-          {stepTitle(t('pages.what_are_you_doing', 'What are you doing?'), t('pages.choose_path', 'Select your deal type'))}
+          {stepTitle(t('pages.choose_path', 'Select your deal type'))}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <button onClick={() => setValue('escrow_type', 'item')} className={`p-5 sm:p-8 border rounded-2xl text-left transition-all relative group ${escrowType === 'item' ? 'border-primary-600 bg-primary-50' : 'border-gray-100 bg-white'}`}>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${escrowType === 'item' ? 'bg-primary-600 text-white' : 'bg-gray-50 text-gray-400'}`}>
