@@ -551,36 +551,27 @@ const CreateEscrow = () => {
           <div className="space-y-5 sm:space-y-6">
             {stepTitle(t('pages.legal_review', 'Legal Review'))}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-               <div className="p-5 sm:p-8 bg-primary-900 text-white rounded-2xl shadow-md space-y-5 sm:space-y-6">
-                  <div>
-                    <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-2">{t('pages.agreement_summary', 'Agreement Summary')}</p>
-                    <h3 className="text-xl font-black leading-tight">{data.title}</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
-                    <div>
-                      <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{t('pages.budget', 'Budget')}</p>
-                      <p className="text-lg font-black">{Number(data.amount).toLocaleString()} ETB</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{t('pages.target', 'Target')}</p>
-                      <p className="text-sm font-bold">{data.delivery_date || 'N/A'}</p>
-                    </div>
+               <div className="p-5 sm:p-8 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-5">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Review & Confirm</h3>
+                  <h4 className="text-xl font-black text-gray-900">{data.title}</h4>
+                  <p className="text-sm text-gray-600 font-medium">{data.description}</p>
+                  <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <span className="text-xs font-bold text-gray-500">Total Value</span>
+                    <span className="text-lg font-black text-primary-700">{Number(data.amount).toLocaleString()} ETB</span>
                   </div>
                </div>
 
-               <div className="p-5 sm:p-8 bg-gray-50 rounded-2xl border border-white space-y-4">
-                  <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
-                    <Scale size={14} className="text-primary-600" /> {t('pages.system_clauses', 'System Clauses')}
+               <div className="p-5 sm:p-8 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                    <Scale size={14} className="text-primary-600" /> Summary of Terms
                   </h4>
-                  <div className="space-y-3 text-[11px] font-bold text-gray-600 leading-relaxed">
-                    {escrowType === 'project' ? (
-                      <p>• <span className="text-gray-900">{t('pages.review_deliverables', 'Deliverables')}</span>: {(data.scope?.deliverables || []).filter((d: any) => d.title.trim()).length} item(s) with standards.</p>
-                    ) : (
-                      <p>• <span className="text-gray-900">{t('pages.deliverable', 'Deliverable')}</span>: {data.title || data.description}</p>
+                  <div className="space-y-2 text-xs font-medium text-gray-700">
+                    <p>• <strong>Inspection:</strong> {data.inspection_period} days</p>
+                    <p>• <strong>Review Window:</strong> {data.scope?.acceptance_days || 5} days</p>
+                    <p>• <strong>Dispute Resolution:</strong> Simple Platform Mediation</p>
+                    {escrowType === 'project' && (
+                      <p>• <strong>Deliverables:</strong> {(data.scope?.deliverables || []).length} item(s)</p>
                     )}
-                    <p>• <span className="text-gray-900">{t('pages.acceptance', 'Acceptance')}</span>: {t('pages.review_acceptance', 'review within {{days}} days', { days: data.scope?.acceptance_days || 5 })}.</p>
-                    <p>• <span className="italic">{t('pages.release', 'Release')}:</span> {t('pages.review_release', 'Funds are released only upon your explicit approval — never automatically.')}</p>
-                    {escrowType === 'project' && <p>{t('pages.review_milestone_release', '• Payments released milestone-by-milestone upon approval.')}</p>}
                   </div>
                </div>
             </div>
