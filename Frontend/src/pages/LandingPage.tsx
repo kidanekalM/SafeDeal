@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  Send, 
+import {
+  Send,
   Shield,
   CheckCircle,
   Clock,
   Award,
-  ArrowRight
+  ArrowRight,
+  Lock,
+  Users,
+  CreditCard
 } from 'lucide-react';
  
 import Logo from "../assets/Logo.png";
@@ -190,8 +193,61 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* 5. Footer */}
-        <footer className="text-center py-4 text-xs font-bold text-gray-400 space-y-2 border-t border-gray-100">
+        {/* 5. Trust Pillars — honest, no fabricated stats */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-black uppercase tracking-wider text-gray-400 text-center">
+            {i18n.language === 'am' ? 'ለምን SafeDeal?' : 'Why SafeDeal'}
+          </h3>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-white border border-gray-100">
+              <div className="p-2 bg-emerald-50 rounded-lg shrink-0">
+                <Lock className="h-5 w-5 text-[#005356]" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-gray-900">
+                  {i18n.language === 'am' ? 'ገንዘብዎ ይቆለፋል፣ ይዘዋልም አይደለም።' : 'Funds are held, not transferred.'}
+                </p>
+                <p className="text-xs text-gray-500 font-medium leading-snug mt-1">
+                  {i18n.language === 'am' ? 'ገንዘቡ እስከ ስምምነቱ መጠናቀቅ ድረስ በSafeDeal ይቆያል። ሻጩ ወይም ገዢው አይወስዱትም።' : 'Your money stays with SafeDeal until the deal is complete. Neither side can take it early.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-white border border-gray-100">
+              <div className="p-2 bg-emerald-50 rounded-lg shrink-0">
+                <Users className="h-5 w-5 text-[#005356]" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-gray-900">
+                  {i18n.language === 'am' ? 'ውድመት ካለ መፍትሄ አለ።' : 'Disputes have a resolution path.'}
+                </p>
+                <p className="text-xs text-gray-500 font-medium leading-snug mt-1">
+                  {i18n.language === 'am' ? 'እንቅስቃሴ ካልተስማማ ሁለቱም ወገኖች ሊያመለክቱት ይችላሉ። መራጭ ይጠቀማል።' : "If something goes wrong, either party can flag it. A neutral mediator reviews the deal and decides."}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-white border border-gray-100">
+              <div className="p-2 bg-emerald-50 rounded-lg shrink-0">
+                <CreditCard className="h-5 w-5 text-[#005356]" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-gray-900">
+                  {i18n.language === 'am' ? 'እንደሚያውቁት ይክፈሉ።' : 'Pay the way you already do.'}
+                </p>
+                <p className="text-xs text-gray-500 font-medium leading-snug mt-1">
+                  {i18n.language === 'am' ? 'ቴሌብር፣ ንግድ ባንክ (CBE)፣ Chapa በኩል ይክፈሉ። አዲስ ሂሳብ መክፈት አያስፈልግም።' : 'Pay and get paid through Telebirr, CBE, or Chapa. No new wallet to set up.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 6. Footer */}
+        <footer className="text-center py-4 text-xs font-bold text-gray-400 space-y-3 border-t border-gray-100">
+          <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
+            {i18n.language === 'am'
+              ? 'በኢትዮጵያ የተሰራ · ክፍያ በቴሌብር፣ CBE፣ Chapa · ውድመት በመራጭ'
+              : 'Built in Ethiopia · Payments via Telebirr, CBE, Chapa · Disputes via mediators'}
+          </p>
           <div className="flex justify-center gap-4">
             <a href="/terms" className="hover:text-gray-700">Terms of Service</a>
             <span>•</span>
