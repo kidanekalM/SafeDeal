@@ -455,9 +455,12 @@ const CreateEscrow = () => {
                 <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.days_to_review', 'Days to Review')}</label>
                 <input type="number" {...register('scope.acceptance_days')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" defaultValue={5} />
               </div>
-              <div className="form-control">
-                <label className="label-text font-black text-[9px] uppercase tracking-widest text-gray-400 mb-2 block">{t('pages.cure_period_days', 'Cure Period (Days)')}</label>
-                <input type="number" {...register('scope.cure_period_days')} className="input w-full h-12 rounded-xl bg-gray-50 border-none font-bold px-6" placeholder="0" />
+              <div className="form-control flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                  <span className="text-xs font-black text-gray-900 block">Auto-Accept on Silence</span>
+                  <span className="text-[10px] text-gray-500 font-medium">Deems accepted if buyer goes silent</span>
+                </div>
+                <input type="checkbox" {...register('scope.deemed_accept')} className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500" />
               </div>
             </div>
           </div>
